@@ -347,6 +347,20 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
   }
 }
 
+/* =========================================================================
+   AI FOOTPRINT CHART HEIGHT CONTROLLER (CUSTOMIZABLE)
+   ========================================================================= */
+#footprintModal .modal-container {
+  height: 94vh; /* Adjust this to any height you need (e.g., 85vh, 90vh, 700px, 100%) */
+  max-height: 96vh;
+}
+@media (max-width: 767px) {
+  #footprintModal .modal-container {
+    height: 100%; /* Or set e.g., 92vh, 650px */
+    max-height: 100vh;
+  }
+}
+
 .tv-top-bar {
   display: flex; justify-content: space-between; align-items: center;
   padding: 6px 10px; border-bottom: 1px solid #1a1e29; background: #0c0e14;
@@ -478,7 +492,9 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 #fpChartCanvas:active { cursor: grabbing; }
 #fpPriceCanvas {
   width: 100%; height: 100%; display: block; background: #0d0f14; border-left: 1px solid #212530;
+  touch-action: none; -webkit-user-select: none; user-select: none;
 }
+.fp-chart-viewport { touch-action: none; }
 .fp-footer-summary {
   height: 92px; min-height: 92px; background: #0b0d12; border-top: 1px solid #212530;
   display: grid; grid-template-columns: 72px 1fr 72px; flex-shrink: 0; font-family: monospace; font-size: 10px;
@@ -843,6 +859,9 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <button class="fp-tf-btn active" id="fpBtn5" onclick="changeFpTF(5)">M5</button>
         <button class="fp-tf-btn" id="fpBtn15" onclick="changeFpTF(15)">M15</button>
         <button class="fp-tf-btn" onclick="autoCenterFp()">Center</button>
+        <button class="fp-tf-btn" id="fpFollowBtn" onclick="toggleFpFollow()" title="Auto-follow live price">Free</button>
+        <button class="fp-tf-btn" onclick="fpZoomOut()" title="Smaller candles">Zoom−</button>
+        <button class="fp-tf-btn" onclick="fpZoomIn()" title="Larger candles">Zoom+</button>
       </div>
       <button class="fp-exit-btn" onclick="closeFootprintModal()">✕ Exit</button>
     </div>
@@ -2632,11 +2651,20 @@ function stopAllTickFeed() {
 /* =====================================================================
    =============== REAL-MARKET FOOTPRINT ENGINE (IMPROVED) ===============
    ===================================================================== */
-const FP_TICK_SIZE = 0.10; // was 0.50 — finer ladder for live gold ticks
-const FP_CANDLE_WIDTH = 86;
-const FP_ROW_HEIGHT = 16;
-const FP_GAP = 12;
+const FP_TICK_SIZE = 0.10; // ladder bucket
+const FP_CANDLE_WIDTH_BASE = 54;  // smaller default candles
+const FP_ROW_HEIGHT_BASE = 13;
+const FP_GAP = 8;
 const FP_PRICE_W = 72;
+let fpZoom = 1.0;            // 0.30 .. 2.50
+let fpFollowLive = false;    // Free by default so user can pan/zoom freely
+function FP_ROW_HEIGHT() {
+  return Math.max(7, Math.round(FP_ROW_HEIGHT_BASE * fpZoom));
+}
+function FP_CANDLE_WIDTH() {
+  // Linear with zoom — − button and pinch can make candles clearly smaller
+  return Math.max(22, Math.round(FP_CANDLE_WIDTH_BASE * fpZoom));
+}
 let fpTfMinutes = 5;
 let fpLivePrice = 2650.00;
 let fpIsLoaded = true;
@@ -2647,6 +2675,12 @@ let fpPanX = 0;
 let fpPanY = 0;
 let fpIsDragging = false;
 let fpStartX = 0, fpStartY = 0;
+// Multi-touch (pinch + 2-finger pan)
+let fpPinching = false;
+let fpLastPinchDist = 0;
+let fpLastPinchMidX = 0;
+let fpLastPinchMidY = 0;
+let fpLastZoom = 1.0;
 
 const fpChartCanvas = document.getElementById('fpChartCanvas');
 const fpPriceCanvas = document.getElementById('fpPriceCanvas');
@@ -2925,16 +2959,61 @@ function autoCenterFp() {
   const w = fpChartCanvas.width / dpr;
   const h = fpChartCanvas.height / dpr;
   if (w < 10 || h < 10) return;
-  fpPanX = w - (fpCandles.length * (FP_CANDLE_WIDTH + FP_GAP)) - 28;
+  fpPanX = w - (fpCandles.length * (FP_CANDLE_WIDTH() + FP_GAP)) - 28;
   fpPanY = h / 2;
-  fpViewCenter = fpLivePrice; // lock view center to current live price
+  fpViewCenter = fpLivePrice;
   fpNeedsRedraw = true;
 }
 
 function fpPriceToY(p) {
-  // Stable view center + pixel snap → no sub-pixel jitter on grid/cells
   const center = fpViewCenter || fpLivePrice;
-  return Math.round(fpPanY - ((p - center) / FP_TICK_SIZE) * FP_ROW_HEIGHT);
+  return Math.round(fpPanY - ((p - center) / FP_TICK_SIZE) * FP_ROW_HEIGHT());
+}
+
+/** Soft vertical follow only — never locks pan/zoom. Skips while user is touching. */
+function ensureLivePriceVisible() {
+  if (!fpFollowLive || fpIsDragging || fpPinching) return;
+  if (!fpChartCanvas || !fpChartCanvas.height) return;
+  const dpr = window.devicePixelRatio || 1;
+  const h = fpChartCanvas.height / dpr;
+  if (h < 40) return;
+  const liveY = fpPriceToY(fpLivePrice);
+  // Wide margin so it only nudges when price is almost off-screen
+  const margin = Math.max(28, h * 0.12);
+  if (liveY < margin) {
+    const shiftPx = margin - liveY;
+    fpViewCenter = fpViewCenter + (shiftPx / FP_ROW_HEIGHT()) * FP_TICK_SIZE;
+    fpNeedsRedraw = true;
+  } else if (liveY > h - margin) {
+    const shiftPx = liveY - (h - margin);
+    fpViewCenter = fpViewCenter - (shiftPx / FP_ROW_HEIGHT()) * FP_TICK_SIZE;
+    fpNeedsRedraw = true;
+  }
+}
+
+function toggleFpFollow() {
+  fpFollowLive = !fpFollowLive;
+  const btn = document.getElementById('fpFollowBtn');
+  if (btn) {
+    btn.classList.toggle('active', fpFollowLive);
+    btn.textContent = fpFollowLive ? 'Follow' : 'Free';
+  }
+  if (fpFollowLive) {
+    autoCenterFp();
+  }
+}
+
+function fpZoomIn() {
+  fpZoom = Math.min(2.5, +(fpZoom + 0.12).toFixed(2));
+  fpNeedsRedraw = true;
+}
+function fpZoomOut() {
+  fpZoom = Math.max(0.30, +(fpZoom - 0.12).toFixed(2));
+  fpNeedsRedraw = true;
+}
+function fpSetZoom(z) {
+  fpZoom = Math.max(0.30, Math.min(2.5, +Number(z).toFixed(2)));
+  fpNeedsRedraw = true;
 }
 
 function renderFpFrame() {
@@ -2965,7 +3044,7 @@ function drawFpChart() {
   fpCtxChart.strokeStyle = '#141822';
   fpCtxChart.lineWidth = 1;
   const centerP = fpRound(fpLivePrice);
-  const halfRows = Math.ceil((h / 2) / FP_ROW_HEIGHT) + 4;
+  const halfRows = Math.ceil((h / 2) / FP_ROW_HEIGHT()) + 4;
   for (let i = -halfRows; i <= halfRows; i++) {
     const p = fpRound(centerP + i * FP_TICK_SIZE);
     const y = Math.floor(fpPriceToY(p));
@@ -2978,8 +3057,8 @@ function drawFpChart() {
   }
 
   fpCandles.forEach((c, idx) => {
-    const cx = fpPanX + idx * (FP_CANDLE_WIDTH + FP_GAP);
-    if (cx + FP_CANDLE_WIDTH < -40 || cx > w + 40) return;
+    const cx = fpPanX + idx * (FP_CANDLE_WIDTH() + FP_GAP);
+    if (cx + FP_CANDLE_WIDTH() < -40 || cx > w + 40) return;
 
     const isUp = c.close >= c.open;
     const bodyColor = isUp ? '#089981' : '#f23645';
@@ -2989,8 +3068,8 @@ function drawFpChart() {
     fpCtxChart.strokeStyle = bodyColor;
     fpCtxChart.lineWidth = 1.4;
     fpCtxChart.beginPath();
-    fpCtxChart.moveTo(cx + FP_CANDLE_WIDTH / 2, highY);
-    fpCtxChart.lineTo(cx + FP_CANDLE_WIDTH / 2, lowY);
+    fpCtxChart.moveTo(cx + FP_CANDLE_WIDTH() / 2, highY);
+    fpCtxChart.lineTo(cx + FP_CANDLE_WIDTH() / 2, lowY);
     fpCtxChart.stroke();
 
     const openY = fpPriceToY(c.open);
@@ -3000,22 +3079,22 @@ function drawFpChart() {
     const bodyH = Math.max(botY - topY, 2);
     fpCtxChart.strokeStyle = bodyColor;
     fpCtxChart.lineWidth = c.isLive ? 2 : 1.3;
-    fpCtxChart.strokeRect(cx, topY, FP_CANDLE_WIDTH, bodyH);
+    fpCtxChart.strokeRect(cx, topY, FP_CANDLE_WIDTH(), bodyH);
 
     if (c.isLive) {
       fpCtxChart.fillStyle = '#38bdf8';
       fpCtxChart.font = 'bold 9px monospace';
       fpCtxChart.textAlign = 'center';
-      fpCtxChart.fillText('LIVE ●', cx + FP_CANDLE_WIDTH / 2, highY - 7);
+      fpCtxChart.fillText('LIVE ●', cx + FP_CANDLE_WIDTH() / 2, highY - 7);
     }
 
-    const halfW = FP_CANDLE_WIDTH / 2;
+    const halfW = FP_CANDLE_WIDTH() / 2;
     const sortedPrices = Array.from(c.levels.keys()).sort((a, b) => a - b);
 
     sortedPrices.forEach((p, lIdx) => {
       const lvl = c.levels.get(p);
       const y = fpPriceToY(p);
-      if (y < -FP_ROW_HEIGHT || y > h + FP_ROW_HEIGHT) return;
+      if (y < -FP_ROW_HEIGHT() || y > h + FP_ROW_HEIGHT()) return;
 
       let buyImbalance = false;
       let sellImbalance = false;
@@ -3029,22 +3108,22 @@ function drawFpChart() {
 
       if (sellImbalance) {
         fpCtxChart.fillStyle = 'rgba(242, 54, 69, 0.28)';
-        fpCtxChart.fillRect(cx, y - FP_ROW_HEIGHT / 2, halfW, FP_ROW_HEIGHT);
+        fpCtxChart.fillRect(cx, y - FP_ROW_HEIGHT() / 2, halfW, FP_ROW_HEIGHT());
       }
       if (buyImbalance) {
         fpCtxChart.fillStyle = 'rgba(8, 153, 129, 0.28)';
-        fpCtxChart.fillRect(cx + halfW, y - FP_ROW_HEIGHT / 2, halfW, FP_ROW_HEIGHT);
+        fpCtxChart.fillRect(cx + halfW, y - FP_ROW_HEIGHT() / 2, halfW, FP_ROW_HEIGHT());
       }
 
       if (p === c.pocPrice) {
         fpCtxChart.strokeStyle = '#f59e0b';
         fpCtxChart.lineWidth = 1.6;
-        fpCtxChart.strokeRect(cx + 1, y - FP_ROW_HEIGHT / 2 + 1, FP_CANDLE_WIDTH - 2, FP_ROW_HEIGHT - 2);
+        fpCtxChart.strokeRect(cx + 1, y - FP_ROW_HEIGHT() / 2 + 1, FP_CANDLE_WIDTH() - 2, FP_ROW_HEIGHT() - 2);
       }
 
       fpCtxChart.strokeStyle = '#1b202c';
       fpCtxChart.lineWidth = 0.5;
-      fpCtxChart.strokeRect(cx, y - FP_ROW_HEIGHT / 2, FP_CANDLE_WIDTH, FP_ROW_HEIGHT);
+      fpCtxChart.strokeRect(cx, y - FP_ROW_HEIGHT() / 2, FP_CANDLE_WIDTH(), FP_ROW_HEIGHT());
 
       fpCtxChart.font = '9.5px monospace';
       fpCtxChart.textAlign = 'center';
@@ -3055,7 +3134,7 @@ function drawFpChart() {
       fpCtxChart.fillText(String(lvl.ask), cx + halfW * 1.5, y + 3.2);
 
       fpCtxChart.fillStyle = '#222838';
-      fpCtxChart.fillRect(cx + halfW - 0.5, y - FP_ROW_HEIGHT / 2, 1, FP_ROW_HEIGHT);
+      fpCtxChart.fillRect(cx + halfW - 0.5, y - FP_ROW_HEIGHT() / 2, 1, FP_ROW_HEIGHT());
     });
   });
 
@@ -3080,7 +3159,7 @@ function drawFpPriceLadder() {
   fpCtxPrice.textAlign = 'left';
 
   const centerP = fpRound(fpLivePrice);
-  const halfRows = Math.ceil((h / 2) / FP_ROW_HEIGHT) + 4;
+  const halfRows = Math.ceil((h / 2) / FP_ROW_HEIGHT()) + 4;
   for (let i = -halfRows; i <= halfRows; i++) {
     const p = fpRound(centerP + i * FP_TICK_SIZE);
     const y = Math.floor(fpPriceToY(p));
@@ -3120,10 +3199,10 @@ function drawFpTable() {
   fpCtxTable.textAlign = 'center';
 
   fpCandles.forEach((c, idx) => {
-    const cx = fpPanX + idx * (FP_CANDLE_WIDTH + FP_GAP);
-    if (cx + FP_CANDLE_WIDTH < -40 || cx > w + 40) return;
+    const cx = fpPanX + idx * (FP_CANDLE_WIDTH() + FP_GAP);
+    if (cx + FP_CANDLE_WIDTH() < -40 || cx > w + 40) return;
 
-    const midX = cx + FP_CANDLE_WIDTH / 2;
+    const midX = cx + FP_CANDLE_WIDTH() / 2;
     const isPos = c.delta >= 0;
 
     fpCtxTable.fillStyle = isPos ? '#089981' : '#f23645';
@@ -3139,48 +3218,172 @@ function drawFpTable() {
     fpCtxTable.fillText(String(c.volume), midX, 78);
 
     fpCtxTable.fillStyle = '#1c202b';
-    fpCtxTable.fillRect(cx + FP_CANDLE_WIDTH + 5, 0, 1, h);
+    fpCtxTable.fillRect(cx + FP_CANDLE_WIDTH() + 5, 0, 1, h);
   });
 }
 
 // Smooth pan — block page scroll / pull-to-refresh while dragging chart
+function fpTouchDist(t0, t1) {
+  const dx = t0.clientX - t1.clientX;
+  const dy = t0.clientY - t1.clientY;
+  return Math.hypot(dx, dy);
+}
+function fpTouchMid(t0, t1) {
+  return {
+    x: (t0.clientX + t1.clientX) / 2,
+    y: (t0.clientY + t1.clientY) / 2
+  };
+}
+
+// Mouse: 1-finger style pan
 fpChartCanvas.addEventListener('mousedown', (e) => {
   e.preventDefault();
   fpIsDragging = true;
+  fpPinching = false;
   fpStartX = e.clientX - fpPanX;
   fpStartY = e.clientY - fpPanY;
 });
 window.addEventListener('mousemove', (e) => {
-  if (!fpIsDragging) return;
+  if (!fpIsDragging || fpPinching) return;
   e.preventDefault();
   fpPanX = e.clientX - fpStartX;
   fpPanY = e.clientY - fpStartY;
-  fpNeedsRedraw = true; // instant redraw while dragging
+  fpNeedsRedraw = true;
 });
-window.addEventListener('mouseup', () => { fpIsDragging = false; });
+window.addEventListener('mouseup', () => { fpIsDragging = false; fpPinching = false; });
 
+// Touch: 1 finger = pan, 2 fingers = pan + pinch zoom
 fpChartCanvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
   if (e.touches.length === 1) {
-    e.preventDefault();
+    fpIsDragging = true;
+    fpPinching = false;
+    fpStartX = e.touches[0].clientX - fpPanX;
+    fpStartY = e.touches[0].clientY - fpPanY;
+  } else if (e.touches.length >= 2) {
+    fpIsDragging = true;
+    fpPinching = true;
+    const t0 = e.touches[0], t1 = e.touches[1];
+    fpLastPinchDist = fpTouchDist(t0, t1);
+    const mid = fpTouchMid(t0, t1);
+    fpLastPinchMidX = mid.x;
+    fpLastPinchMidY = mid.y;
+    fpLastZoom = fpZoom;
+  }
+}, { passive: false });
+
+fpChartCanvas.addEventListener('touchmove', (e) => {
+  e.preventDefault(); // block page scroll / pull-to-refresh
+  if (e.touches.length >= 2) {
+    // ---- two-finger: pan + pinch zoom ----
+    fpPinching = true;
+    fpIsDragging = true;
+    const t0 = e.touches[0], t1 = e.touches[1];
+    const dist = fpTouchDist(t0, t1);
+    const mid = fpTouchMid(t0, t1);
+
+    // Pan by midpoint movement
+    const dx = mid.x - fpLastPinchMidX;
+    const dy = mid.y - fpLastPinchMidY;
+    fpPanX += dx;
+    fpPanY += dy;
+    fpLastPinchMidX = mid.x;
+    fpLastPinchMidY = mid.y;
+
+    // Pinch zoom (relative to last distance)
+    if (fpLastPinchDist > 12) {
+      const scale = dist / fpLastPinchDist;
+      // Smooth + clamped
+      const next = Math.max(0.30, Math.min(2.5, fpZoom * scale));
+      if (Math.abs(next - fpZoom) > 0.002) {
+        fpZoom = +next.toFixed(3);
+      }
+    }
+    fpLastPinchDist = dist;
+    fpNeedsRedraw = true;
+  } else if (e.touches.length === 1 && !fpPinching) {
+    // ---- one-finger pan ----
+    fpIsDragging = true;
+    fpPanX = e.touches[0].clientX - fpStartX;
+    fpPanY = e.touches[0].clientY - fpStartY;
+    fpNeedsRedraw = true;
+  }
+}, { passive: false });
+
+function fpEndTouch(e) {
+  if (!e.touches || e.touches.length === 0) {
+    fpIsDragging = false;
+    fpPinching = false;
+  } else if (e.touches.length === 1) {
+    // Dropped from 2 → 1 finger: re-anchor single pan so no jump
+    fpPinching = false;
     fpIsDragging = true;
     fpStartX = e.touches[0].clientX - fpPanX;
     fpStartY = e.touches[0].clientY - fpPanY;
   }
-}, { passive: false });
-fpChartCanvas.addEventListener('touchmove', (e) => {
-  if (!fpIsDragging || e.touches.length !== 1) return;
-  e.preventDefault(); // stop page scroll / refresh
-  fpPanX = e.touches[0].clientX - fpStartX;
-  fpPanY = e.touches[0].clientY - fpStartY;
-  fpNeedsRedraw = true;
-}, { passive: false });
-window.addEventListener('touchend', () => { fpIsDragging = false; });
+}
+fpChartCanvas.addEventListener('touchend', fpEndTouch, { passive: false });
+fpChartCanvas.addEventListener('touchcancel', fpEndTouch, { passive: false });
+
+// Desktop wheel: scroll = pan, Ctrl/pinch-wheel = zoom
 fpChartCanvas.addEventListener('wheel', (e) => {
   e.preventDefault();
-  fpPanY -= e.deltaY;
-  fpPanX -= e.deltaX;
-  fpNeedsRedraw = true;
+  if (e.ctrlKey || e.metaKey) {
+    if (e.deltaY < 0) fpZoomIn();
+    else fpZoomOut();
+  } else {
+    fpPanY -= e.deltaY;
+    fpPanX -= e.deltaX;
+    fpNeedsRedraw = true;
+  }
 }, { passive: false });
+
+// Also allow gestures starting on price ladder / viewport edges
+(function bindFpGesturesTo(el) {
+  if (!el || el === fpChartCanvas) return;
+  el.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      fpIsDragging = true; fpPinching = false;
+      fpStartX = e.touches[0].clientX - fpPanX;
+      fpStartY = e.touches[0].clientY - fpPanY;
+    } else if (e.touches.length >= 2) {
+      fpIsDragging = true; fpPinching = true;
+      const t0 = e.touches[0], t1 = e.touches[1];
+      fpLastPinchDist = fpTouchDist(t0, t1);
+      const mid = fpTouchMid(t0, t1);
+      fpLastPinchMidX = mid.x; fpLastPinchMidY = mid.y;
+    }
+  }, { passive: false });
+  el.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (e.touches.length >= 2) {
+      fpPinching = true; fpIsDragging = true;
+      const t0 = e.touches[0], t1 = e.touches[1];
+      const dist = fpTouchDist(t0, t1);
+      const mid = fpTouchMid(t0, t1);
+      fpPanX += mid.x - fpLastPinchMidX;
+      fpPanY += mid.y - fpLastPinchMidY;
+      fpLastPinchMidX = mid.x; fpLastPinchMidY = mid.y;
+      if (fpLastPinchDist > 12) {
+        const next = Math.max(0.30, Math.min(2.5, fpZoom * (dist / fpLastPinchDist)));
+        if (Math.abs(next - fpZoom) > 0.002) fpZoom = +next.toFixed(3);
+      }
+      fpLastPinchDist = dist;
+      fpNeedsRedraw = true;
+    } else if (e.touches.length === 1 && !fpPinching) {
+      fpIsDragging = true;
+      fpPanX = e.touches[0].clientX - fpStartX;
+      fpPanY = e.touches[0].clientY - fpStartY;
+      fpNeedsRedraw = true;
+    }
+  }, { passive: false });
+  el.addEventListener('touchend', fpEndTouch, { passive: false });
+  el.addEventListener('touchcancel', fpEndTouch, { passive: false });
+})(document.getElementById('fpViewport'));
+(function(){ const p = document.getElementById('fpPriceCanvas'); if (p) {
+  p.style.pointerEvents = 'auto';
+}})();
 
 function changeFpTF(minutes) {
   fpTfMinutes = minutes;
@@ -3217,9 +3420,9 @@ function processFpTick(price, qty, isBuy) {
   if (!raw || raw < 500) return;
   const rounded = fpRound(raw); // ladder bucket only
   fpLivePrice = raw; // full precision for ticker
-  // View center is FROZEN — never moves on ticks or during pan.
-  // Only autoCenterFp() / Center button changes it → zero vertical jitter.
   if (!fpViewCenter) fpViewCenter = rounded;
+  // Soft follow: only when Follow is ON and user is not dragging
+  ensureLivePriceVisible();
   const tickerEl = document.getElementById('fpLiveTicker');
   if (tickerEl) tickerEl.textContent = raw.toFixed(2);
 
@@ -3274,6 +3477,11 @@ function openFootprintModal() {
   document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
   document.body.style.touchAction = 'none';
+  const followBtn = document.getElementById('fpFollowBtn');
+  if (followBtn) {
+    followBtn.classList.toggle('active', fpFollowLive);
+    followBtn.textContent = fpFollowLive ? 'Follow' : 'Free';
+  }
   requestAnimationFrame(() => {
     resizeFpCanvases();
     autoCenterFp();
