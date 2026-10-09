@@ -553,7 +553,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   transform: scale(0.9);
 }
 
-/* FOOTER AND METRIC ROW HEIGHT RESIZER */
+/* FOOTER AND BOTTOM-CORNER HEIGHT ADJUSTMENT CONTROLS */
 .fp-footer-summary {
   height: 92px; min-height: 50px; background: #0b0d12; border-top: 1px solid #212530;
   display: grid; grid-template-columns: 72px 1fr 72px; flex-shrink: 0; font-family: monospace; font-size: 10px;
@@ -958,8 +958,8 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <button class="fp-tf-btn active" id="fpBtn5" onclick="changeFpTF(5)">M5</button>
         <button class="fp-tf-btn" id="fpBtn15" onclick="changeFpTF(15)">M15</button>
         <button class="fp-tf-btn" id="fpFollowBtn" onclick="toggleFpFollow()" title="Auto-follow live price">Follow</button>
-        <button class="fp-tf-btn" onclick="fpZoomOut()" title="Smaller candles">Zoom−</button>
-        <button class="fp-tf-btn" onclick="fpZoomIn()" title="Larger candles">Zoom+</button>
+        <button class="fp-tf-btn" onclick="fpZoomOut()" title="Smaller candles">−</button>
+        <button class="fp-tf-btn" onclick="fpZoomIn()" title="Larger candles">+</button>
       </div>
       <button class="fp-exit-btn" onclick="closeFootprintModal()">✕ Exit</button>
     </div>
@@ -1361,7 +1361,7 @@ function updateChartBiasesLive() {
     if (badge && info) { badge.textContent = info.text; badge.className = `chip-badge ${info.class}`; }
     if (val && info) { const sign = info.delta >= 0 ? '+' : ''; val.textContent = `${sign}${info.delta.toFixed(2)}%`; val.className = info.delta >= 0 ? 'pos' : 'neg'; }
     if (fBadge && info) { fBadge.textContent = info.text; fBadge.className = `front-badge ${info.class}`; }
-    if (fVal && info) { const sign = info.delta >= 0 ? '+' : ''; fVal.textContent = `${sign}${info.delta.toFixed(2)}%`; fVal.className = info.delta >= 0 ? 'pos' : 'neg'; }
+    if (fVal && info) { const sign = info.delta >= 0 ? '+' : ''; fVal.textContent = `${sign}${info.delta.toFixed(2)}%`; val.className = info.delta >= 0 ? 'pos' : 'neg'; }
   };
 
   ['3m', '5m', '15m', '1h', '1d'].forEach(updateUI);
@@ -2972,7 +2972,6 @@ async function loadRealFootprintCandles(minutes) {
   fpCandles = list;
   fpLivePrice = fpRound(livePx);
   fpLastRealPrice = livePx;
-  autoCenterFp();
   return true;
 }
 
@@ -3009,7 +3008,6 @@ function checkFpRollover() {
     });
 
     if (fpCandles.length > 28) fpCandles.shift();
-    autoCenterFp();
     fpNeedsRedraw = true;
   }
 }
@@ -3037,7 +3035,7 @@ function resizeFpCanvases() {
   fpTableCanvas.height = Math.round(footerH * dpr);
   fpCtxTable.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  autoCenterFp();
+  if (!fpViewCenter) autoCenterFp();
 }
 
 function autoCenterFp() {
@@ -3540,13 +3538,12 @@ function openFootprintModal() {
   }
   requestAnimationFrame(() => {
     resizeFpCanvases();
-    autoCenterFp();
+    if (!fpViewCenter) autoCenterFp();
     fpNeedsRedraw = true;
   });
   loadRealFootprintCandles(fpTfMinutes).then(ok => {
     if (ok) {
       resizeFpCanvases();
-      autoCenterFp();
       fpNeedsRedraw = true;
     }
   });
