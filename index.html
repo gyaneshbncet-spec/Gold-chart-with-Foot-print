@@ -495,63 +495,114 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 }
 .fp-chart-viewport { touch-action: none; }
 
-/* FLOATING BOTTOM WIDTH CONTROLS */
-.fp-bottom-width-bar {
+/* BOTTOM-MIDDLE HOVER/CURSOR WIDTH CONTROLLER (+ and - ONLY) */
+.fp-width-hover-zone {
   position: absolute;
-  bottom: 12px;
+  bottom: 0;
   left: calc((100% - 72px) / 2);
   transform: translateX(-50%);
+  height: 48px;
+  padding: 8px 16px;
   display: flex;
   align-items: center;
-  background: rgba(17, 20, 29, 0.92);
-  border: 1px solid #283042;
+  justify-content: center;
+  z-index: 25;
+  pointer-events: auto;
+}
+.fp-width-hover-zone .fp-w-btn-group {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  transform: translateY(4px);
+  background: rgba(15, 18, 26, 0.94);
+  border: 1px solid #283246;
   border-radius: 20px;
-  padding: 3px 6px;
-  gap: 6px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
-  z-index: 10;
-  user-select: none;
-  backdrop-filter: blur(6px);
+  padding: 3px 8px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.8);
+}
+.fp-width-hover-zone:hover .fp-w-btn-group,
+.fp-width-hover-zone:focus-within .fp-w-btn-group {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 .fp-w-btn {
-  background: #1c2230;
-  border: 1px solid #333d52;
-  color: #cbd5e1;
-  font-size: 11px;
+  background: #19202f;
+  border: 1px solid #333f57;
+  color: #e2e8f0;
+  font-size: 14px;
   font-weight: 800;
-  padding: 3px 10px;
-  border-radius: 14px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
   cursor: pointer;
-  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 .fp-w-btn:hover {
-  background: #252e42;
-  color: #ffffff;
+  background: #2563eb;
   border-color: #3b82f6;
+  color: #ffffff;
 }
 .fp-w-btn:active {
-  background: #3b82f6;
-  color: #ffffff;
-  transform: scale(0.92);
-}
-.fp-w-label {
-  font-size: 9.5px;
-  font-weight: 700;
-  color: #8e95a5;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  transform: scale(0.9);
 }
 
+/* FOOTER AND METRIC ROW HEIGHT RESIZER */
 .fp-footer-summary {
-  height: 92px; min-height: 92px; background: #0b0d12; border-top: 1px solid #212530;
+  height: 92px; min-height: 50px; background: #0b0d12; border-top: 1px solid #212530;
   display: grid; grid-template-columns: 72px 1fr 72px; flex-shrink: 0; font-family: monospace; font-size: 10px;
+  transition: height 0.1s ease;
 }
 .fp-metrics-labels {
   background: #11141c; border-right: 1px solid #212530; display: flex; flex-direction: column;
   justify-content: space-around; padding: 4px 5px; color: #6b7280;
+  overflow: hidden;
 }
 #fpTableCanvas { width: 100%; height: 100%; display: block; }
-.fp-footer-corner { background: #0d0f14; border-left: 1px solid #212530; }
+.fp-footer-corner {
+  background: #0d0f14;
+  border-left: 1px solid #212530;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px;
+  user-select: none;
+}
+.fp-corner-h-btn {
+  width: 28px;
+  height: 28px;
+  background: #151a24;
+  border: 1px solid #2a3449;
+  color: #94a3b8;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all 0.15s;
+}
+.fp-corner-h-btn:hover {
+  background: #1e293b;
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+.fp-corner-h-btn:active {
+  background: #0284c7;
+  color: #ffffff;
+  transform: scale(0.92);
+}
+
 @media (max-width: 480px) {
   .fp-header { padding: 0 6px; gap: 4px; }
   .fp-symbol-badge { font-size: 10px; padding: 2px 4px; }
@@ -559,8 +610,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   .fp-live-status { display: none; }
   .fp-tf-btn { padding: 3px 5px; font-size: 10px; }
   .fp-exit-btn { padding: 4px 8px; font-size: 10px; }
-  .fp-bottom-width-bar { bottom: 8px; padding: 2px 4px; gap: 4px; }
-  .fp-w-btn { padding: 2px 8px; font-size: 10px; }
+  .fp-width-hover-zone .fp-w-btn-group { opacity: 0.9; pointer-events: auto; }
 }
 </style>
 </head>
@@ -894,7 +944,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   </div>
 </div>
 
-<!-- AUTO-FITTED AI FOOTPRINT MODAL WITH SCALE HEIGHT AND BOTTOM WIDTH CONTROLS -->
+<!-- AUTO-FITTED AI FOOTPRINT MODAL -->
 <div class="modal-overlay" id="footprintModal">
   <div class="modal-container">
     <div class="fp-header">
@@ -907,10 +957,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <button class="fp-tf-btn" id="fpBtn1" onclick="changeFpTF(1)">M1</button>
         <button class="fp-tf-btn active" id="fpBtn5" onclick="changeFpTF(5)">M5</button>
         <button class="fp-tf-btn" id="fpBtn15" onclick="changeFpTF(15)">M15</button>
-        <button class="fp-tf-btn" onclick="autoCenterFp()" title="Auto-Fit screen height">Auto Fit</button>
         <button class="fp-tf-btn" id="fpFollowBtn" onclick="toggleFpFollow()" title="Auto-follow live price">Follow</button>
-        <button class="fp-tf-btn" onclick="adjustHeight(1.15)" title="Expand Candle Height">H+</button>
-        <button class="fp-tf-btn" onclick="adjustHeight(0.85)" title="Compress Candle Height">H−</button>
         <button class="fp-tf-btn" onclick="fpZoomOut()" title="Smaller candles">Zoom−</button>
         <button class="fp-tf-btn" onclick="fpZoomIn()" title="Larger candles">Zoom+</button>
       </div>
@@ -921,23 +968,29 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
       <canvas id="fpChartCanvas"></canvas>
       <canvas id="fpPriceCanvas" title="Drag up/down to adjust scale height"></canvas>
       
-      <!-- FLOATING MIDDLE-BOTTOM WIDTH CONTROLLER -->
-      <div class="fp-bottom-width-bar">
-        <span class="fp-w-label">Width</span>
-        <button class="fp-w-btn" onclick="adjustCandleWidth(0.85)" title="Narrow Candle Width">W−</button>
-        <button class="fp-w-btn" onclick="adjustCandleWidth(1.15)" title="Wider Candle Width">W+</button>
+      <!-- HOVER/CURSOR BOTTOM-MIDDLE WIDTH CONTROLLER (+ and - only) -->
+      <div class="fp-width-hover-zone" title="Move cursor here to adjust width">
+        <div class="fp-w-btn-group">
+          <button class="fp-w-btn" onclick="adjustCandleWidth(0.85)" title="Narrow Candle Width">−</button>
+          <button class="fp-w-btn" onclick="adjustCandleWidth(1.15)" title="Wider Candle Width">+</button>
+        </div>
       </div>
     </div>
 
-    <div class="fp-footer-summary">
-      <div class="fp-metrics-labels">
+    <div class="fp-footer-summary" id="fpFooterSummary">
+      <div class="fp-metrics-labels" id="fpMetricsLabels">
         <div>Delta</div>
         <div>Delta %</div>
         <div>Session CVD</div>
         <div>Volume</div>
       </div>
       <canvas id="fpTableCanvas"></canvas>
-      <div class="fp-footer-corner"></div>
+      
+      <!-- BLANK BOTTOM-RIGHT CORNER HEIGHT CONTROLLER (+ and -) -->
+      <div class="fp-footer-corner" title="Adjust Delta / Volume section height">
+        <button class="fp-corner-h-btn" onclick="adjustFooterHeight(1.15)" title="Expand Footer Height">+</button>
+        <button class="fp-corner-h-btn" onclick="adjustFooterHeight(0.85)" title="Compress Footer Height">−</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2671,10 +2724,10 @@ function stopAllTickFeed() {
 }
 
 /* =====================================================================
-   === FIXED FOOTPRINT ENGINE: HEIGHT & BOTTOM-MIDDLE WIDTH RESIZING ===
+   === FOOTPRINT ENGINE: CLEANED CONTROLS & RESIZING LOGIC ===
    ===================================================================== */
-let FP_TICK_SIZE = 0.50; // Dynamic step size tailored for Gold
-let fpCandleWidthCustom = 58; // Base width adjustable via bottom buttons
+let FP_TICK_SIZE = 0.50;
+let fpCandleWidthCustom = 58;
 const FP_GAP = 8;
 const FP_PRICE_W = 72;
 let fpZoom = 1.0;
@@ -2693,10 +2746,12 @@ let fpLastPinchDist = 0;
 let fpLastPinchMidX = 0;
 let fpLastPinchMidY = 0;
 
-// Price Scale Vertical Dragging State
 let isDraggingPriceScale = false;
 let priceScaleStartY = 0;
 let priceScaleStartPixelsPerDollar = 22;
+
+// Footer metrics height control (Delta / Volume rows)
+let fpFooterHeight = 92;
 
 const fpChartCanvas = document.getElementById('fpChartCanvas');
 const fpPriceCanvas = document.getElementById('fpPriceCanvas');
@@ -2707,15 +2762,26 @@ const fpCtxTable = fpTableCanvas.getContext('2d');
 
 let fpCandles = [];
 let fpViewCenter = 0;
-let fpPixelsPerDollar = 22; // Dynamic vertical height multiplier
+let fpPixelsPerDollar = 22;
 
 function FP_CANDLE_WIDTH() {
   return Math.max(24, Math.round(fpCandleWidthCustom * fpZoom));
 }
 
-// Bottom Button Width Controller
 function adjustCandleWidth(multiplier) {
   fpCandleWidthCustom = Math.max(24, Math.min(160, Math.round(fpCandleWidthCustom * multiplier)));
+  fpNeedsRedraw = true;
+}
+
+// Adjust Delta, CVD, Volume footer height without touching chart scale
+function adjustFooterHeight(multiplier) {
+  fpFooterHeight = Math.max(50, Math.min(200, Math.round(fpFooterHeight * multiplier)));
+  const footerWrap = document.getElementById('fpFooterSummary');
+  if (footerWrap) {
+    footerWrap.style.height = fpFooterHeight + 'px';
+    footerWrap.style.minHeight = fpFooterHeight + 'px';
+  }
+  resizeFpCanvases();
   fpNeedsRedraw = true;
 }
 
@@ -2966,17 +3032,12 @@ function resizeFpCanvases() {
   fpPriceCanvas.height = Math.round(h * dpr);
   fpCtxPrice.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const footerH = 92;
+  const footerH = fpFooterHeight;
   fpTableCanvas.width = Math.round(chartW * dpr);
   fpTableCanvas.height = Math.round(footerH * dpr);
   fpCtxTable.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   autoCenterFp();
-}
-
-function adjustHeight(multiplier) {
-  fpPixelsPerDollar = Math.max(5, Math.min(120, fpPixelsPerDollar * multiplier));
-  fpNeedsRedraw = true;
 }
 
 function autoCenterFp() {
@@ -3215,11 +3276,17 @@ function drawFpPriceLadder() {
 function drawFpTable() {
   const dpr = window.devicePixelRatio || 1;
   const w = fpTableCanvas.width / dpr;
-  const h = 92;
+  const h = fpFooterHeight;
   if (w < 10) return;
   fpCtxTable.clearRect(0, 0, w, h);
   fpCtxTable.font = '10.5px monospace';
   fpCtxTable.textAlign = 'center';
+
+  // Proportional 4-row positions based on footer height
+  const rowY1 = Math.round(h * 0.18);
+  const rowY2 = Math.round(h * 0.40);
+  const rowY3 = Math.round(h * 0.63);
+  const rowY4 = Math.round(h * 0.85);
 
   fpCandles.forEach((c, idx) => {
     const cx = fpPanX + idx * (FP_CANDLE_WIDTH() + FP_GAP);
@@ -3229,16 +3296,16 @@ function drawFpTable() {
     const isPos = c.delta >= 0;
 
     fpCtxTable.fillStyle = isPos ? '#089981' : '#f23645';
-    fpCtxTable.fillText((isPos ? '+' : '') + c.delta, midX, 16);
+    fpCtxTable.fillText((isPos ? '+' : '') + c.delta, midX, rowY1);
 
     fpCtxTable.fillStyle = isPos ? '#34d399' : '#f87171';
-    fpCtxTable.fillText(c.deltaPct + '%', midX, 36);
+    fpCtxTable.fillText(c.deltaPct + '%', midX, rowY2);
 
     fpCtxTable.fillStyle = '#38bdf8';
-    fpCtxTable.fillText(String(c.sessionCVD), midX, 58);
+    fpCtxTable.fillText(String(c.sessionCVD), midX, rowY3);
 
     fpCtxTable.fillStyle = '#94a3b8';
-    fpCtxTable.fillText(String(c.volume), midX, 78);
+    fpCtxTable.fillText(String(c.volume), midX, rowY4);
 
     fpCtxTable.fillStyle = '#1c202b';
     fpCtxTable.fillRect(cx + FP_CANDLE_WIDTH() + 5, 0, 1, h);
