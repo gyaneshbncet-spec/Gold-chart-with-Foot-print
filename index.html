@@ -491,8 +491,57 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 #fpPriceCanvas {
   width: 100%; height: 100%; display: block; background: #0d0f14; border-left: 1px solid #212530;
   touch-action: none; -webkit-user-select: none; user-select: none;
+  cursor: ns-resize;
 }
 .fp-chart-viewport { touch-action: none; }
+
+/* FLOATING BOTTOM WIDTH CONTROLS */
+.fp-bottom-width-bar {
+  position: absolute;
+  bottom: 12px;
+  left: calc((100% - 72px) / 2);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  background: rgba(17, 20, 29, 0.92);
+  border: 1px solid #283042;
+  border-radius: 20px;
+  padding: 3px 6px;
+  gap: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+  z-index: 10;
+  user-select: none;
+  backdrop-filter: blur(6px);
+}
+.fp-w-btn {
+  background: #1c2230;
+  border: 1px solid #333d52;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.fp-w-btn:hover {
+  background: #252e42;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+.fp-w-btn:active {
+  background: #3b82f6;
+  color: #ffffff;
+  transform: scale(0.92);
+}
+.fp-w-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8e95a5;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
 .fp-footer-summary {
   height: 92px; min-height: 92px; background: #0b0d12; border-top: 1px solid #212530;
   display: grid; grid-template-columns: 72px 1fr 72px; flex-shrink: 0; font-family: monospace; font-size: 10px;
@@ -510,6 +559,8 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   .fp-live-status { display: none; }
   .fp-tf-btn { padding: 3px 5px; font-size: 10px; }
   .fp-exit-btn { padding: 4px 8px; font-size: 10px; }
+  .fp-bottom-width-bar { bottom: 8px; padding: 2px 4px; gap: 4px; }
+  .fp-w-btn { padding: 2px 8px; font-size: 10px; }
 }
 </style>
 </head>
@@ -843,7 +894,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   </div>
 </div>
 
-<!-- AUTO-FITTED AI FOOTPRINT MODAL -->
+<!-- AUTO-FITTED AI FOOTPRINT MODAL WITH SCALE HEIGHT AND BOTTOM WIDTH CONTROLS -->
 <div class="modal-overlay" id="footprintModal">
   <div class="modal-container">
     <div class="fp-header">
@@ -856,8 +907,10 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <button class="fp-tf-btn" id="fpBtn1" onclick="changeFpTF(1)">M1</button>
         <button class="fp-tf-btn active" id="fpBtn5" onclick="changeFpTF(5)">M5</button>
         <button class="fp-tf-btn" id="fpBtn15" onclick="changeFpTF(15)">M15</button>
-        <button class="fp-tf-btn" onclick="autoCenterFp()" title="Auto-Fit Screen">Auto Fit</button>
+        <button class="fp-tf-btn" onclick="autoCenterFp()" title="Auto-Fit screen height">Auto Fit</button>
         <button class="fp-tf-btn" id="fpFollowBtn" onclick="toggleFpFollow()" title="Auto-follow live price">Follow</button>
+        <button class="fp-tf-btn" onclick="adjustHeight(1.15)" title="Expand Candle Height">H+</button>
+        <button class="fp-tf-btn" onclick="adjustHeight(0.85)" title="Compress Candle Height">H−</button>
         <button class="fp-tf-btn" onclick="fpZoomOut()" title="Smaller candles">Zoom−</button>
         <button class="fp-tf-btn" onclick="fpZoomIn()" title="Larger candles">Zoom+</button>
       </div>
@@ -866,7 +919,14 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 
     <div class="fp-chart-viewport" id="fpViewport">
       <canvas id="fpChartCanvas"></canvas>
-      <canvas id="fpPriceCanvas"></canvas>
+      <canvas id="fpPriceCanvas" title="Drag up/down to adjust scale height"></canvas>
+      
+      <!-- FLOATING MIDDLE-BOTTOM WIDTH CONTROLLER -->
+      <div class="fp-bottom-width-bar">
+        <span class="fp-w-label">Width</span>
+        <button class="fp-w-btn" onclick="adjustCandleWidth(0.85)" title="Narrow Candle Width">W−</button>
+        <button class="fp-w-btn" onclick="adjustCandleWidth(1.15)" title="Wider Candle Width">W+</button>
+      </div>
     </div>
 
     <div class="fp-footer-summary">
@@ -2611,10 +2671,10 @@ function stopAllTickFeed() {
 }
 
 /* =====================================================================
-   === FIXED FOOTPRINT ENGINE: FULL AUTO-FIT ACROSS ALL SCREEN SIZES ===
+   === FIXED FOOTPRINT ENGINE: HEIGHT & BOTTOM-MIDDLE WIDTH RESIZING ===
    ===================================================================== */
 let FP_TICK_SIZE = 0.50; // Dynamic step size tailored for Gold
-const FP_CANDLE_WIDTH_BASE = 58;
+let fpCandleWidthCustom = 58; // Base width adjustable via bottom buttons
 const FP_GAP = 8;
 const FP_PRICE_W = 72;
 let fpZoom = 1.0;
@@ -2633,6 +2693,11 @@ let fpLastPinchDist = 0;
 let fpLastPinchMidX = 0;
 let fpLastPinchMidY = 0;
 
+// Price Scale Vertical Dragging State
+let isDraggingPriceScale = false;
+let priceScaleStartY = 0;
+let priceScaleStartPixelsPerDollar = 22;
+
 const fpChartCanvas = document.getElementById('fpChartCanvas');
 const fpPriceCanvas = document.getElementById('fpPriceCanvas');
 const fpTableCanvas = document.getElementById('fpTableCanvas');
@@ -2642,10 +2707,16 @@ const fpCtxTable = fpTableCanvas.getContext('2d');
 
 let fpCandles = [];
 let fpViewCenter = 0;
-let fpPixelsPerDollar = 22; // Computed dynamically per screen
+let fpPixelsPerDollar = 22; // Dynamic vertical height multiplier
 
 function FP_CANDLE_WIDTH() {
-  return Math.max(34, Math.round(FP_CANDLE_WIDTH_BASE * fpZoom));
+  return Math.max(24, Math.round(fpCandleWidthCustom * fpZoom));
+}
+
+// Bottom Button Width Controller
+function adjustCandleWidth(multiplier) {
+  fpCandleWidthCustom = Math.max(24, Math.min(160, Math.round(fpCandleWidthCustom * multiplier)));
+  fpNeedsRedraw = true;
 }
 
 function fpRound(p) {
@@ -2903,7 +2974,11 @@ function resizeFpCanvases() {
   autoCenterFp();
 }
 
-// Automatically fits candles to stay completely visible inside any device viewport
+function adjustHeight(multiplier) {
+  fpPixelsPerDollar = Math.max(5, Math.min(120, fpPixelsPerDollar * multiplier));
+  fpNeedsRedraw = true;
+}
+
 function autoCenterFp() {
   const dpr = window.devicePixelRatio || 1;
   const w = fpChartCanvas.width / dpr;
@@ -2917,7 +2992,6 @@ function autoCenterFp() {
   });
 
   const range = Math.max(maxP - minP, 3.5);
-  // Auto-fit pixels per dollar so candles occupy ~65% of viewport
   fpPixelsPerDollar = (h * 0.65) / range;
   fpViewCenter = (maxP + minP) / 2;
 
@@ -2932,7 +3006,7 @@ function fpPriceToY(p) {
 }
 
 function ensureLivePriceVisible() {
-  if (!fpFollowLive || fpIsDragging || fpPinching) return;
+  if (!fpFollowLive || fpIsDragging || fpPinching || isDraggingPriceScale) return;
   const dpr = window.devicePixelRatio || 1;
   const h = fpChartCanvas.height / dpr;
   if (h < 40) return;
@@ -3171,7 +3245,52 @@ function drawFpTable() {
   });
 }
 
-// Interactive gestures
+/* --- PRICE SCALE DRAG-TO-RESIZE LISTENERS --- */
+fpPriceCanvas.addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  isDraggingPriceScale = true;
+  priceScaleStartY = e.clientY;
+  priceScaleStartPixelsPerDollar = fpPixelsPerDollar;
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (isDraggingPriceScale) {
+    e.preventDefault();
+    const diff = priceScaleStartY - e.clientY;
+    const factor = Math.max(0.2, 1 + (diff / 120));
+    fpPixelsPerDollar = Math.max(5, Math.min(120, priceScaleStartPixelsPerDollar * factor));
+    fpNeedsRedraw = true;
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  if (isDraggingPriceScale) isDraggingPriceScale = false;
+});
+
+fpPriceCanvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    e.preventDefault();
+    isDraggingPriceScale = true;
+    priceScaleStartY = e.touches[0].clientY;
+    priceScaleStartPixelsPerDollar = fpPixelsPerDollar;
+  }
+}, { passive: false });
+
+fpPriceCanvas.addEventListener('touchmove', (e) => {
+  if (isDraggingPriceScale && e.touches.length === 1) {
+    e.preventDefault();
+    const diff = priceScaleStartY - e.touches[0].clientY;
+    const factor = Math.max(0.2, 1 + (diff / 120));
+    fpPixelsPerDollar = Math.max(5, Math.min(120, priceScaleStartPixelsPerDollar * factor));
+    fpNeedsRedraw = true;
+  }
+}, { passive: false });
+
+fpPriceCanvas.addEventListener('touchend', () => {
+  isDraggingPriceScale = false;
+}, { passive: false });
+
+// Mouse dragging & touch gestures on main chart
 function fpTouchDist(t0, t1) {
   return Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
 }
