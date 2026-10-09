@@ -347,16 +347,14 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
   }
 }
 
-/* =========================================================================
-   AI FOOTPRINT CHART HEIGHT CONTROLLER (CUSTOMIZABLE)
-   ========================================================================= */
+/* AI FOOTPRINT MODAL CONTAINER */
 #footprintModal .modal-container {
-  height: 94vh; /* Adjust this to any height you need (e.g., 85vh, 90vh, 700px, 100%) */
+  height: 94vh;
   max-height: 96vh;
 }
 @media (max-width: 767px) {
   #footprintModal .modal-container {
-    height: 100%; /* Or set e.g., 92vh, 650px */
+    height: 100%;
     max-height: 100vh;
   }
 }
@@ -2486,15 +2484,12 @@ function closeChartModal() {
   document.getElementById("chartModal").style.display = "none";
 }
 
-
 /* =====================================================================
    =============== ALLTICK LIVE TICK FEED (for Footprint) =================
-   Get free token: https://alltick.co/register
-   Paste token below. Leave empty to use biquote only.
    ===================================================================== */
-const ALLTICK_TOKEN = "09c2bc4b8ae0274c3dfc0f1586fb5295-c-app"; // AllTick 7-day trial
+const ALLTICK_TOKEN = "09c2bc4b8ae0274c3dfc0f1586fb5295-c-app";
 const ALLTICK_WS_URL = "wss://quote.alltick.co/quote-b-ws-api";
-const ALLTICK_SYMBOL = "XAUUSD"; // or "GOLD"
+const ALLTICK_SYMBOL = "XAUUSD";
 
 let alltickWs = null;
 let alltickConnected = false;
@@ -2502,21 +2497,15 @@ let alltickLastPrice = 0;
 let alltickHeartbeatTimer = null;
 
 function startAllTickFeed() {
-  if (!ALLTICK_TOKEN || ALLTICK_TOKEN.length < 8) {
-    console.log("[AllTick] No token set — using biquote price only");
-    return;
-  }
-  if (alltickWs && (alltickWs.readyState === WebSocket.OPEN || alltickWs.readyState === WebSocket.CONNECTING)) {
-    return;
-  }
+  if (!ALLTICK_TOKEN || ALLTICK_TOKEN.length < 8) return;
+  if (alltickWs && (alltickWs.readyState === WebSocket.OPEN || alltickWs.readyState === WebSocket.CONNECTING)) return;
+
   try {
     const url = ALLTICK_WS_URL + "?token=" + encodeURIComponent(ALLTICK_TOKEN);
     alltickWs = new WebSocket(url);
 
     alltickWs.onopen = function () {
       alltickConnected = true;
-      console.log("[AllTick] Connected");
-      // Subscribe last trade / tick (cmd 22004)
       const subTrade = {
         cmd_id: 22004,
         seq_id: 1,
@@ -2524,7 +2513,6 @@ function startAllTickFeed() {
         data: { symbol_list: [{ code: ALLTICK_SYMBOL }] }
       };
       alltickWs.send(JSON.stringify(subTrade));
-      // Also try depth for bid/ask side (cmd 22002)
       const subDepth = {
         cmd_id: 22002,
         seq_id: 2,
@@ -2536,31 +2524,23 @@ function startAllTickFeed() {
       if (alltickHeartbeatTimer) clearInterval(alltickHeartbeatTimer);
       alltickHeartbeatTimer = setInterval(function () {
         if (alltickWs && alltickWs.readyState === WebSocket.OPEN) {
-          alltickWs.send(JSON.stringify({
-            cmd_id: 22000,
-            seq_id: 99,
-            trace: "hb",
-            data: {}
-          }));
+          alltickWs.send(JSON.stringify({ cmd_id: 22000, seq_id: 99, trace: "hb", data: {} }));
         }
       }, 10000);
 
       const lbl = document.getElementById("fpWsLabel");
       if (lbl) lbl.textContent = "ALLTICK LIVE";
       const dot = document.getElementById("fpWsDot");
-      if (dot) { dot.style.background = "#10b981"; }
+      if (dot) dot.style.background = "#10b981";
     };
 
     alltickWs.onmessage = function (ev) {
       try {
         const msg = JSON.parse(ev.data);
-        const cmd = msg.cmd_id || msg.cmdId || 0;
         const data = msg.data || msg;
-
         let price = null;
         let isBuy = null;
 
-        // Common AllTick trade push shapes
         const candidates = [];
         if (data.price != null) candidates.push(data.price);
         if (data.last != null) candidates.push(data.last);
@@ -2571,7 +2551,6 @@ function startAllTickFeed() {
           const b = parseFloat(data.bid), a = parseFloat(data.ask);
           if (b > 500 && a > 500) candidates.push((b + a) / 2);
         }
-        // Nested tick list
         const lists = [data.tick_list, data.list, data.ticks, data.quotes];
         for (const lst of lists) {
           if (Array.isArray(lst) && lst.length) {
@@ -2585,7 +2564,6 @@ function startAllTickFeed() {
             }
           }
         }
-        // Depth book
         if (data.bids && data.asks) {
           const bid = parseFloat((data.bids[0] && (data.bids[0].price || data.bids[0][0])) || 0);
           const ask = parseFloat((data.asks[0] && (data.asks[0].price || data.asks[0][0])) || 0);
@@ -2598,44 +2576,29 @@ function startAllTickFeed() {
         }
 
         if (price == null) return;
-
-        if (isBuy === null) {
-          isBuy = (alltickLastPrice > 0) ? (price >= alltickLastPrice) : true;
-        }
+        if (isBuy === null) isBuy = (alltickLastPrice > 0) ? (price >= alltickLastPrice) : true;
         const qty = 1 + Math.floor(Math.random() * 2);
         alltickLastPrice = price;
 
-        if (state) {
-          state.gold_price = parseFloat(price.toFixed(2));
-        }
-        // Always push into footprint + header ticker
-        if (typeof processFpTick === "function") {
-          processFpTick(price, qty, isBuy);
-        }
+        if (state) state.gold_price = parseFloat(price.toFixed(2));
+        if (typeof processFpTick === "function") processFpTick(price, qty, isBuy);
+
         const tickerEl = document.getElementById("fpLiveTicker");
         if (tickerEl) tickerEl.textContent = price.toFixed(2);
         const lbl = document.getElementById("fpWsLabel");
         if (lbl) lbl.textContent = "ALLTICK LIVE";
-      } catch (e) {
-        // ignore heartbeats / parse noise
-      }
+      } catch (e) {}
     };
 
     alltickWs.onclose = function () {
       alltickConnected = false;
-      console.log("[AllTick] Disconnected — reconnect in 4s");
       const lbl = document.getElementById("fpWsLabel");
       if (lbl) lbl.textContent = "RECONNECT…";
       if (alltickHeartbeatTimer) { clearInterval(alltickHeartbeatTimer); alltickHeartbeatTimer = null; }
       setTimeout(startAllTickFeed, 4000);
     };
-
-    alltickWs.onerror = function () {
-      console.log("[AllTick] Socket error");
-    };
-  } catch (e) {
-    console.log("[AllTick] Failed to start:", e);
-  }
+    alltickWs.onerror = function () {};
+  } catch (e) {}
 }
 
 function stopAllTickFeed() {
@@ -2647,27 +2610,17 @@ function stopAllTickFeed() {
   alltickConnected = false;
 }
 
-
 /* =====================================================================
-   =============== REAL-MARKET FOOTPRINT ENGINE (IMPROVED) ===============
+   === FIXED FOOTPRINT ENGINE: AUTO-FIT & PROPORTIONAL CANDLE SCALING ===
    ===================================================================== */
-const FP_TICK_SIZE = 0.10; // ladder bucket
-const FP_CANDLE_WIDTH_BASE = 54;  // smaller default candles
-const FP_ROW_HEIGHT_BASE = 13;
+let FP_TICK_SIZE = 0.50; // Dynamic bucket for gold to prevent overflowing
+const FP_CANDLE_WIDTH_BASE = 58;
 const FP_GAP = 8;
 const FP_PRICE_W = 72;
-let fpZoom = 1.0;            // 0.30 .. 2.50
-let fpFollowLive = false;    // Free by default so user can pan/zoom freely
-function FP_ROW_HEIGHT() {
-  return Math.max(7, Math.round(FP_ROW_HEIGHT_BASE * fpZoom));
-}
-function FP_CANDLE_WIDTH() {
-  // Linear with zoom — − button and pinch can make candles clearly smaller
-  return Math.max(22, Math.round(FP_CANDLE_WIDTH_BASE * fpZoom));
-}
+let fpZoom = 1.0;
+let fpFollowLive = true;
 let fpTfMinutes = 5;
 let fpLivePrice = 2650.00;
-let fpIsLoaded = true;
 let fpNeedsRedraw = true;
 let fpLastRealPrice = 0;
 
@@ -2675,12 +2628,10 @@ let fpPanX = 0;
 let fpPanY = 0;
 let fpIsDragging = false;
 let fpStartX = 0, fpStartY = 0;
-// Multi-touch (pinch + 2-finger pan)
 let fpPinching = false;
 let fpLastPinchDist = 0;
 let fpLastPinchMidX = 0;
 let fpLastPinchMidY = 0;
-let fpLastZoom = 1.0;
 
 const fpChartCanvas = document.getElementById('fpChartCanvas');
 const fpPriceCanvas = document.getElementById('fpPriceCanvas');
@@ -2690,6 +2641,12 @@ const fpCtxPrice = fpPriceCanvas.getContext('2d');
 const fpCtxTable = fpTableCanvas.getContext('2d');
 
 let fpCandles = [];
+let fpViewCenter = 0;
+let fpPixelsPerDollar = 22; // Dynamic vertical scale factor
+
+function FP_CANDLE_WIDTH() {
+  return Math.max(34, Math.round(FP_CANDLE_WIDTH_BASE * fpZoom));
+}
 
 function fpRound(p) {
   return +(Math.round(p / FP_TICK_SIZE) * FP_TICK_SIZE).toFixed(2);
@@ -2699,7 +2656,6 @@ function _fpRand(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// Deterministic PRNG so historical candles stay stable (no random jump on redraw)
 function _fpHash(n) {
   n = (n ^ 61) ^ (n >>> 16);
   n = n + (n << 3);
@@ -2708,6 +2664,7 @@ function _fpHash(n) {
   n = n ^ (n >>> 15);
   return (n >>> 0) / 4294967296;
 }
+
 function _fpRng(seed) {
   let s = (seed * 16807 + 11) % 2147483647;
   return function() {
@@ -2716,7 +2673,6 @@ function _fpRng(seed) {
   };
 }
 
-// Realistic volume profile with deterministic volumes
 function _buildRealisticLevels(open, high, low, close, isUp, barSeed) {
   const levels = new Map();
   const bodyTop = Math.max(open, close);
@@ -2790,10 +2746,9 @@ function buildFootprintFromRealBar(bar, isLive, prevCVD, barSeed) {
   const { levels, poc } = _buildRealisticLevels(open, high, low, close, isUp, barSeed);
   let delta = 0, volume = 0;
   levels.forEach(v => { delta += (v.ask - v.bid); volume += (v.ask + v.bid); });
-  // Scale simulated volume roughly with real bar volume if present
   if (bar.v > 0 && volume > 0) {
     const scale = Math.min(3, Math.max(0.4, (bar.v / 50) / (volume / 20)));
-    levels.forEach((v, p) => {
+    levels.forEach((v) => {
       v.bid = Math.max(1, Math.round(v.bid * scale));
       v.ask = Math.max(1, Math.round(v.ask * scale));
     });
@@ -2817,28 +2772,27 @@ function buildFootprintFromRealBar(bar, isLive, prevCVD, barSeed) {
 }
 
 function seedInstantCandles(centerPrice, minutes) {
-  // Fast synchronous fallback (used before real bars arrive)
   const tfMs = minutes * 60 * 1000;
   const now = Date.now();
   const count = minutes <= 1 ? 12 : (minutes <= 5 ? 10 : 8);
   const list = [];
-  const atr = minutes <= 1 ? 1.1 : (minutes <= 5 ? 2.6 : 5.2);
+  const atr = minutes <= 1 ? 1.0 : (minutes <= 5 ? 2.5 : 4.5);
   let px = fpRound(centerPrice);
   const path = [px];
   for (let i = 1; i < count; i++) {
-    const r = _fpHash(Math.floor(centerPrice * 100) + i * 17 + minutes * 3);
-    px = fpRound(px - (r - 0.48) * atr * 0.9);
+    const r = _fpHash(Math.floor(centerPrice * 10) + i * 17 + minutes * 3);
+    px = fpRound(px - (r - 0.48) * atr * 0.7);
     path.unshift(px);
   }
   path[path.length - 1] = fpRound(centerPrice);
-  let sessionCVD = 900 + Math.floor(_fpHash(Math.floor(centerPrice)) * 700);
+  let sessionCVD = 900;
   for (let i = 0; i < count; i++) {
     const slot = Math.floor((now - (count - 1 - i) * tfMs) / tfMs) * tfMs;
     const open = path[i];
     const close = i < count - 1 ? path[i + 1] : fpRound(centerPrice);
     const isUp = close >= open;
-    const high = fpRound(Math.max(open, close) + _fpHash(slot + 11) * atr * 0.45);
-    const low = fpRound(Math.min(open, close) - _fpHash(slot + 29) * atr * 0.45);
+    const high = fpRound(Math.max(open, close) + _fpHash(slot + 11) * atr * 0.4);
+    const low = fpRound(Math.min(open, close) - _fpHash(slot + 29) * atr * 0.4);
     const barSeed = (slot / 60000) ^ Math.floor(centerPrice * 10) ^ (minutes * 97);
     const { levels, poc } = _buildRealisticLevels(open, high, low, close, isUp, barSeed);
     let delta = 0, volume = 0;
@@ -2854,7 +2808,6 @@ function seedInstantCandles(centerPrice, minutes) {
   return list;
 }
 
-// Load REAL OHLC bars into footprint (matches TradingView structure)
 async function loadRealFootprintCandles(minutes) {
   const bars = await fetchFpRealBars(minutes);
   if (!bars || bars.length < 3) return false;
@@ -2882,13 +2835,11 @@ async function loadRealFootprintCandles(minutes) {
   fpCandles = list;
   fpLivePrice = fpRound(livePx);
   fpLastRealPrice = livePx;
-  fpViewCenter = fpLivePrice;
+  autoCenterFp();
   return true;
 }
 
 fpCandles = seedInstantCandles(fpLivePrice, fpTfMinutes);
-
-
 
 function checkFpRollover() {
   if (fpCandles.length === 0) return;
@@ -2949,44 +2900,50 @@ function resizeFpCanvases() {
   fpTableCanvas.height = Math.round(footerH * dpr);
   fpCtxTable.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  fpNeedsRedraw = true;
+  autoCenterFp();
 }
 
-let fpViewCenter = 0; // stable Y-axis center (prevents jitter when scrolling history)
-
+// Automatically fits candles to stay completely visible inside viewport
 function autoCenterFp() {
   const dpr = window.devicePixelRatio || 1;
   const w = fpChartCanvas.width / dpr;
   const h = fpChartCanvas.height / dpr;
-  if (w < 10 || h < 10) return;
-  fpPanX = w - (fpCandles.length * (FP_CANDLE_WIDTH() + FP_GAP)) - 28;
+  if (w < 10 || h < 10 || fpCandles.length === 0) return;
+
+  let minP = Infinity, maxP = -Infinity;
+  fpCandles.forEach(c => {
+    if (c.low < minP) minP = c.low;
+    if (c.high > maxP) maxP = c.high;
+  });
+
+  const range = Math.max(maxP - minP, 3.5);
+  // Auto-fit pixels per dollar so candles occupy ~65% of viewport
+  fpPixelsPerDollar = (h * 0.65) / range;
+  fpViewCenter = (maxP + minP) / 2;
+
+  fpPanX = w - (fpCandles.length * (FP_CANDLE_WIDTH() + FP_GAP)) - 40;
   fpPanY = h / 2;
-  fpViewCenter = fpLivePrice;
   fpNeedsRedraw = true;
 }
 
 function fpPriceToY(p) {
   const center = fpViewCenter || fpLivePrice;
-  return Math.round(fpPanY - ((p - center) / FP_TICK_SIZE) * FP_ROW_HEIGHT());
+  return Math.round(fpPanY - ((p - center) * fpPixelsPerDollar * fpZoom));
 }
 
-/** Soft vertical follow only — never locks pan/zoom. Skips while user is touching. */
 function ensureLivePriceVisible() {
   if (!fpFollowLive || fpIsDragging || fpPinching) return;
-  if (!fpChartCanvas || !fpChartCanvas.height) return;
   const dpr = window.devicePixelRatio || 1;
   const h = fpChartCanvas.height / dpr;
   if (h < 40) return;
+
   const liveY = fpPriceToY(fpLivePrice);
-  // Wide margin so it only nudges when price is almost off-screen
-  const margin = Math.max(28, h * 0.12);
+  const margin = Math.max(30, h * 0.15);
   if (liveY < margin) {
-    const shiftPx = margin - liveY;
-    fpViewCenter = fpViewCenter + (shiftPx / FP_ROW_HEIGHT()) * FP_TICK_SIZE;
+    fpPanY += (margin - liveY) * 0.1;
     fpNeedsRedraw = true;
   } else if (liveY > h - margin) {
-    const shiftPx = liveY - (h - margin);
-    fpViewCenter = fpViewCenter - (shiftPx / FP_ROW_HEIGHT()) * FP_TICK_SIZE;
+    fpPanY -= (liveY - (h - margin)) * 0.1;
     fpNeedsRedraw = true;
   }
 }
@@ -2998,32 +2955,21 @@ function toggleFpFollow() {
     btn.classList.toggle('active', fpFollowLive);
     btn.textContent = fpFollowLive ? 'Follow' : 'Free';
   }
-  if (fpFollowLive) {
-    autoCenterFp();
-  }
+  if (fpFollowLive) autoCenterFp();
 }
 
 function fpZoomIn() {
-  fpZoom = Math.min(2.5, +(fpZoom + 0.12).toFixed(2));
+  fpZoom = Math.min(2.8, +(fpZoom * 1.15).toFixed(2));
   fpNeedsRedraw = true;
 }
 function fpZoomOut() {
-  fpZoom = Math.max(0.30, +(fpZoom - 0.12).toFixed(2));
-  fpNeedsRedraw = true;
-}
-function fpSetZoom(z) {
-  fpZoom = Math.max(0.30, Math.min(2.5, +Number(z).toFixed(2)));
+  fpZoom = Math.max(0.35, +(fpZoom * 0.85).toFixed(2));
   fpNeedsRedraw = true;
 }
 
 function renderFpFrame() {
   const modal = document.getElementById('footprintModal');
   if (modal && modal.style.display === 'flex') {
-    if (window._fpPendingRedraw && (!window._fpLastRedrawTs || performance.now() - window._fpLastRedrawTs > 50)) {
-      fpNeedsRedraw = true;
-      window._fpPendingRedraw = false;
-      window._fpLastRedrawTs = performance.now();
-    }
     if (fpNeedsRedraw) {
       drawFpChart();
       drawFpPriceLadder();
@@ -3041,13 +2987,13 @@ function drawFpChart() {
   if (w < 10 || h < 10) return;
   fpCtxChart.clearRect(0, 0, w, h);
 
+  // Background Grid Lines
   fpCtxChart.strokeStyle = '#141822';
   fpCtxChart.lineWidth = 1;
-  const centerP = fpRound(fpLivePrice);
-  const halfRows = Math.ceil((h / 2) / FP_ROW_HEIGHT()) + 4;
-  for (let i = -halfRows; i <= halfRows; i++) {
-    const p = fpRound(centerP + i * FP_TICK_SIZE);
-    const y = Math.floor(fpPriceToY(p));
+  const priceStep = 1.0;
+  const startP = Math.floor((fpLivePrice - 20) / priceStep) * priceStep;
+  for (let p = startP; p <= fpLivePrice + 20; p += priceStep) {
+    const y = fpPriceToY(p);
     if (y >= 0 && y <= h) {
       fpCtxChart.beginPath();
       fpCtxChart.moveTo(0, y);
@@ -3065,6 +3011,10 @@ function drawFpChart() {
 
     const highY = fpPriceToY(c.high);
     const lowY = fpPriceToY(c.low);
+    const openY = fpPriceToY(c.open);
+    const closeY = fpPriceToY(c.close);
+
+    // High/Low Wick
     fpCtxChart.strokeStyle = bodyColor;
     fpCtxChart.lineWidth = 1.4;
     fpCtxChart.beginPath();
@@ -3072,8 +3022,7 @@ function drawFpChart() {
     fpCtxChart.lineTo(cx + FP_CANDLE_WIDTH() / 2, lowY);
     fpCtxChart.stroke();
 
-    const openY = fpPriceToY(c.open);
-    const closeY = fpPriceToY(c.close);
+    // Body
     const topY = Math.min(openY, closeY);
     const botY = Math.max(openY, closeY);
     const bodyH = Math.max(botY - topY, 2);
@@ -3090,14 +3039,14 @@ function drawFpChart() {
 
     const halfW = FP_CANDLE_WIDTH() / 2;
     const sortedPrices = Array.from(c.levels.keys()).sort((a, b) => a - b);
+    const rowH = Math.max(7, Math.abs(fpPriceToY(sortedPrices[0] || c.low) - fpPriceToY((sortedPrices[0] || c.low) + FP_TICK_SIZE)));
 
     sortedPrices.forEach((p, lIdx) => {
       const lvl = c.levels.get(p);
       const y = fpPriceToY(p);
-      if (y < -FP_ROW_HEIGHT() || y > h + FP_ROW_HEIGHT()) return;
+      if (y < -rowH || y > h + rowH) return;
 
-      let buyImbalance = false;
-      let sellImbalance = false;
+      let buyImbalance = false, sellImbalance = false;
       if (lIdx > 0) {
         const lowerLvl = c.levels.get(sortedPrices[lIdx - 1]);
         if (lowerLvl) {
@@ -3108,36 +3057,37 @@ function drawFpChart() {
 
       if (sellImbalance) {
         fpCtxChart.fillStyle = 'rgba(242, 54, 69, 0.28)';
-        fpCtxChart.fillRect(cx, y - FP_ROW_HEIGHT() / 2, halfW, FP_ROW_HEIGHT());
+        fpCtxChart.fillRect(cx, y - rowH / 2, halfW, rowH);
       }
       if (buyImbalance) {
         fpCtxChart.fillStyle = 'rgba(8, 153, 129, 0.28)';
-        fpCtxChart.fillRect(cx + halfW, y - FP_ROW_HEIGHT() / 2, halfW, FP_ROW_HEIGHT());
+        fpCtxChart.fillRect(cx + halfW, y - rowH / 2, halfW, rowH);
       }
 
       if (p === c.pocPrice) {
         fpCtxChart.strokeStyle = '#f59e0b';
         fpCtxChart.lineWidth = 1.6;
-        fpCtxChart.strokeRect(cx + 1, y - FP_ROW_HEIGHT() / 2 + 1, FP_CANDLE_WIDTH() - 2, FP_ROW_HEIGHT() - 2);
+        fpCtxChart.strokeRect(cx + 1, y - rowH / 2 + 1, FP_CANDLE_WIDTH() - 2, rowH - 2);
       }
 
       fpCtxChart.strokeStyle = '#1b202c';
       fpCtxChart.lineWidth = 0.5;
-      fpCtxChart.strokeRect(cx, y - FP_ROW_HEIGHT() / 2, FP_CANDLE_WIDTH(), FP_ROW_HEIGHT());
+      fpCtxChart.strokeRect(cx, y - rowH / 2, FP_CANDLE_WIDTH(), rowH);
 
-      fpCtxChart.font = '9.5px monospace';
+      fpCtxChart.font = `${Math.min(9.5, Math.max(7, rowH * 0.75))}px monospace`;
       fpCtxChart.textAlign = 'center';
       fpCtxChart.fillStyle = sellImbalance ? '#fca5a5' : '#94a3b8';
-      fpCtxChart.fillText(String(lvl.bid), cx + halfW * 0.5, y + 3.2);
+      fpCtxChart.fillText(String(lvl.bid), cx + halfW * 0.5, y + rowH * 0.25);
 
       fpCtxChart.fillStyle = buyImbalance ? '#86efac' : '#cbd5e1';
-      fpCtxChart.fillText(String(lvl.ask), cx + halfW * 1.5, y + 3.2);
+      fpCtxChart.fillText(String(lvl.ask), cx + halfW * 1.5, y + rowH * 0.25);
 
       fpCtxChart.fillStyle = '#222838';
-      fpCtxChart.fillRect(cx + halfW - 0.5, y - FP_ROW_HEIGHT() / 2, 1, FP_ROW_HEIGHT());
+      fpCtxChart.fillRect(cx + halfW - 0.5, y - rowH / 2, 1, rowH);
     });
   });
 
+  // Live Price Line
   const liveY = fpPriceToY(fpLivePrice);
   fpCtxChart.setLineDash([4, 3]);
   fpCtxChart.strokeStyle = '#089981';
@@ -3158,11 +3108,10 @@ function drawFpPriceLadder() {
   fpCtxPrice.font = '10.5px monospace';
   fpCtxPrice.textAlign = 'left';
 
-  const centerP = fpRound(fpLivePrice);
-  const halfRows = Math.ceil((h / 2) / FP_ROW_HEIGHT()) + 4;
-  for (let i = -halfRows; i <= halfRows; i++) {
-    const p = fpRound(centerP + i * FP_TICK_SIZE);
-    const y = Math.floor(fpPriceToY(p));
+  const step = 0.50;
+  const startP = Math.floor((fpLivePrice - 20) / step) * step;
+  for (let p = startP; p <= fpLivePrice + 20; p += step) {
+    const y = fpPriceToY(p);
     if (y >= 0 && y <= h) {
       const isWhole = Math.abs(p % 1) < 0.001;
       fpCtxPrice.fillStyle = isWhole ? '#94a3b8' : '#475569';
@@ -3222,20 +3171,14 @@ function drawFpTable() {
   });
 }
 
-// Smooth pan — block page scroll / pull-to-refresh while dragging chart
+// Mouse dragging & touch gestures
 function fpTouchDist(t0, t1) {
-  const dx = t0.clientX - t1.clientX;
-  const dy = t0.clientY - t1.clientY;
-  return Math.hypot(dx, dy);
+  return Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
 }
 function fpTouchMid(t0, t1) {
-  return {
-    x: (t0.clientX + t1.clientX) / 2,
-    y: (t0.clientY + t1.clientY) / 2
-  };
+  return { x: (t0.clientX + t1.clientX) / 2, y: (t0.clientY + t1.clientY) / 2 };
 }
 
-// Mouse: 1-finger style pan
 fpChartCanvas.addEventListener('mousedown', (e) => {
   e.preventDefault();
   fpIsDragging = true;
@@ -3252,7 +3195,6 @@ window.addEventListener('mousemove', (e) => {
 });
 window.addEventListener('mouseup', () => { fpIsDragging = false; fpPinching = false; });
 
-// Touch: 1 finger = pan, 2 fingers = pan + pinch zoom
 fpChartCanvas.addEventListener('touchstart', (e) => {
   e.preventDefault();
   if (e.touches.length === 1) {
@@ -3268,41 +3210,30 @@ fpChartCanvas.addEventListener('touchstart', (e) => {
     const mid = fpTouchMid(t0, t1);
     fpLastPinchMidX = mid.x;
     fpLastPinchMidY = mid.y;
-    fpLastZoom = fpZoom;
   }
 }, { passive: false });
 
 fpChartCanvas.addEventListener('touchmove', (e) => {
-  e.preventDefault(); // block page scroll / pull-to-refresh
+  e.preventDefault();
   if (e.touches.length >= 2) {
-    // ---- two-finger: pan + pinch zoom ----
     fpPinching = true;
     fpIsDragging = true;
     const t0 = e.touches[0], t1 = e.touches[1];
     const dist = fpTouchDist(t0, t1);
     const mid = fpTouchMid(t0, t1);
 
-    // Pan by midpoint movement
-    const dx = mid.x - fpLastPinchMidX;
-    const dy = mid.y - fpLastPinchMidY;
-    fpPanX += dx;
-    fpPanY += dy;
+    fpPanX += mid.x - fpLastPinchMidX;
+    fpPanY += mid.y - fpLastPinchMidY;
     fpLastPinchMidX = mid.x;
     fpLastPinchMidY = mid.y;
 
-    // Pinch zoom (relative to last distance)
     if (fpLastPinchDist > 12) {
       const scale = dist / fpLastPinchDist;
-      // Smooth + clamped
-      const next = Math.max(0.30, Math.min(2.5, fpZoom * scale));
-      if (Math.abs(next - fpZoom) > 0.002) {
-        fpZoom = +next.toFixed(3);
-      }
+      fpZoom = Math.max(0.35, Math.min(2.8, +(fpZoom * scale).toFixed(3)));
     }
     fpLastPinchDist = dist;
     fpNeedsRedraw = true;
   } else if (e.touches.length === 1 && !fpPinching) {
-    // ---- one-finger pan ----
     fpIsDragging = true;
     fpPanX = e.touches[0].clientX - fpStartX;
     fpPanY = e.touches[0].clientY - fpStartY;
@@ -3315,7 +3246,6 @@ function fpEndTouch(e) {
     fpIsDragging = false;
     fpPinching = false;
   } else if (e.touches.length === 1) {
-    // Dropped from 2 → 1 finger: re-anchor single pan so no jump
     fpPinching = false;
     fpIsDragging = true;
     fpStartX = e.touches[0].clientX - fpPanX;
@@ -3325,65 +3255,17 @@ function fpEndTouch(e) {
 fpChartCanvas.addEventListener('touchend', fpEndTouch, { passive: false });
 fpChartCanvas.addEventListener('touchcancel', fpEndTouch, { passive: false });
 
-// Desktop wheel: scroll = pan, Ctrl/pinch-wheel = zoom
 fpChartCanvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   if (e.ctrlKey || e.metaKey) {
     if (e.deltaY < 0) fpZoomIn();
     else fpZoomOut();
   } else {
-    fpPanY -= e.deltaY;
-    fpPanX -= e.deltaX;
+    fpPanY -= e.deltaY * 0.5;
+    fpPanX -= e.deltaX * 0.5;
     fpNeedsRedraw = true;
   }
 }, { passive: false });
-
-// Also allow gestures starting on price ladder / viewport edges
-(function bindFpGesturesTo(el) {
-  if (!el || el === fpChartCanvas) return;
-  el.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    if (e.touches.length === 1) {
-      fpIsDragging = true; fpPinching = false;
-      fpStartX = e.touches[0].clientX - fpPanX;
-      fpStartY = e.touches[0].clientY - fpPanY;
-    } else if (e.touches.length >= 2) {
-      fpIsDragging = true; fpPinching = true;
-      const t0 = e.touches[0], t1 = e.touches[1];
-      fpLastPinchDist = fpTouchDist(t0, t1);
-      const mid = fpTouchMid(t0, t1);
-      fpLastPinchMidX = mid.x; fpLastPinchMidY = mid.y;
-    }
-  }, { passive: false });
-  el.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    if (e.touches.length >= 2) {
-      fpPinching = true; fpIsDragging = true;
-      const t0 = e.touches[0], t1 = e.touches[1];
-      const dist = fpTouchDist(t0, t1);
-      const mid = fpTouchMid(t0, t1);
-      fpPanX += mid.x - fpLastPinchMidX;
-      fpPanY += mid.y - fpLastPinchMidY;
-      fpLastPinchMidX = mid.x; fpLastPinchMidY = mid.y;
-      if (fpLastPinchDist > 12) {
-        const next = Math.max(0.30, Math.min(2.5, fpZoom * (dist / fpLastPinchDist)));
-        if (Math.abs(next - fpZoom) > 0.002) fpZoom = +next.toFixed(3);
-      }
-      fpLastPinchDist = dist;
-      fpNeedsRedraw = true;
-    } else if (e.touches.length === 1 && !fpPinching) {
-      fpIsDragging = true;
-      fpPanX = e.touches[0].clientX - fpStartX;
-      fpPanY = e.touches[0].clientY - fpStartY;
-      fpNeedsRedraw = true;
-    }
-  }, { passive: false });
-  el.addEventListener('touchend', fpEndTouch, { passive: false });
-  el.addEventListener('touchcancel', fpEndTouch, { passive: false });
-})(document.getElementById('fpViewport'));
-(function(){ const p = document.getElementById('fpPriceCanvas'); if (p) {
-  p.style.pointerEvents = 'auto';
-}})();
 
 function changeFpTF(minutes) {
   fpTfMinutes = minutes;
@@ -3391,15 +3273,11 @@ function changeFpTF(minutes) {
   const btn = document.getElementById(`fpBtn${minutes}`);
   if (btn) btn.classList.add('active');
   if (state.gold_price > 500) fpLivePrice = fpRound(state.gold_price);
-  fpCandles = seedInstantCandles(fpLivePrice, minutes); // instant placeholder
+  fpCandles = seedInstantCandles(fpLivePrice, minutes);
   resizeFpCanvases();
-  autoCenterFp();
-  fpNeedsRedraw = true;
-  // Replace with real OHLC as soon as available
   loadRealFootprintCandles(minutes).then(ok => {
     if (ok) {
       resizeFpCanvases();
-      autoCenterFp();
       fpNeedsRedraw = true;
     }
   });
@@ -3418,11 +3296,11 @@ function processFpTick(price, qty, isBuy) {
   checkFpRollover();
   const raw = parseFloat(price);
   if (!raw || raw < 500) return;
-  const rounded = fpRound(raw); // ladder bucket only
-  fpLivePrice = raw; // full precision for ticker
+  const rounded = fpRound(raw);
+  fpLivePrice = raw;
   if (!fpViewCenter) fpViewCenter = rounded;
-  // Soft follow: only when Follow is ON and user is not dragging
   ensureLivePriceVisible();
+
   const tickerEl = document.getElementById('fpLiveTicker');
   if (tickerEl) tickerEl.textContent = raw.toFixed(2);
 
@@ -3454,15 +3332,7 @@ function processFpTick(price, qty, isBuy) {
     if (v > maxV) { maxV = v; bestP = p; }
   });
   active.pocPrice = bestP;
-
-  // Throttle heavy redraws from tick stream (~15–20 fps) — pan still instant via drag handlers
-  const now = performance.now();
-  if (!window._fpLastRedrawTs || now - window._fpLastRedrawTs > 50) {
-    window._fpLastRedrawTs = now;
-    fpNeedsRedraw = true;
-  } else {
-    window._fpPendingRedraw = true;
-  }
+  fpNeedsRedraw = true;
 }
 
 function openFootprintModal() {
@@ -3470,13 +3340,13 @@ function openFootprintModal() {
     fpLivePrice = fpRound(state.gold_price);
     fpLastRealPrice = state.gold_price;
   }
-  fpCandles = seedInstantCandles(fpLivePrice, fpTfMinutes); // show instantly
+  fpCandles = seedInstantCandles(fpLivePrice, fpTfMinutes);
   const modal = document.getElementById('footprintModal');
   modal.style.display = 'flex';
-  // Lock page scroll so mobile doesn't pull-to-refresh / bounce while using chart
   document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
   document.body.style.touchAction = 'none';
+
   const followBtn = document.getElementById('fpFollowBtn');
   if (followBtn) {
     followBtn.classList.toggle('active', fpFollowLive);
@@ -3487,7 +3357,6 @@ function openFootprintModal() {
     autoCenterFp();
     fpNeedsRedraw = true;
   });
-  // Swap in real market OHLC candles
   loadRealFootprintCandles(fpTfMinutes).then(ok => {
     if (ok) {
       resizeFpCanvases();
@@ -3495,33 +3364,24 @@ function openFootprintModal() {
       fpNeedsRedraw = true;
     }
   });
-  // Start AllTick live ticks (if token set)
   startAllTickFeed();
 }
 
 function closeFootprintModal() {
   document.getElementById('footprintModal').style.display = 'none';
-  // Restore page scroll
   document.documentElement.style.overflow = '';
   document.body.style.overflow = '';
   document.body.style.touchAction = '';
 }
 
-// Light synthetic pulse only when modal is open (keeps cells alive between real ticks)
-// Live price driver while Footprint is open
 setInterval(() => {
   const modal = document.getElementById('footprintModal');
   if (!modal || modal.style.display !== 'flex') return;
-
-  // Prefer real gold_price from biquote / AllTick
-  if (state.gold_price > 500) {
-    if (Math.abs(state.gold_price - fpLivePrice) >= 0.01) {
-      syncLivePriceToFootprint(state.gold_price);
-    }
+  if (state.gold_price > 500 && Math.abs(state.gold_price - fpLivePrice) >= 0.01) {
+    syncLivePriceToFootprint(state.gold_price);
   }
 }, 200);
 
-// Extra fast biquote gold poll only while Footprint open (keeps price live if AllTick fails)
 setInterval(() => {
   const modal = document.getElementById('footprintModal');
   if (!modal || modal.style.display !== 'flex') return;
@@ -3531,16 +3391,12 @@ setInterval(() => {
       const px = parseFloat(data.mid ?? data.last ?? data.price ?? data.bid);
       if (!px || px < 500) return;
       state.gold_price = parseFloat(px.toFixed(2));
-      if (data.dayDiffPercent != null && !isNaN(parseFloat(data.dayDiffPercent))) {
-        state.gold_pct = parseFloat(parseFloat(data.dayDiffPercent).toFixed(2));
-      }
       syncLivePriceToFootprint(state.gold_price);
       const tickerEl = document.getElementById('fpLiveTicker');
       if (tickerEl) tickerEl.textContent = state.gold_price.toFixed(2);
     })
     .catch(() => {});
 }, 800);
-
 
 setInterval(() => {
   checkFpRollover();
@@ -3551,7 +3407,6 @@ setInterval(() => {
 
 /* =====================================================================
    ===================================================================== */
-
 function initLiveSocket() {
   const statusEl = document.getElementById("session-status");
   if (statusEl) statusEl.textContent = "● Real-Time Interbank Feed Synchronized";
@@ -4071,15 +3926,11 @@ function initApp() {
   setTimeout(() => fetchRealCandles(state.tf_interval, false), 50);
 
   syncEconomicCalendarFeed();
-
-  // Start Footprint engine render loop
   requestAnimationFrame(renderFpFrame);
 
   setInterval(pollRealForexLive, 1000);
   setInterval(() => {
-    if ((Date.now() - (_dxyLastOk || 0)) > 4000) {
-      tickDXYOnly();
-    }
+    if ((Date.now() - (_dxyLastOk || 0)) > 4000) tickDXYOnly();
   }, 2000);
   setInterval(() => {
     if ((Date.now() - (_us10yLastOk || 0)) > 10000 || !(state.tip_price > 1)) {
@@ -4094,7 +3945,6 @@ function initApp() {
 }
 
 initApp();
-// Optional: start AllTick as soon as app loads if token is set
 setTimeout(function(){ if (ALLTICK_TOKEN) startAllTickFeed(); }, 2500);
 </script>
 </body>
