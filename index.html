@@ -524,6 +524,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <button class="fp-tf-btn active" id="fpBtn5" onclick="changeFpTF(5)">M5</button>
         <button class="fp-tf-btn" id="fpBtn15" onclick="changeFpTF(15)">M15</button>
         <button class="fp-tf-btn" id="fpFollowBtn" onclick="toggleFpFollow()" title="Auto-follow live price">Follow</button>
+        <button class="fp-tf-btn" id="fpRefreshBtn" onclick="refreshFootprintChart()" title="Reload real OHLC + volume history">↻</button>
         <button class="fp-tf-btn" onclick="fpZoomOut()" title="Smaller candles">−</button>
         <button class="fp-tf-btn" onclick="fpZoomIn()" title="Larger candles">+</button>
       </div>
@@ -1330,8 +1331,10 @@ function applyCandleSeries(bars, interval, asset) {
   } else {
     candleHistory = normalized;
   }
-  if (candleHistory.length > 300) {
-    candleHistory = candleHistory.slice(-300);
+  // Keep at least 300 bars of history on every timeframe
+  const CHART_HISTORY_BARS = 300;
+  if (candleHistory.length > CHART_HISTORY_BARS) {
+    candleHistory = candleHistory.slice(-CHART_HISTORY_BARS);
   }
   allCandidateDemandOBs = [];
   allCandidateSupplyOBs = [];
@@ -1373,8 +1376,10 @@ function fetchWithTimeout(url, ms, opts) {
 async function fetchRealCandles(interval, forceClear) {
   const asset = state.chartAsset || 'gold';
   const is3m = (interval === '3m');
+  // Target ≥300 candles on every TF. 3m is built from 1m → need 3× source bars.
+  const CHART_HISTORY_BARS = 300;
   const bqInterval = is3m ? '1m' : (interval === '1h' ? '1h' : (interval === '4h' ? '4h' : (interval === '1d' ? '1d' : interval)));
-  const limitCount = is3m ? 900 : 300;
+  const limitCount = is3m ? 1500 : Math.max(400, CHART_HISTORY_BARS + 50);
   if (isFetchingCandles && !forceClear) return;
   isFetchingCandles = true;
   if (forceClear && candleHistory.length === 0) {
@@ -1382,18 +1387,91 @@ async function fetchRealCandles(interval, forceClear) {
   }
   try {
     const symbol = (asset === 'dxy') ? 'DXY' : 'XAUUSD';
+
+    // 3m: try native 3m interval first (if API supports) for full depth
+    if (is3m) {
+      try {
+        const data3 = await fetchJson(`https://biquote.io/api/${symbol}/ohlc?interval=3m&limit=${CHART_HISTORY_BARS + 50}`);
+        let bars3 = (data3 && data3.bars) ? data3.bars.slice() : [];
+        if (bars3.length > 1 && new Date(bars3[0].openTime) > new Date(bars3[bars3.length - 1].openTime)) bars3.reverse();
+        if (bars3.length >= 200) {
+          const normalized = normalizeBars(bars3, '3m');
+          if (candlesMatchAsset(normalized, asset) && normalized.length >= 150 &&
+              (state.chartAsset || 'gold') === asset && state.tf_interval === interval) {
+            candleHistory = normalized.length > CHART_HISTORY_BARS
+              ? normalized.slice(-CHART_HISTORY_BARS)
+              : normalized;
+            allCandidateDemandOBs = [];
+            allCandidateSupplyOBs = [];
+            storedDemandOBs = [];
+            storedSupplyOBs = [];
+            multiHorizonTrendlines = [];
+            const last = candleHistory[candleHistory.length - 1];
+            if (last) {
+              if (asset === 'dxy') {
+                if (!(state._feed_dxy_pct && state.dxy_price > 50 && (Date.now() - (_dxyLastOk || 0)) < 15000)) {
+                  state.dxy_price = last.c;
+                }
+              } else {
+                state.gold_price = last.c;
+              }
+              getInstantCandleTimer();
+            }
+            scanAndStoreOrderBlocks(candleHistory);
+            executeTradingViewRayArchitecture(candleHistory);
+            saveActiveStore();
+            triggerRealtimeRender();
+            isFetchingCandles = false;
+            return;
+          }
+        }
+      } catch (e) {}
+    }
+
     try {
       const data = await fetchJson(`https://biquote.io/api/${symbol}/ohlc?interval=${bqInterval}&limit=${limitCount}`);
       let bars = (data && data.bars) ? data.bars.slice() : [];
       if (bars.length > 1 && new Date(bars[0].openTime) > new Date(bars[bars.length - 1].openTime)) bars.reverse();
       if (applyCandleSeries(bars, interval, asset)) {
+        // If 3m still short after 1m aggregate, pull an older 1m page and merge
+        if (is3m && candleHistory.length < CHART_HISTORY_BARS && bars.length > 10) {
+          try {
+            const oldest = bars[0];
+            let t0 = oldest.openTime ?? oldest.t ?? oldest.time;
+            if (typeof t0 === 'string' && /^\d+$/.test(t0)) t0 = parseInt(t0, 10);
+            if (typeof t0 === 'number' && t0 < 1e12) t0 = t0 * 1000;
+            const endMs = new Date(t0).getTime();
+            if (endMs > 0) {
+              const dataMore = await fetchJson(
+                `https://biquote.io/api/${symbol}/ohlc?interval=1m&limit=1500&endTime=${endMs}`
+              );
+              let barsMore = (dataMore && dataMore.bars) ? dataMore.bars.slice() : [];
+              if (barsMore.length > 1 && new Date(barsMore[0].openTime) > new Date(barsMore[barsMore.length - 1].openTime)) {
+                barsMore.reverse();
+              }
+              if (barsMore.length > 0) {
+                const merged = barsMore.concat(bars);
+                const seen = new Set();
+                const uniq = [];
+                for (let i = 0; i < merged.length; i++) {
+                  const b = merged[i];
+                  const key = String(b.openTime ?? b.t ?? b.time ?? i);
+                  if (seen.has(key)) continue;
+                  seen.add(key);
+                  uniq.push(b);
+                }
+                applyCandleSeries(uniq, interval, asset);
+              }
+            }
+          } catch (e2) {}
+        }
         isFetchingCandles = false;
         return;
       }
     } catch (e) {}
     try {
       const fallbackInterval = is3m ? '1m' : '15m';
-      const fallbackLimit = is3m ? 900 : 300;
+      const fallbackLimit = is3m ? 1500 : Math.max(400, CHART_HISTORY_BARS + 50);
       const data2 = await fetchJson(`https://biquote.io/api/${symbol}/ohlc?interval=${fallbackInterval}&limit=${fallbackLimit}`);
       let bars2 = (data2 && data2.bars) ? data2.bars.slice() : [];
       if (bars2.length > 1 && new Date(bars2[0].openTime) > new Date(bars2[bars2.length - 1].openTime)) bars2.reverse();
@@ -2196,6 +2274,7 @@ function rollLocalCandle() {
   saveActiveStore();
   triggerRealtimeRender();
 }
+// Note: history depth capped at 300 bars for all timeframes (see CHART_HISTORY_BARS)
 
 function checkTimeframeRollover() {
   const stepSec = state.tf_seconds || 60;
@@ -2448,13 +2527,19 @@ function drawFpChart() {
     const cx = fpPanX + idx * (FP_CANDLE_WIDTH() + FP_GAP);
     if (cx + FP_CANDLE_WIDTH() < -40 || cx > w + 40) continue;
 
-    // Full real OHLC — no wick cap
+    // Real interbank OHLC only — clamp any leftover absurd range so scale stays real
     let dH = Math.max(c.high, c.open, c.close);
     let dL = Math.min(c.low,  c.open, c.close);
     if (!(dH > 500) || !(dL > 500)) {
       const mid = ((c.open > 500 ? c.open : 0) + (c.close > 500 ? c.close : 0)) / 2 || (fpLivePrice || 4200);
       dH = Math.max(c.open, c.close, mid) + 0.25;
       dL = Math.min(c.open, c.close, mid) - 0.25;
+    }
+    const refDraw = (fpLivePrice > 500) ? fpLivePrice : ((c.close > 500) ? c.close : 4200);
+    const maxDrawRange = fpTfMinutes <= 1 ? 12 : (fpTfMinutes <= 5 ? 25 : 50);
+    if ((dH - dL) > maxDrawRange) {
+      dH = Math.max(c.open, c.close, refDraw) + 0.4;
+      dL = Math.min(c.open, c.close, refDraw) - 0.4;
     }
 
     const isUp = c.close >= c.open;
@@ -3284,7 +3369,8 @@ async function fetchFpRealHistory(minutes) {
   fpRealLoading = true;
   const interval = minutes + 'm';
   try {
-    const data = await fetchJson(`https://biquote.io/api/XAUUSD/ohlc?interval=${interval}&limit=80`);
+    // Same interbank source as main gold chart — enough bars for real OHLC backbone
+    const data = await fetchJson(`https://biquote.io/api/XAUUSD/ohlc?interval=${interval}&limit=120`);
     let bars = (data && data.bars) ? data.bars.slice() : [];
     if (bars.length > 1 && new Date(bars[0].openTime) > new Date(bars[bars.length - 1].openTime)) bars.reverse();
     const ms = minutes * 60000;
@@ -3301,13 +3387,12 @@ async function fetchFpRealHistory(minutes) {
         c: +b.close || +b.c
       };
     }).filter(b => b.o > 500 && b.barSlot > 0);
-    // Keep last 40 bars
-    if (fpRealHistory.length > 40) fpRealHistory = fpRealHistory.slice(-40);
+    if (fpRealHistory.length > 80) fpRealHistory = fpRealHistory.slice(-80);
   } catch (e) {
-    // fallback: try to derive from main candleHistory if same-ish TF
+    // fallback: main chart history (same interbank OHLC)
     if (typeof candleHistory !== 'undefined' && candleHistory.length) {
       const ms = minutes * 60000;
-      fpRealHistory = candleHistory.slice(-40).map(b => ({
+      fpRealHistory = candleHistory.slice(-80).map(b => ({
         barSlot: b.barSlot || Math.floor((b.openTime || 0) / ms) * ms,
         openTime: b.barSlot || b.openTime,
         closeTime: (b.barSlot || b.openTime) + ms,
@@ -3388,22 +3473,28 @@ function rfBuild(min) {
     volBySlot.get(t).push(rfStore.get(s));
   }
 
-  // --- Real OHLC backbone: prefer fpRealHistory (fetched for this TF) ---
+  // --- Real OHLC backbone: main chart history first (exact match), then fpRealHistory ---
   const realByTime = new Map();
-  if (fpRealHistory && fpRealHistory.length) {
-    for (let i = 0; i < fpRealHistory.length; i++) {
-      const rc = fpRealHistory[i];
-      if (rc.barSlot > 0) realByTime.set(rc.barSlot, rc);
-    }
-  }
-  // Also merge main chart history if same TF
+  // Prefer main interbank candleHistory when TF matches — same source as front gold chart
   if (typeof candleHistory !== 'undefined' && candleHistory.length) {
     const mainMs = (state.tf_seconds || 60) * 1000;
     if (mainMs === ms) {
       for (let i = 0; i < candleHistory.length; i++) {
         const rc = candleHistory[i];
-        const rt = rc.barSlot || 0;
-        if (rt > 0 && !realByTime.has(rt)) realByTime.set(rt, rc);
+        const rt = rc.barSlot || Math.floor((rc.openTime || 0) / ms) * ms;
+        if (rt > 0 && +rc.o > 500) {
+          realByTime.set(rt, {
+            barSlot: rt, o: +rc.o, h: +rc.h, l: +rc.l, c: +rc.c
+          });
+        }
+      }
+    }
+  }
+  if (fpRealHistory && fpRealHistory.length) {
+    for (let i = 0; i < fpRealHistory.length; i++) {
+      const rc = fpRealHistory[i];
+      if (rc.barSlot > 0 && +rc.o > 500 && !realByTime.has(rc.barSlot)) {
+        realByTime.set(rc.barSlot, rc);
       }
     }
   }
@@ -3420,42 +3511,31 @@ function rfBuild(min) {
 
   for (let gi = 0; gi < gKeys.length; gi++) {
     const t = gKeys[gi];
-    const isLast = (t === nowSlot) || (gi === gKeys.length - 1 && t >= nowSlot - ms);
+    // Only the wall-clock current bar is live (never mark two bars LIVE)
+    const isLast = (t === nowSlot);
     const volBars = volBySlot.get(t) || [];
     const realCandle = realByTime.get(t);
 
+    // OHLC MUST come from interbank / real history only — never Binance prices.
+    // Crypto is volume-only (mapped into the real body later).
     let o, h, l, c_;
     if (realCandle && realCandle.o > 500) {
       o = +realCandle.o;
       h = +realCandle.h;
       l = +realCandle.l;
       c_ = +realCandle.c;
-    } else if (volBars.length) {
-      // Volume-only slot: anchor near interbank so crypto drift cannot create giant wicks
-      const anchor = realP > 500 ? realP : +volBars[volBars.length - 1].c;
-      o = +volBars[0].o;
-      h = +volBars[0].h;
-      l = +volBars[0].l;
-      c_ = +volBars[volBars.length - 1].c;
-      for (let k = 0; k < volBars.length; k++) {
-        if (volBars[k].h > h) h = +volBars[k].h;
-        if (volBars[k].l < l) l = +volBars[k].l;
-      }
-      // Reject absurd outliers far from interbank / anchor
-      const maxDrift = min <= 1 ? 8 : (min <= 5 ? 15 : 25);
-      if (anchor > 500) {
-        if (Math.abs(o - anchor) > maxDrift) o = anchor;
-        if (Math.abs(c_ - anchor) > maxDrift) c_ = anchor;
-        h = Math.min(h, anchor + maxDrift);
-        l = Math.max(l, anchor - maxDrift);
-        h = Math.max(h, o, c_);
-        l = Math.min(l, o, c_);
-      }
+    } else if (isLast && realP > 500) {
+      // Live bar with no history yet — pure interbank
+      o = realP; h = realP; l = realP; c_ = realP;
+    } else if (volBars.length && realP > 500) {
+      // Volume exists but no real OHLC for this slot:
+      // draw a flat interbank bar (volume still overlays). Do NOT use crypto OHLC.
+      o = realP; h = realP; l = realP; c_ = realP;
     } else {
-      continue; // no data for this slot
+      continue; // no trustworthy price for this slot
     }
 
-    // Live candle: close tracks interbank; high/low expand only, never shrink
+    // Live candle: close = interbank; high/low expand only with interbank
     if (isLast && realP > 500) {
       if (!o || o < 500) o = realP;
       c_ = realP;
@@ -3465,11 +3545,20 @@ function rfBuild(min) {
 
     h = Math.max(h, o, c_);
     l = Math.min(l, o, c_);
-    // Hard reject broken data only
-    if (!(h > 500) || !(l > 500) || (h - l) > 60) {
+    // Reject broken / absurd ranges (crypto contamination leftover)
+    const maxRange = min <= 1 ? 12 : (min <= 5 ? 25 : 50);
+    if (!(h > 500) || !(l > 500) || (h - l) > maxRange) {
       const mid = ((o > 500 ? o : 0) + (c_ > 500 ? c_ : 0)) / 2 || realP || 4200;
-      h = Math.max(o, c_, mid) + 0.4;
-      l = Math.min(o, c_, mid) - 0.4;
+      h = Math.max(o, c_, mid) + 0.35;
+      l = Math.min(o, c_, mid) - 0.35;
+    }
+    // Keep closed bars near interbank when we only have live price as reference
+    if (!realCandle && realP > 500) {
+      const maxDrift = min <= 1 ? 3 : (min <= 5 ? 6 : 12);
+      h = Math.min(h, realP + maxDrift);
+      l = Math.max(l, realP - maxDrift);
+      h = Math.max(h, o, c_);
+      l = Math.min(l, o, c_);
     }
 
     const c = {
@@ -3575,17 +3664,44 @@ function rfRebuild() {
   rfWait.style.display = fpCandles.length ? 'none' : 'flex';
   if (!fpCandles.length) return;
 
-  // Restore finalized OHLC on closed bars (history must never morph)
+  // Closed bars: prefer interbank real history; only use snapshot if no real OHLC
+  const realBySlot = new Map();
+  if (fpRealHistory && fpRealHistory.length) {
+    for (let i = 0; i < fpRealHistory.length; i++) {
+      const rc = fpRealHistory[i];
+      if (rc.barSlot > 0 && +rc.o > 500) realBySlot.set(rc.barSlot, rc);
+    }
+  }
+  if (typeof candleHistory !== 'undefined' && candleHistory.length) {
+    const mainMs = (state.tf_seconds || 60) * 1000;
+    const fpMs = fpTfMinutes * 60000;
+    if (mainMs === fpMs) {
+      for (let i = 0; i < candleHistory.length; i++) {
+        const rc = candleHistory[i];
+        const rt = rc.barSlot || 0;
+        if (rt > 0 && +rc.o > 500) realBySlot.set(rt, { o: +rc.o, h: +rc.h, l: +rc.l, c: +rc.c });
+      }
+    }
+  }
   for (let i = 0; i < fpCandles.length; i++) {
     const c = fpCandles[i];
     if (c.isLive) continue;
-    const snap = prevClosed.get(c.barSlot);
-    if (snap && snap.open > 500) {
-      c.open = snap.open;
-      c.high = snap.high;
-      c.low = snap.low;
-      c.close = snap.close;
+    const real = realBySlot.get(c.barSlot);
+    if (real && real.o > 500) {
+      c.open = +real.o; c.high = +real.h; c.low = +real.l; c.close = +real.c;
+    } else {
+      const snap = prevClosed.get(c.barSlot);
+      if (snap && snap.open > 500) {
+        c.open = snap.open; c.high = snap.high; c.low = snap.low; c.close = snap.close;
+      }
     }
+    c.isLive = false;
+  }
+  // Guarantee only the true wall-clock bar is marked live
+  const nowMs = fpTfMinutes * 60000;
+  const liveSlot = Math.floor(Date.now() / nowMs) * nowMs;
+  for (let i = 0; i < fpCandles.length; i++) {
+    fpCandles[i].isLive = (fpCandles[i].barSlot === liveSlot);
   }
 
   if (state.gold_price > 500) {
@@ -3614,15 +3730,26 @@ function rfRebuild() {
         });
         last._cvd = (prevLive._cvd || 0);
         rfFinal(last);
-        // Preserve expanded high/low from prior live state
-        if (prevLive.high > last.high) last.high = prevLive.high;
-        if (prevLive.low > 500 && prevLive.low < last.low) last.low = prevLive.low;
+        // Preserve prior live open; high/low only if still near interbank (no crypto wicks)
         if (prevLive.open > 500) last.open = prevLive.open;
+        const maxLiveDrift = fpTfMinutes <= 1 ? 4 : (fpTfMinutes <= 5 ? 8 : 15);
+        if (prevLive.high > 500 && prevLive.high <= state.gold_price + maxLiveDrift) {
+          if (prevLive.high > last.high) last.high = prevLive.high;
+        }
+        if (prevLive.low > 500 && prevLive.low >= state.gold_price - maxLiveDrift) {
+          if (prevLive.low < last.low) last.low = prevLive.low;
+        }
       }
       if (!last.open || last.open < 500) last.open = state.gold_price;
       last.close = state.gold_price;
       if (state.gold_price > last.high) last.high = state.gold_price;
       if (state.gold_price < last.low || !(last.low > 500)) last.low = state.gold_price;
+      // Hard clamp live bar to interbank neighborhood — kills forced tall candles
+      const maxLiveDrift = fpTfMinutes <= 1 ? 4 : (fpTfMinutes <= 5 ? 8 : 15);
+      if (last.high > state.gold_price + maxLiveDrift) last.high = Math.max(state.gold_price, last.open) + 0.5;
+      if (last.low < state.gold_price - maxLiveDrift) last.low = Math.min(state.gold_price, last.open) - 0.5;
+      last.high = Math.max(last.high, last.open, last.close);
+      last.low = Math.min(last.low, last.open, last.close);
       const minPad = 0.12;
       if (last.high - last.low < minPad * 2) {
         last.high = Math.max(last.high, state.gold_price + minPad);
@@ -3722,22 +3849,29 @@ function rfIngest(p, q, buy, ts, id) {
 }
 
 async function rfBackfill() {
-  // Single source only: Binance Futures aggTrades
+  // Binance Futures aggTrades — paginate so M1/M5/M15 history has real volume
   rfBusy = true;
   try {
-    const res = await fetch('https://fapi.binance.com/fapi/v1/aggTrades?symbol=XAUUSDT&limit=1000');
-    if (res.ok) {
+    let endTime = Date.now();
+    // ~3 pages × 1000 trades ≈ enough for several M1 / a few M5 bars
+    for (let page = 0; page < 3; page++) {
+      const url = `https://fapi.binance.com/fapi/v1/aggTrades?symbol=XAUUSDT&limit=1000&endTime=${endTime}`;
+      const res = await fetch(url);
+      if (!res.ok) break;
       const list = await res.json();
-      if (Array.isArray(list)) {
-        for (let i = 0; i < list.length; i++) {
-          const item = list[i];
-          const p = parseFloat(item.p);
-          const q = parseFloat(item.q);
-          const buy = item.m === false; // m=true → seller was maker → sell aggressor
-          const ts = item.T || item.t;
-          if (p > 500 && p < 20000 && q > 0) rfStoreTrade(p, q, buy, ts);
-        }
+      if (!Array.isArray(list) || !list.length) break;
+      let oldest = endTime;
+      for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        const p = parseFloat(item.p);
+        const q = parseFloat(item.q);
+        const buy = item.m === false;
+        const ts = item.T || item.t;
+        if (p > 500 && p < 20000 && q > 0) rfStoreTrade(p, q, buy, ts);
+        if (ts < oldest) oldest = ts;
       }
+      if (list.length < 1000) break;
+      endTime = oldest - 1;
     }
   } catch (e) {}
   rfBusy = false;
@@ -3849,13 +3983,46 @@ async function changeFpTF(m) {
     const b = document.getElementById('fpBtn' + x);
     if (b) b.classList.toggle('active', x === m);
   });
-  // Immediately fetch real OHLC for this timeframe, then rebuild with footprint
+  // Clear stale candles so old TF highs cannot stick
+  fpCandles = [];
+  _rfLastBarSlot = 0;
   await fetchFpRealHistory(m);
+  // If main chart is on same TF, pull its interbank history for exact match
+  if (typeof fetchRealCandles === 'function') {
+    const wantInterval = m === 1 ? '1m' : (m === 5 ? '5m' : '15m');
+    if (state.tf_interval === wantInterval && typeof candleHistory !== 'undefined') {
+      // already loaded
+    } else {
+      try { await fetchRealCandles(wantInterval, false); } catch (e) {}
+    }
+  }
   rfRebuild();
   resizeFpCanvases();
   fpViewCenter = 0;
   autoCenterFp();
   syncLivePriceToFootprint();
+  // Background volume refresh for denser history prints
+  rfBackfill();
+}
+
+/** Full reload of real OHLC + volume — used by ↻ button and on every modal open */
+async function refreshFootprintChart() {
+  const btn = document.getElementById('fpRefreshBtn');
+  if (btn) { btn.textContent = '…'; btn.disabled = true; }
+  try {
+    fpCandles = [];
+    _rfLastBarSlot = 0;
+    fpViewCenter = 0;
+    await fetchFpRealHistory(fpTfMinutes);
+    await rfBackfill(); // rebuilds inside
+    rfRebuild();
+    resizeFpCanvases();
+    autoCenterFp();
+    syncLivePriceToFootprint();
+    startAllTickFeed();
+  } finally {
+    if (btn) { btn.textContent = '↻'; btn.disabled = false; }
+  }
 }
 
 async function openFootprintModal() {
@@ -3869,19 +4036,19 @@ async function openFootprintModal() {
     fb.classList.toggle('active', fpFollowLive);
     fb.textContent = fpFollowLive ? 'Follow' : 'Free';
   }
+  fpFollowLive = true;
   fpViewCenter = 0;
   fpZoom = 1;
-  // Fetch real OHLC history for current TF first
-  await fetchFpRealHistory(fpTfMinutes);
+  // Auto-refresh every time modal opens (background may have run for a while)
+  await refreshFootprintChart();
   requestAnimationFrame(() => {
     resizeFpCanvases();
-    rfRebuild();
     autoCenterFp();
     syncLivePriceToFootprint();
     setTimeout(() => {
       autoCenterFp();
       syncLivePriceToFootprint();
-    }, 400);
+    }, 350);
   });
   startAllTickFeed();
 }
@@ -3891,7 +4058,7 @@ function closeFootprintModal() {
   document.documentElement.style.overflow = '';
   document.body.style.overflow = '';
   document.body.style.touchAction = '';
-  // Keep tick feed running so footprint volume continues to build in background
+  // Keep tick feed + rfStore running so volume keeps building while modal is closed
 }
 
 function initApp() {
