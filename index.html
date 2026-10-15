@@ -1525,15 +1525,16 @@ function executeTradingViewRayArchitecture(data) {
       Math.abs(data[k].l - data[k - 1].c)
     );
   }
+  // Gold: use real ATR (typical $3–$25); floor only for dead-flat series
   const atr = isDxy
     ? Math.max(0.015, atrSum / atrPeriod)
-    : Math.max(1.5, atrSum / atrPeriod);
+    : Math.max(2.0, atrSum / atrPeriod);
 
   // ── Multi-strength swing pivots (fractals) ──────────────────────────
-  // L = bars on each side; minGap avoids stacked near-duplicate pivots
-  const L = isDxy ? 5 : 4;
-  const minGap = isDxy ? 4 : 3;
-  const promMin = atr * (isDxy ? 0.20 : 0.12);
+  // Gold needs wider / stronger pivots so lines lock to real structure
+  const L = isDxy ? 5 : 5;
+  const minGap = isDxy ? 4 : 5;
+  const promMin = atr * (isDxy ? 0.20 : 0.22);
 
   function collectPivots(kind) {
     const raw = [];
@@ -1573,13 +1574,19 @@ function executeTradingViewRayArchitecture(data) {
   const highs = collectPivots('h');
   const lows = collectPivots('l');
 
-  // ── Thresholds ─────────────────────────────────────────────────────
-  const maxSlope = isDxy ? Math.max(0.06, atr * 1.5) : 0.70;
-  const touchTol = isDxy ? Math.max(0.02, atr * 0.45) : atr * 0.45;
-  const breakTol = isDxy ? Math.max(0.018, atr * 0.35) : atr * 0.28;
-  const midBreakTol = isDxy ? Math.max(0.02, atr * 0.38) : atr * 0.32;
-  const minSpan = isDxy ? 7 : 6;
-  const maxSpan = isDxy ? 160 : 220;
+  // ── Thresholds (Gold tuned for authentic structure) ────────────────
+  // maxSlope = max $/bar; gold can slope more than DXY but reject vertical noise
+  const maxSlope = isDxy
+    ? Math.max(0.06, atr * 1.5)
+    : Math.min(4.0, Math.max(1.0, atr * 0.50));
+  // Touch band: wick must land near the line (tighter = more authentic)
+  const touchTol = isDxy ? Math.max(0.02, atr * 0.45) : atr * 0.38;
+  // Decisive close through the line = broken
+  const breakTol = isDxy ? Math.max(0.018, atr * 0.35) : atr * 0.22;
+  const midBreakTol = isDxy ? Math.max(0.02, atr * 0.38) : atr * 0.26;
+  // Gold: slightly longer min span so short noise pairs are ignored
+  const minSpan = isDxy ? 7 : 8;
+  const maxSpan = isDxy ? 160 : 200;
   const livePx = isDxy
     ? (state.dxy_price > 50 ? state.dxy_price : data[n - 1].c)
     : (state.gold_price > 500 ? state.gold_price : data[n - 1].c);
@@ -1696,33 +1703,40 @@ function executeTradingViewRayArchitecture(data) {
       }
     }
 
-    // Require at least 2 confirmed touches; prefer 3+ for quality
+    // Require at least 2 confirmed touches; gold prefers 3+ for authenticity
     if (touches.length < 2) return null;
-    // Soft reject: single weak 2-touch lines far from live price
     const x1 = touches[0].i;
     const y1 = lineAt(fit, x1);
     const x2 = touches[touches.length - 1].i;
     const y2 = lineAt(fit, x2);
     const projNow = lineAt(fit, n - 1);
     const distNow = Math.abs(livePx - projNow);
-    const relevance = Math.max(0, 1 - distNow / (atr * (isDxy ? 7 : 3.5)));
-    if (touches.length === 2 && relevance < 0.15) return null;
+    // Gold: relevance window ~3–4 ATR from live price
+    const relevance = Math.max(0, 1 - distNow / (atr * (isDxy ? 7 : 4.0)));
+    // Gold: drop weak 2-touch lines that are far from price or poorly aligned
+    if (!isDxy && touches.length === 2 && relevance < 0.22) return null;
+    if (isDxy && touches.length === 2 && relevance < 0.15) return null;
 
     // Residual quality: average distance of touches to fitted line
     let resid = 0;
     for (const t of touches) resid += Math.abs(t.p - lineAt(fit, t.i));
     resid /= touches.length;
     const residualPenalty = Math.min(1, resid / (touchTol + 1e-9));
+    // Gold: reject sloppy fits (touches not truly on the line)
+    if (!isDxy && residualPenalty > 0.85 && touches.length < 4) return null;
 
-    const touchScore = touches.length * (isDxy ? 450 : 280);
-    const spanBonus = Math.min(x2 - x1, 90) * (isDxy ? 2.2 : 1.2);
+    // Gold scoring: heavy weight on 3+ touches, clean fit, still-active lines
+    const touchScore = touches.length * (isDxy ? 450 : (touches.length >= 3 ? 360 : 240));
+    const spanBonus = Math.min(x2 - x1, 100) * (isDxy ? 2.2 : 1.6);
+    const threeTouchBonus = (!isDxy && touches.length >= 3) ? 180 : 0;
     const score =
       touchScore +
       x2 +
       spanBonus +
-      relevance * (isDxy ? 350 : 140) +
+      threeTouchBonus +
+      relevance * (isDxy ? 350 : 200) +
       (isBase ? 40 : 0) -
-      residualPenalty * (isDxy ? 120 : 80);
+      residualPenalty * (isDxy ? 120 : 110);
 
     return {
       x1, y1, x2, y2,
@@ -1753,12 +1767,26 @@ function executeTradingViewRayArchitecture(data) {
       if (ray && !ray.isBroken) allRays.push(ray);
     }
   }
-  // Structural base (recent lows on DXY, early/mid on gold)
+  // Structural base: DXY = recent lows; Gold = major early→mid structure
   if (lows.length >= 2) {
-    const i1 = isDxy ? Math.max(0, lows.length - Math.min(8, lows.length)) : 0;
-    const i2 = isDxy
-      ? Math.min(lows.length - 1, i1 + Math.max(1, Math.floor((lows.length - i1) / 2)))
-      : Math.floor(lows.length / 2);
+    let i1, i2;
+    if (isDxy) {
+      i1 = Math.max(0, lows.length - Math.min(8, lows.length));
+      i2 = Math.min(lows.length - 1, i1 + Math.max(1, Math.floor((lows.length - i1) / 2)));
+    } else {
+      // Gold: connect a strong early low to a later structural low
+      i1 = 0;
+      i2 = Math.max(1, Math.floor(lows.length * 0.55));
+      // Prefer the most prominent low in the first third as anchor
+      let bestProm = lows[0].prom || 0;
+      for (let t = 1; t < Math.min(lows.length, Math.ceil(lows.length / 3)); t++) {
+        if ((lows[t].prom || 0) > bestProm) {
+          bestProm = lows[t].prom;
+          i1 = t;
+        }
+      }
+      if (i2 <= i1) i2 = Math.min(lows.length - 1, i1 + 1);
+    }
     if (i2 > i1) {
       const baseRay = evaluateRay(lows[i1], lows[i2], 'base');
       if (baseRay && !baseRay.isBroken) allRays.push(baseRay);
@@ -1768,8 +1796,9 @@ function executeTradingViewRayArchitecture(data) {
   function filterRedundantRays(rays) {
     rays.sort((a, b) => b.score - a.score);
     const unique = [];
-    const slopeEps = isDxy ? Math.max(0.0015, atr * 0.06) : 0.03;
-    const levelEps = isDxy ? Math.max(0.035, atr * 1.0) : atr * 0.9;
+    // Gold: merge near-parallel lines within ~0.8 ATR at the right endpoint
+    const slopeEps = isDxy ? Math.max(0.0015, atr * 0.06) : Math.max(0.02, atr * 0.04);
+    const levelEps = isDxy ? Math.max(0.035, atr * 1.0) : atr * 0.75;
     for (const r of rays) {
       const isDupe = unique.some(ex =>
         ex.type === r.type &&
@@ -1782,10 +1811,11 @@ function executeTradingViewRayArchitecture(data) {
   }
 
   const filtered = filterRedundantRays(allRays);
-  // Prefer lines with 3+ touches when available
+  // Prefer authentic 3+ touch lines; gold is stricter (use strong set if any exist)
   const quality = (arr) => {
     const strong = arr.filter(r => r.touchCount >= 3);
-    return (strong.length >= 2 ? strong : arr);
+    if (isDxy) return (strong.length >= 2 ? strong : arr);
+    return (strong.length >= 1 ? strong : arr);
   };
   const resCap = isDxy ? 4 : 3;
   const supCap = isDxy ? 4 : 3;
