@@ -44,6 +44,144 @@ body { padding: 12px 8px; display: flex; justify-content: center; align-items: f
   body { padding: 20px 16px; }
   .card { max-width: 960px; padding: 20px; }
   .tablet-grid-layout { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 16px; align-items: start; }
+  .desk-chat-embed { display: flex !important; }
+  .gp-mini-btn { display: none !important; }
+}
+/* Embedded GP AI chat in desktop/tablet right column */
+.desk-chat-embed {
+  display: none;
+  flex-direction: column;
+  margin-top: 12px;
+  background: #0b0d12;
+  border: 1px solid #243044;
+  border-radius: 14px;
+  overflow: hidden;
+  min-height: 280px;
+  max-height: 520px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+}
+.desk-chat-embed.minimized {
+  min-height: 0;
+  max-height: 48px;
+}
+.desk-chat-embed.minimized .desk-chat-body,
+.desk-chat-embed.minimized .desk-chat-compose {
+  display: none !important;
+}
+.desk-chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.28), rgba(37,99,235,0.18));
+  border-bottom: 1px solid #243044;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.desk-chat-head .dc-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #f3f4f6;
+}
+.desk-chat-head .dc-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #34d399; box-shadow: 0 0 8px #34d399;
+  animation: livePulse 1.4s ease-in-out infinite;
+}
+.desk-chat-head .dc-actions { display: flex; gap: 6px; }
+.desk-chat-head button {
+  width: 28px; height: 28px; border-radius: 8px; border: none;
+  background: rgba(255,255,255,0.08); color: #d1d5db; cursor: pointer;
+  font-size: 13px; display: flex; align-items: center; justify-content: center;
+}
+.desk-chat-head button:active { background: rgba(255,255,255,0.15); }
+.desk-chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #0a0d13;
+  min-height: 160px;
+  -webkit-overflow-scrolling: touch;
+}
+.desk-chat-body .mb {
+  max-width: 94%;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.desk-chat-body .mb.ai {
+  align-self: flex-start;
+  background: #151b28;
+  border: 1px solid #2a3548;
+  color: #e5e7eb;
+}
+.desk-chat-body .mb.me {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #5b21b6, #1d4ed8);
+  color: #fff;
+  border: none;
+}
+.desk-chat-body .mb.sys {
+  align-self: center;
+  background: rgba(124,58,237,0.12);
+  border: 1px solid rgba(124,58,237,0.3);
+  color: #c4b5fd;
+  font-size: 11.5px;
+}
+.desk-chat-quick {
+  display: flex;
+  gap: 6px;
+  padding: 0 10px 6px;
+  background: #0f131c;
+  flex-wrap: wrap;
+}
+.desk-chat-quick button {
+  border: 1px solid #2a3142;
+  background: #151822;
+  color: #c8cdd8;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 5px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.desk-chat-compose {
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid #1f2937;
+  background: #0f131c;
+  flex-shrink: 0;
+}
+.desk-chat-compose input {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid #2a3142;
+  background: #0b0d12;
+  color: #e5e7eb;
+  padding: 10px 14px;
+  font-size: 13px;
+  outline: none;
+}
+.desk-chat-compose input:focus { border-color: #7c3aed; }
+.desk-chat-compose button {
+  border: none;
+  border-radius: 999px;
+  padding: 0 14px;
+  font-size: 12.5px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  color: #fff;
+  cursor: pointer;
 }
 .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
@@ -978,6 +1116,20 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
 .tv-news-timer { font-family: monospace; font-size: 10px; font-weight: 700; color: #f59e0b; flex-shrink: 0; }
 .tv-right-group { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
 .tv-close { background: none; border: none; font-size: 20px; color: #8e95a5; cursor: pointer; padding: 4px 8px; line-height: 1; }
+.tv-ai-btn, .fp-ai-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+  border: none; color: #fff; font-size: 11px; font-weight: 800;
+  padding: 5px 10px; border-radius: 8px; cursor: pointer;
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.4);
+  white-space: nowrap; letter-spacing: 0.2px;
+}
+.tv-ai-btn:active, .fp-ai-btn:active { transform: scale(0.96); opacity: 0.9; }
+.tv-ai-btn.active, .fp-ai-btn.active {
+  background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.45);
+}
+.fp-ai-btn { padding: 4px 8px; font-size: 10.5px; }
 .chart-bias-bar { display: flex; align-items: center; gap: 8px; overflow-x: auto; white-space: nowrap; padding: 5px 10px; background: #0a0c12; border-bottom: 1px solid #1a1e29; scrollbar-width: none; flex-shrink: 0; }
 .chart-bias-bar::-webkit-scrollbar { display: none; }
 .bias-chip { font-size: 10.5px; font-weight: 700; color: #8e95a5; display: flex; align-items: center; gap: 4px; background: #12151e; border: 1px solid #1e2434; padding: 2px 6px; border-radius: 5px; }
@@ -1061,8 +1213,8 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   </div>
 </div>
 
-<!-- Floating Trade Toolbar -->
-<div class="ftb" id="floatingTradeBar" style="top:120px; right:12px;">
+<!-- Floating Trade Toolbar (hidden by default — not shown on page load) -->
+<div class="ftb hidden" id="floatingTradeBar" style="top:120px; right:12px;">
   <div class="ftb-head" id="ftbDragHandle">
     <b>Trade Desk</b>
     <button class="ftb-x" type="button" onclick="deskUiSet('toolbarVisible', false)">✕</button>
@@ -1216,25 +1368,9 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   </button>
 
   <div class="side-drawer-section">Trade desk</div>
-  <button class="side-drawer-item" onclick="deskTradeTicket('long'); closeSideDrawer();">
-    <span class="sd-ico"><span style="font-size:14px;color:#34d399;">▲</span></span>
-    <span class="sd-text">Set Long<span class="sd-sub">Entry · stop · target ticket</span></span>
-  </button>
-  <button class="side-drawer-item" onclick="deskTradeTicket('stop'); closeSideDrawer();">
-    <span class="sd-ico"><span style="font-size:14px;color:#f87171;">⏹</span></span>
-    <span class="sd-text">Set Stop<span class="sd-sub">Suggest session SL</span></span>
-  </button>
-  <button class="side-drawer-item" onclick="deskTradeTicket('target'); closeSideDrawer();">
-    <span class="sd-ico"><span style="font-size:14px;color:#60a5fa;">◎</span></span>
-    <span class="sd-text">Set Target<span class="sd-sub">Suggest session TP</span></span>
-  </button>
   <button class="side-drawer-item" onclick="deskExportSnapshot(); closeSideDrawer();">
     <span class="sd-ico"><span style="font-size:14px;">⤓</span></span>
     <span class="sd-text">Export PNG<span class="sd-sub">Snapshot + composite</span></span>
-  </button>
-  <button class="side-drawer-item" onclick="openDeskSettings(); closeSideDrawer();">
-    <span class="sd-ico"><span style="font-size:14px;">⚙</span></span>
-    <span class="sd-text">Desk Settings<span class="sd-sub">Overlay · hot-keys · footprint</span></span>
   </button>
 
   <div class="side-drawer-section">System</div>
@@ -1371,7 +1507,6 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
             <span class="news-tab-headline" id="pairsHeadTitle">DXY · US10Y · FX Pairs</span>
           </div>
           <div class="news-tab-right">
-            <span class="news-compact-timer" id="pairsHeadDxy" style="color:#e1e4ea;">—</span>
             <span class="news-tab-chevron" id="pairsChevron">▼</span>
           </div>
         </div>
@@ -1458,6 +1593,32 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
           </div>
         </div>
       </div>
+
+      <!-- Desktop/Tablet embedded GP AI chat (fills empty right area) -->
+      <div class="desk-chat-embed" id="deskChatEmbed">
+        <div class="desk-chat-head" onclick="deskChatToggleMin()">
+          <div class="dc-title">
+            <span class="dc-dot"></span>
+            GP AI
+          </div>
+          <div class="dc-actions" onclick="event.stopPropagation()">
+            <button type="button" title="Full agent" onclick="openGpAi()">↗</button>
+            <button type="button" id="deskChatMinBtn" title="Minimize / Expand" onclick="deskChatToggleMin()">−</button>
+          </div>
+        </div>
+        <div class="desk-chat-body" id="deskChatBody">
+          <div class="mb sys">Desktop chat ready. Ask about gold bias, levels, or news.</div>
+        </div>
+        <div class="desk-chat-quick">
+          <button type="button" onclick="deskChatQuick('Live brief')">Live brief</button>
+          <button type="button" onclick="deskChatQuick('Gold bias and nearest support?')">Bias</button>
+          <button type="button" onclick="deskChatQuick('Any news risk for gold right now?')">News</button>
+        </div>
+        <div class="desk-chat-compose">
+          <input id="deskChatInput" type="text" placeholder="Ask GP-AI…" autocomplete="off" />
+          <button type="button" id="deskChatSend" onclick="deskChatSend()">Send</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1528,6 +1689,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <span class="tv-news-timer" id="chartNewsTimer">--:--:--</span>
       </div>
       <div class="tv-right-group">
+        <button class="tv-ai-btn" id="tvAiZonesBtn" type="button" onclick="aiToggleZones()" title="AI Buy / Sell Zones">🤖 Zones</button>
         <button class="tv-close" onclick="closeChartModal()">✕</button>
       </div>
     </div>
@@ -1600,6 +1762,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <button class="fp-tf-btn" id="fpRefreshBtn" onclick="refreshFootprintChart()" title="Reload real OHLC + volume history">↻</button>
         <button class="fp-tf-btn" onclick="fpZoomOut()" title="Smaller candles">−</button>
         <button class="fp-tf-btn" onclick="fpZoomIn()" title="Larger candles">+</button>
+        <button class="fp-ai-btn" id="fpAiZonesBtn" type="button" onclick="aiToggleZones()" title="AI Buy / Sell Zones">🤖 Zones</button>
       </div>
       <button class="fp-exit-btn" onclick="closeFootprintModal()">✕ Exit</button>
     </div>
@@ -3244,6 +3407,13 @@ function drawTradingViewChart() {
     }
   } catch (e) {}
 
+  // AI Buy / Sell Zones
+  try {
+    if (typeof aiDrawZonesOnChart === 'function') {
+      aiDrawZonesOnChart(ctx, getY, chartW);
+    }
+  } catch (e) {}
+
   ctx.restore();
 }
 
@@ -3396,6 +3566,8 @@ function openChartModal(asset) {
   if (state.chartAsset === 'dxy') {
     if (label) label.textContent = 'US Dollar Index (DXY)';
     if (dot) { dot.textContent = 'D'; dot.style.background = '#3b82f6'; }
+    // Minimize embedded desk chat when opening DXY
+    try { deskChatSetMinimized(true); } catch (e) {}
   } else {
     if (label) label.textContent = 'CFDs on Gold (XAUUSD)';
     if (dot) { dot.textContent = 'G'; dot.style.background = '#f59e0b'; }
@@ -3416,6 +3588,12 @@ function closeChartModal() {
   document.getElementById("chartModal").style.display = "none";
   const sr = document.getElementById('sideFab');
   if (sr) sr.style.display = '';
+  // Restore embedded chat on desktop when chart closes
+  try {
+    if (typeof deskChatIsDesktop === 'function' && deskChatIsDesktop()) {
+      deskChatSetMinimized(false);
+    }
+  } catch (e) {}
 }
 
 /* =====================================================================
@@ -3799,6 +3977,13 @@ function drawFpChart() {
     fpCtxChart.stroke();
     fpCtxChart.setLineDash([]);
   }
+
+  // AI Buy / Sell Zones on footprint
+  try {
+    if (typeof aiDrawZonesOnFootprint === 'function') {
+      aiDrawZonesOnFootprint(fpCtxChart, w);
+    }
+  } catch (e) {}
 }
 
 function drawFpPriceLadder() {
@@ -5419,7 +5604,7 @@ const DESK_PROFILE_KEY = 'gold_desk_layout_profile_v1';
 const defaultDeskUi = {
   overlayEnabled: true,
   pinMode: true,
-  toolbarVisible: true,
+  toolbarVisible: false,
   hotKeysEnabled: true,
   showScoreBanner: true,
   footprintMode: 'both', // front | slide | both | off
@@ -5428,11 +5613,159 @@ const defaultDeskUi = {
 let deskUi = { ...defaultDeskUi };
 let deskTradeLevels = { entry: 0, sl: 0, tp: 0, side: 'buy' };
 
+/* ===== AI BUY / SELL ZONES ===== */
+let aiZones = { buy: null, sell: null, visible: false };
+
+function aiUpdateZoneButtons() {
+  const on = !!(aiZones && aiZones.visible);
+  ['tvAiZonesBtn', 'fpAiZonesBtn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.toggle('active', on);
+      el.textContent = on ? '🤖 Clear' : '🤖 Zones';
+    }
+  });
+}
+
+function aiComputeZones() {
+  const isDxy = (state.chartAsset === 'dxy');
+  const px = isDxy ? (state.dxy_price || 0) : (state.gold_price || 0);
+  const minValid = isDxy ? 50 : 500;
+  if (!(px > minValid)) {
+    if (typeof deskShowAlert === 'function') deskShowAlert('No price', 'Wait for live feed', 'warn');
+    return false;
+  }
+  let recentHigh = px, recentLow = px;
+  try {
+    if (typeof candleHistory !== 'undefined' && candleHistory.length > 3 && candlesMatchAsset(candleHistory, state.chartAsset || 'gold')) {
+      candleHistory.slice(-24).forEach(c => {
+        if (c.h > recentHigh) recentHigh = c.h;
+        if (c.l < recentLow && c.l > minValid) recentLow = c.l;
+      });
+    }
+  } catch (e) {}
+  // Also consider footprint candles when on gold
+  if (!isDxy && typeof fpCandles !== 'undefined' && fpCandles.length > 2) {
+    fpCandles.slice(-12).forEach(c => {
+      if (c.high > recentHigh) recentHigh = c.high;
+      if (c.low < recentLow && c.low > minValid) recentLow = c.low;
+    });
+  }
+  const open = isDxy ? (state.dxy_open_session || px) : (state.gold_open_session || px);
+  const range = Math.max(recentHigh - recentLow, isDxy ? 0.08 : 4);
+  const pad = Math.max(range * 0.18, isDxy ? 0.04 : 1.2);
+
+  // Bias from composite score when on gold
+  const score = state.smoothed_score || 0;
+  let buyBias = 0.5, sellBias = 0.5;
+  if (!isDxy) {
+    if (score >= 10) { buyBias = 0.65; sellBias = 0.4; }
+    else if (score <= -10) { buyBias = 0.4; sellBias = 0.65; }
+  }
+
+  // Buy zone sits near lower structure / support
+  const support = Math.min(px, open, recentLow + pad * 0.35);
+  const buyHigh = support + pad * buyBias * 0.55;
+  const buyLow = support - pad * (1.1 - buyBias * 0.3);
+
+  // Sell zone near upper structure / resistance
+  const resist = Math.max(px, open, recentHigh - pad * 0.35);
+  const sellLow = resist - pad * sellBias * 0.55;
+  const sellHigh = resist + pad * (1.1 - sellBias * 0.3);
+
+  aiZones.buy = { low: Math.min(buyLow, buyHigh), high: Math.max(buyLow, buyHigh) };
+  aiZones.sell = { low: Math.min(sellLow, sellHigh), high: Math.max(sellLow, sellHigh) };
+  aiZones.visible = true;
+  aiUpdateZoneButtons();
+
+  const dig = isDxy ? 3 : 2;
+  const msg = 'BUY $' + aiZones.buy.low.toFixed(dig) + '–' + aiZones.buy.high.toFixed(dig) +
+    '  ·  SELL $' + aiZones.sell.low.toFixed(dig) + '–' + aiZones.sell.high.toFixed(dig);
+  if (typeof deskShowAlert === 'function') {
+    deskShowAlert('AI Zones drawn', msg, score >= 5 ? 'bull' : (score <= -5 ? 'bear' : 'warn'));
+  }
+  try { if (typeof drawTradingViewChart === 'function') drawTradingViewChart(); } catch (e) {}
+  return true;
+}
+
+function aiClearZones() {
+  aiZones.visible = false;
+  aiZones.buy = null;
+  aiZones.sell = null;
+  aiUpdateZoneButtons();
+  try { if (typeof drawTradingViewChart === 'function') drawTradingViewChart(); } catch (e) {}
+  if (typeof deskShowAlert === 'function') deskShowAlert('Zones cleared', 'AI buy/sell zones removed', 'warn');
+}
+
+function aiToggleZones() {
+  if (aiZones.visible) {
+    aiClearZones();
+  } else {
+    aiComputeZones();
+  }
+}
+
+function aiDrawZonesOnChart(ctx, getY, chartW) {
+  if (!aiZones || !aiZones.visible) return;
+  const dig = (state.chartAsset === 'dxy') ? 3 : 2;
+  const drawOne = (z, fill, stroke, label) => {
+    if (!z || !(z.high > 0)) return;
+    const yTop = getY(z.high);
+    const yBot = getY(z.low);
+    const top = Math.min(yTop, yBot);
+    const bot = Math.max(yTop, yBot);
+    const hgt = Math.max(2, bot - top);
+    ctx.fillStyle = fill;
+    ctx.fillRect(0, top, chartW, hgt);
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([5, 3]);
+    ctx.beginPath(); ctx.moveTo(0, top + 0.5); ctx.lineTo(chartW, top + 0.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, bot + 0.5); ctx.lineTo(chartW, bot + 0.5); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = stroke;
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(label + '  ' + z.low.toFixed(dig) + ' – ' + z.high.toFixed(dig), 8, top + 13);
+  };
+  drawOne(aiZones.buy, 'rgba(16, 185, 129, 0.14)', '#10b981', 'AI BUY ZONE');
+  drawOne(aiZones.sell, 'rgba(239, 68, 68, 0.14)', '#ef4444', 'AI SELL ZONE');
+}
+
+function aiDrawZonesOnFootprint(ctx, w) {
+  if (!aiZones || !aiZones.visible || typeof fpPriceToY !== 'function') return;
+  const dig = 2;
+  const drawOne = (z, fill, stroke, label) => {
+    if (!z || !(z.high > 0)) return;
+    const yTop = fpPriceToY(z.high);
+    const yBot = fpPriceToY(z.low);
+    const top = Math.min(yTop, yBot);
+    const bot = Math.max(yTop, yBot);
+    const hgt = Math.max(2, bot - top);
+    ctx.fillStyle = fill;
+    ctx.fillRect(0, top, w, hgt);
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([5, 3]);
+    ctx.beginPath(); ctx.moveTo(0, top + 0.5); ctx.lineTo(w, top + 0.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, bot + 0.5); ctx.lineTo(w, bot + 0.5); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = stroke;
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(label + '  ' + z.low.toFixed(dig) + ' – ' + z.high.toFixed(dig), 8, top + 13);
+  };
+  drawOne(aiZones.buy, 'rgba(16, 185, 129, 0.16)', '#10b981', 'AI BUY ZONE');
+  drawOne(aiZones.sell, 'rgba(239, 68, 68, 0.16)', '#ef4444', 'AI SELL ZONE');
+}
+
 function deskUiLoad() {
   try {
     const s = JSON.parse(localStorage.getItem(DESK_UI_KEY) || '{}');
     deskUi = { ...defaultDeskUi, ...s, ticket: { ...defaultDeskUi.ticket, ...(s.ticket || {}) } };
   } catch (e) { deskUi = { ...defaultDeskUi }; }
+  // Floating Trade Desk is permanently off on page load
+  deskUi.toolbarVisible = false;
 }
 function deskUiSave() {
   try { localStorage.setItem(DESK_UI_KEY, JSON.stringify(deskUi)); } catch (e) {}
@@ -5786,10 +6119,150 @@ function gpAiPushUI(role, content) {
   const label = role === 'user' ? 'You' : (role === 'assistant' ? 'GP AI' : 'System');
   div.innerHTML = `<div class="gp-role">${label}</div>${gpAiEscape(content)}`;
   chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
+  // Assistant replies: show from the START of the answer (not jump to the end)
+  if (role === 'assistant') {
+    try { div.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {
+      chat.scrollTop = Math.max(0, div.offsetTop - 8);
+    }
+  } else {
+    chat.scrollTop = chat.scrollHeight;
+  }
 }
 function gpAiPushSystem(msg) {
   gpAiPushUI('system', msg);
+}
+
+/* ===== DESKTOP/TABLET EMBEDDED CHAT ===== */
+let _deskChatMin = false;
+
+function deskChatIsDesktop() {
+  return window.matchMedia && window.matchMedia('(min-width: 768px)').matches;
+}
+
+function deskChatSetMinimized(min) {
+  _deskChatMin = !!min;
+  const el = document.getElementById('deskChatEmbed');
+  const btn = document.getElementById('deskChatMinBtn');
+  if (el) el.classList.toggle('minimized', _deskChatMin);
+  if (btn) btn.textContent = _deskChatMin ? '+' : '−';
+}
+
+function deskChatToggleMin() {
+  deskChatSetMinimized(!_deskChatMin);
+}
+
+function deskChatPush(role, text) {
+  const chat = document.getElementById('deskChatBody');
+  if (!chat) return;
+  const div = document.createElement('div');
+  div.className = 'mb ' + (role === 'user' ? 'me' : (role === 'system' ? 'sys' : 'ai'));
+  div.textContent = text;
+  chat.appendChild(div);
+  // AI answers: open at the start of the reply so the question context is readable
+  if (role === 'ai') {
+    try { div.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {
+      chat.scrollTop = Math.max(0, div.offsetTop - 8);
+    }
+  } else {
+    chat.scrollTop = chat.scrollHeight;
+  }
+}
+
+async function deskChatSend() {
+  const input = document.getElementById('deskChatInput');
+  if (!input) return;
+  const q = (input.value || '').trim();
+  if (!q) return;
+  input.value = '';
+  deskChatPush('user', q);
+  const sendBtn = document.getElementById('deskChatSend');
+  if (sendBtn) sendBtn.disabled = true;
+  deskChatPush('system', 'Thinking…');
+  try {
+    if (typeof gpAgentRun === 'function' && typeof gpAiLoadSettings === 'function') {
+      const cfg = gpAiLoadSettings();
+      if (!cfg.key) {
+        const chat = document.getElementById('deskChatBody');
+        if (chat && chat.lastChild) chat.lastChild.remove();
+        deskChatPush('system', 'Set API key in full GP AI (↗) first.');
+        return;
+      }
+      const prevPush = typeof gpAiPushUI === 'function' ? gpAiPushUI : null;
+      let assistantText = '';
+      window.gpAiPushUI = function(role, content) {
+        if (role === 'assistant') {
+          assistantText = content;
+          const chat = document.getElementById('deskChatBody');
+          if (chat) {
+            const nodes = chat.querySelectorAll('.mb.sys');
+            if (nodes.length) {
+              const last = nodes[nodes.length - 1];
+              if ((last.textContent || '').includes('Thinking')) last.remove();
+            }
+          }
+          deskChatPush('ai', content);
+        } else if (role === 'system') {
+          if (/error|api|key/i.test(content || '')) {
+            const chat = document.getElementById('deskChatBody');
+            if (chat) {
+              const nodes = chat.querySelectorAll('.mb.sys');
+              if (nodes.length) {
+                const last = nodes[nodes.length - 1];
+                if ((last.textContent || '').includes('Thinking')) last.remove();
+              }
+            }
+            deskChatPush('system', content);
+          }
+        }
+        if (prevPush) prevPush(role, content);
+      };
+      await gpAgentRun(q);
+      window.gpAiPushUI = prevPush;
+      if (!assistantText) {
+        const chat = document.getElementById('deskChatBody');
+        if (chat) {
+          const nodes = chat.querySelectorAll('.mb.sys');
+          if (nodes.length) {
+            const last = nodes[nodes.length - 1];
+            if ((last.textContent || '').includes('Thinking')) last.remove();
+          }
+        }
+      }
+    } else {
+      const chat = document.getElementById('deskChatBody');
+      if (chat && chat.lastChild) chat.lastChild.remove();
+      deskChatPush('system', 'Agent core not loaded.');
+    }
+  } catch (e) {
+    const chat = document.getElementById('deskChatBody');
+    if (chat && chat.lastChild && (chat.lastChild.textContent || '').includes('Thinking')) chat.lastChild.remove();
+    deskChatPush('system', 'Error: ' + ((e && e.message) || e));
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+  }
+}
+
+function deskChatQuick(text) {
+  const input = document.getElementById('deskChatInput');
+  if (input) input.value = text;
+  deskChatSend();
+}
+
+function deskChatBoot() {
+  const input = document.getElementById('deskChatInput');
+  if (input) {
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); deskChatSend(); }
+    };
+  }
+  // Auto-expand on desktop/tablet; stay usable when resized
+  if (deskChatIsDesktop()) {
+    deskChatSetMinimized(false);
+  }
+  window.addEventListener('resize', () => {
+    if (!deskChatIsDesktop()) return;
+    // keep user preference after first interaction; only auto-open once
+  });
 }
 
 /* ===== GP AI MINI BOT ===== */
@@ -5832,7 +6305,14 @@ function gpMiniPush(role, text) {
   div.className = 'mb ' + (role === 'user' ? 'me' : (role === 'system' ? 'sys' : 'ai'));
   div.textContent = text;
   chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
+  // AI answers: show from the beginning of the reply
+  if (role === 'ai') {
+    try { div.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {
+      chat.scrollTop = Math.max(0, div.offsetTop - 8);
+    }
+  } else {
+    chat.scrollTop = chat.scrollHeight;
+  }
 }
 async function gpMiniSend() {
   const input = document.getElementById('gpMiniInput');
@@ -6330,6 +6810,9 @@ function initApp() {
     rfBackfill();
     fetchFpRealHistory(fpTfMinutes);
   }, 800);
+
+  // Desktop/tablet: auto-open embedded GP AI in right column
+  try { deskChatBoot(); } catch (e) {}
 }
 
 initApp();
