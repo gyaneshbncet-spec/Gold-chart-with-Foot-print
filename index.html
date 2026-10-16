@@ -533,6 +533,363 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
 .gp-typing { color: #a78bfa; font-size: 12px; font-style: italic; }
 
 
+
+/* ===== DESK UPGRADES ===== */
+.bias-bar-track {
+  width: 78%;
+  height: 4px;
+  background: #1a2030;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+.bias-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 3px;
+  transition: width 0.25s ease, background 0.2s;
+}
+.bias-bar-fill.bull { background: linear-gradient(90deg, #059669, #34d399); }
+.bias-bar-fill.bear { background: linear-gradient(90deg, #dc2626, #f87171); }
+.bias-bar-fill.neut { background: #6b7280; }
+.latency-badge {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: monospace;
+  color: #34d399;
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.35);
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.latency-badge.warn {
+  color: #fbbf24;
+  background: rgba(245,158,11,0.12);
+  border-color: rgba(245,158,11,0.45);
+}
+.latency-badge.bad {
+  color: #f87171;
+  background: rgba(239,68,68,0.12);
+  border-color: rgba(239,68,68,0.45);
+}
+.trade-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.trade-toolbar button {
+  border: 1px solid #2a3142;
+  background: #151822;
+  color: #e5e7eb;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 10px 6px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.trade-toolbar button.long { border-color: rgba(16,185,129,0.45); color: #34d399; }
+.trade-toolbar button.stop { border-color: rgba(239,68,68,0.4); color: #f87171; }
+.trade-toolbar button.tgt { border-color: rgba(59,130,246,0.4); color: #60a5fa; }
+.trade-toolbar button:active { transform: scale(0.97); }
+.desk-tools {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.desk-tools button {
+  flex: 1;
+  min-width: 120px;
+  border: 1px solid #2a3142;
+  background: #151822;
+  color: #c8cdd8;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 9px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.live-pair-row.hot-pos { box-shadow: inset 3px 0 0 #00f59b; }
+.live-pair-row.hot-neg { box-shadow: inset 3px 0 0 #ff2a44; }
+.alert-stack {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12000;
+  width: min(420px, 94vw);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.alert-toast {
+  pointer-events: auto;
+  background: #12161f;
+  border: 1px solid #3b82f6;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+  animation: alertIn 0.25s ease;
+}
+.alert-toast.bull { border-color: #10b981; }
+.alert-toast.bear { border-color: #ef4444; }
+.alert-toast.warn { border-color: #f59e0b; }
+.alert-toast .at-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #e5e7eb;
+  margin-bottom: 4px;
+}
+.alert-toast .at-body {
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+@keyframes alertIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== TRADE DESK UI ===== */
+.ftb {
+  position: fixed;
+  z-index: 9100;
+  width: min(300px, 92vw);
+  background: #0f131c;
+  border: 1px solid #2a3548;
+  border-radius: 14px;
+  box-shadow: 0 16px 50px rgba(0,0,0,0.55);
+  color: #e5e7eb;
+  user-select: none;
+}
+.ftb.hidden { display: none !important; }
+.ftb-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; cursor: move;
+  background: linear-gradient(180deg,#161c2a,#0f131c);
+  border-radius: 14px 14px 0 0;
+  border-bottom: 1px solid #243044;
+}
+.ftb-head b { font-size: 12.5px; letter-spacing: 0.3px; }
+.ftb-head .ftb-x {
+  width: 28px; height: 28px; border: none; border-radius: 8px;
+  background: #1a2030; color: #9ca3af; cursor: pointer;
+}
+.ftb-body { padding: 10px 12px 12px; }
+.ftb-score {
+  font-size: 11.5px; font-weight: 800; margin-bottom: 8px;
+  padding: 7px 9px; border-radius: 8px;
+  background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.35); color: #fbbf24;
+}
+.ftb-score.bull { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.4); color: #34d399; }
+.ftb-score.bear { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4); color: #f87171; }
+.ftb-grid { display: grid; grid-template-columns: 72px 1fr; gap: 6px 8px; align-items: center; margin-bottom: 8px; }
+.ftb-grid label { font-size: 11px; color: #8b93a7; font-weight: 700; }
+.ftb-grid input {
+  width: 100%; padding: 7px 8px; border-radius: 8px; border: 1px solid #2a3142;
+  background: #0b0d12; color: #e5e7eb; font-size: 12.5px; font-variant-numeric: tabular-nums;
+}
+.ftb-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ftb-actions button {
+  border: 1px solid #2a3142; background: #151822; color: #e5e7eb;
+  font-size: 11.5px; font-weight: 800; padding: 9px 6px; border-radius: 9px; cursor: pointer;
+}
+.ftb-actions button.buy { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.45); color: #34d399; }
+.ftb-actions button.sell { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.45); color: #f87171; }
+.ftb-actions button.pin { grid-column: 1 / -1; }
+.ftb-toggles { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+.ftb-toggles label { font-size: 11px; color: #9ca3af; display: flex; gap: 8px; align-items: center; }
+.desk-settings-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9600;
+  background: rgba(0,0,0,0.65); align-items: flex-end; justify-content: center;
+}
+.desk-settings-overlay.show { display: flex; }
+.desk-settings-panel {
+  width: min(420px, 100%); background: #0b0d12; border: 1px solid #2a3142;
+  border-radius: 16px 16px 0 0; padding: 14px 16px 20px; max-height: 80vh; overflow: auto;
+}
+.desk-settings-panel h3 { margin: 0 0 10px; font-size: 15px; color: #f3f4f6; }
+.desk-settings-panel .row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0; border-bottom: 1px solid #1a2030; font-size: 13px; color: #d1d5db;
+}
+.desk-settings-panel select, .desk-settings-panel input[type="text"] {
+  background: #151822; border: 1px solid #2a3142; color: #e5e7eb;
+  border-radius: 8px; padding: 6px 8px; font-size: 12px;
+}
+
+
+/* ===== GP AI MINI BOT ===== */
+.gp-mini-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 18px;
+  z-index: 9200;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.45);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.gp-mini-btn:hover { transform: scale(1.06); }
+.gp-mini-btn:active { transform: scale(0.95); }
+.gp-mini-btn.open {
+  background: linear-gradient(135deg, #4c1d95, #1e3a8a);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+}
+.gp-mini-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 80px;
+  z-index: 9201;
+  width: min(320px, calc(100vw - 24px));
+  height: 460px;
+  max-height: calc(100vh - 100px);
+  background: #0c0f16;
+  border: 1px solid #2a3548;
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.6);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.gp-mini-panel.show {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+.gp-mini-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 12px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.35), rgba(37,99,235,0.25));
+  border-bottom: 1px solid #2a3548;
+}
+.gp-mini-head .title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #f3f4f6;
+}
+.gp-mini-head .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #34d399; box-shadow: 0 0 8px #34d399;
+}
+.gp-mini-head .actions { display: flex; gap: 6px; }
+.gp-mini-head button {
+  width: 30px; height: 30px; border-radius: 8px; border: none;
+  background: rgba(255,255,255,0.08); color: #d1d5db; cursor: pointer;
+  font-size: 14px;
+}
+.gp-mini-chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #0a0d13;
+  -webkit-overflow-scrolling: touch;
+}
+.gp-mini-chat .mb {
+  max-width: 92%;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.gp-mini-chat .mb.ai {
+  align-self: flex-start;
+  background: #151b28;
+  border: 1px solid #2a3548;
+  color: #e5e7eb;
+}
+.gp-mini-chat .mb.me {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #5b21b6, #1d4ed8);
+  color: #fff;
+  border: none;
+}
+.gp-mini-chat .mb.sys {
+  align-self: center;
+  background: rgba(124,58,237,0.12);
+  border: 1px solid rgba(124,58,237,0.3);
+  color: #c4b5fd;
+  font-size: 11.5px;
+}
+.gp-mini-input {
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid #1f2937;
+  background: #0f131c;
+}
+.gp-mini-input input {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid #2a3142;
+  background: #0b0d12;
+  color: #e5e7eb;
+  padding: 10px 14px;
+  font-size: 13px;
+  outline: none;
+}
+.gp-mini-input input:focus { border-color: #7c3aed; }
+.gp-mini-input button {
+  border: none;
+  border-radius: 999px;
+  padding: 0 14px;
+  font-size: 12.5px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  color: #fff;
+  cursor: pointer;
+}
+.gp-mini-quick {
+  display: flex;
+  gap: 6px;
+  padding: 0 10px 8px;
+  background: #0f131c;
+  flex-wrap: wrap;
+}
+.gp-mini-quick button {
+  border: 1px solid #2a3142;
+  background: #151822;
+  color: #c8cdd8;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 5px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+@media (prefers-color-scheme: light) {
+  .gp-mini-panel { background: #f8fafc; border-color: #cbd5e1; }
+  .gp-mini-chat { background: #f1f5f9; }
+  .gp-mini-chat .mb.ai { background: #fff; border-color: #e2e8f0; color: #0f172a; }
+  .gp-mini-input { background: #fff; border-top-color: #e2e8f0; }
+  .gp-mini-input input { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+}
+
 @keyframes pulseFootprintBtn { 0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); } 50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } }
 .front-bias-hub { background: #131722; border: 1px solid #1f2430; border-radius: 14px; padding: 12px; margin-bottom: 14px; }
 .front-bias-header { font-size: 12px; font-weight: 700; color: #9aa0a6; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -677,6 +1034,96 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 </style>
 </head>
 <body>
+<div class="alert-stack" id="alertStack"></div>
+
+
+<!-- GP AI Mini Bot -->
+<button class="gp-mini-btn" id="gpMiniBtn" type="button" title="GP AI" onclick="gpMiniToggle()" aria-label="Open GP AI mini">🤖</button>
+<div class="gp-mini-panel" id="gpMiniPanel">
+  <div class="gp-mini-head">
+    <div class="title"><span class="dot"></span> GP-AI</div>
+    <div class="actions">
+      <button type="button" title="Full agent" onclick="gpMiniOpenFull()">↗</button>
+      <button type="button" title="Close" onclick="gpMiniClose()">✕</button>
+    </div>
+  </div>
+  <div class="gp-mini-chat" id="gpMiniChat">
+    <div class="mb sys">Mini bot ready. Ask a quick question or tap Live brief.</div>
+  </div>
+  <div class="gp-mini-quick">
+    <button type="button" onclick="gpMiniQuick('Live brief')">Live brief</button>
+    <button type="button" onclick="gpMiniQuick('Gold bias and nearest support?')">Bias</button>
+    <button type="button" onclick="gpMiniQuick('Any news risk for gold right now?')">News</button>
+  </div>
+  <div class="gp-mini-input">
+    <input id="gpMiniInput" type="text" placeholder="Ask GP-AI…" autocomplete="off" />
+    <button type="button" id="gpMiniSend" onclick="gpMiniSend()">Send</button>
+  </div>
+</div>
+
+<!-- Floating Trade Toolbar -->
+<div class="ftb" id="floatingTradeBar" style="top:120px; right:12px;">
+  <div class="ftb-head" id="ftbDragHandle">
+    <b>Trade Desk</b>
+    <button class="ftb-x" type="button" onclick="deskUiSet('toolbarVisible', false)">✕</button>
+  </div>
+  <div class="ftb-body">
+    <div class="ftb-score" id="ftbScoreBanner">Score —</div>
+    <div class="ftb-grid">
+      <label>Size</label><input id="ftbSize" type="number" value="1.0" step="0.1" />
+      <label>Entry</label><input id="ftbEntry" type="number" step="0.01" />
+      <label>SL</label><input id="ftbSl" type="number" step="0.01" />
+      <label>TP</label><input id="ftbTp" type="number" step="0.01" />
+    </div>
+    <div class="ftb-actions">
+      <button class="buy" type="button" onclick="deskPlaceSide('buy')">BUY / LONG</button>
+      <button class="sell" type="button" onclick="deskPlaceSide('sell')">SELL / SHORT</button>
+      <button type="button" onclick="deskTradeTicket('stop')">Suggest SL</button>
+      <button type="button" onclick="deskTradeTicket('target')">Suggest TP</button>
+      <button class="pin" type="button" onclick="deskPinToChart()">📌 Pin levels to chart</button>
+      <button type="button" onclick="deskClearTradeOverlay()">Clear overlay</button>
+    </div>
+    <div class="ftb-toggles">
+      <label><input type="checkbox" id="ftbOverlayChk" onchange="deskUiSet('overlayEnabled', this.checked)" /> Overlay on chart</label>
+      <label><input type="checkbox" id="ftbPinChk" onchange="deskUiSet('pinMode', this.checked)" /> Pin mode</label>
+      <label><input type="checkbox" id="ftbHotChk" onchange="deskUiSet('hotKeysEnabled', this.checked)" /> Hot-keys</label>
+    </div>
+  </div>
+</div>
+
+<div class="desk-settings-overlay" id="deskSettingsOverlay">
+  <div class="desk-settings-panel">
+    <h3>Desk Settings</h3>
+    <div class="row"><span>Trade overlay</span><input type="checkbox" id="setOverlay" onchange="deskUiSet('overlayEnabled', this.checked)" /></div>
+    <div class="row"><span>Pin mode</span><input type="checkbox" id="setPin" onchange="deskUiSet('pinMode', this.checked)" /></div>
+    <div class="row"><span>Floating toolbar</span><input type="checkbox" id="setToolbar" onchange="deskUiSet('toolbarVisible', this.checked)" /></div>
+    <div class="row"><span>Hot-keys</span><input type="checkbox" id="setHot" onchange="deskUiSet('hotKeysEnabled', this.checked)" /></div>
+    <div class="row"><span>Score banner</span><input type="checkbox" id="setScore" onchange="deskUiSet('showScoreBanner', this.checked)" /></div>
+    <div class="row">
+      <span>Footprint mode</span>
+      <select id="setFpMode" onchange="deskUiSet('footprintMode', this.value)">
+        <option value="both">Both</option>
+        <option value="slide">Slide window</option>
+        <option value="front">Front only</option>
+        <option value="off">Off</option>
+      </select>
+    </div>
+    <div class="row">
+      <span>Layout profile</span>
+      <span>
+        <button type="button" onclick="deskSaveProfile()" style="margin-right:6px;padding:6px 10px;border-radius:8px;border:1px solid #2a3142;background:#151822;color:#e5e7eb;font-weight:700;">Save</button>
+        <button type="button" onclick="deskLoadProfile()" style="padding:6px 10px;border-radius:8px;border:1px solid #2a3142;background:#151822;color:#e5e7eb;font-weight:700;">Load</button>
+      </span>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button type="button" onclick="closeDeskSettings()" style="flex:1;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;font-weight:800;">Done</button>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:#6b7280;line-height:1.4;">
+      Hot-keys: Ctrl+Enter place · Ctrl+S SL · Ctrl+T TP · Ctrl+L overlay · Ctrl+B toolbar · Ctrl+, settings
+    </div>
+  </div>
+</div>
+
 
 <div class="pin-lock-overlay" id="pinLockScreen">
   <div class="pin-title">Authentication Required</div>
@@ -768,6 +1215,28 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
     <span class="sd-text">GP AI<span class="sd-sub">Real LLM agent · API brain + tools</span></span>
   </button>
 
+  <div class="side-drawer-section">Trade desk</div>
+  <button class="side-drawer-item" onclick="deskTradeTicket('long'); closeSideDrawer();">
+    <span class="sd-ico"><span style="font-size:14px;color:#34d399;">▲</span></span>
+    <span class="sd-text">Set Long<span class="sd-sub">Entry · stop · target ticket</span></span>
+  </button>
+  <button class="side-drawer-item" onclick="deskTradeTicket('stop'); closeSideDrawer();">
+    <span class="sd-ico"><span style="font-size:14px;color:#f87171;">⏹</span></span>
+    <span class="sd-text">Set Stop<span class="sd-sub">Suggest session SL</span></span>
+  </button>
+  <button class="side-drawer-item" onclick="deskTradeTicket('target'); closeSideDrawer();">
+    <span class="sd-ico"><span style="font-size:14px;color:#60a5fa;">◎</span></span>
+    <span class="sd-text">Set Target<span class="sd-sub">Suggest session TP</span></span>
+  </button>
+  <button class="side-drawer-item" onclick="deskExportSnapshot(); closeSideDrawer();">
+    <span class="sd-ico"><span style="font-size:14px;">⤓</span></span>
+    <span class="sd-text">Export PNG<span class="sd-sub">Snapshot + composite</span></span>
+  </button>
+  <button class="side-drawer-item" onclick="openDeskSettings(); closeSideDrawer();">
+    <span class="sd-ico"><span style="font-size:14px;">⚙</span></span>
+    <span class="sd-text">Desk Settings<span class="sd-sub">Overlay · hot-keys · footprint</span></span>
+  </button>
+
   <div class="side-drawer-section">System</div>
   <button class="side-drawer-item" onclick="forceLiveSync(); closeSideDrawer();">
     <span class="sd-ico"><span style="font-size:16px;">📡</span></span>
@@ -787,6 +1256,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
       <h1>Gold (XAU/USD) Live Correlation</h1>
     </div>
     <div class="header-actions">
+      <span class="latency-badge" id="latencyBadge" title="Feed age">—</span>
       <button class="btn-live" id="liveBtn" onclick="forceLiveSync()" title="Live feed active — tap to force sync">
         <span class="live-dot"></span>
         <span id="liveBtnLabel">LIVE</span>
@@ -818,7 +1288,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         </div>
       </div>
 
-      <div style="display:flex; gap:10px; margin-bottom:14px;">
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
         <button class="btn-chart" style="flex:1; margin-bottom:0;" onclick="openChartModal('gold')">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 3h18v18H3V3z"/>
@@ -832,7 +1302,6 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
           Open DXY Chart
         </button>
       </div>
-
       <div class="front-bias-hub">
         <div class="front-bias-header">
           <span>Structure Bias Matrix</span>
@@ -843,26 +1312,31 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
             <div class="front-bias-tf">3m</div>
             <div class="front-badge chip-bear" id="fb-3m">BEARISH</div>
             <div class="neg" id="fv-3m" style="font-size:9.5px; font-weight:700;">-0.08%</div>
+            <div class="bias-bar-track"><div class="bias-bar-fill neut" id="bb-3m"></div></div>
           </div>
           <div class="front-bias-col">
             <div class="front-bias-tf">5m</div>
             <div class="front-badge chip-bear" id="fb-5m">BEARISH</div>
             <div class="neg" id="fv-5m" style="font-size:9.5px; font-weight:700;">-0.12%</div>
+            <div class="bias-bar-track"><div class="bias-bar-fill neut" id="bb-5m"></div></div>
           </div>
           <div class="front-bias-col">
             <div class="front-bias-tf">15m</div>
             <div class="front-badge chip-bear" id="fb-15m">BEARISH</div>
             <div class="neg" id="fv-15m" style="font-size:9.5px; font-weight:700;">-0.21%</div>
+            <div class="bias-bar-track"><div class="bias-bar-fill neut" id="bb-15m"></div></div>
           </div>
           <div class="front-bias-col">
             <div class="front-bias-tf">1H</div>
             <div class="front-badge chip-bear" id="fb-1h">BEARISH</div>
             <div class="neg" id="fv-1h" style="font-size:9.5px; font-weight:700;">-0.38%</div>
+            <div class="bias-bar-track"><div class="bias-bar-fill neut" id="bb-1h"></div></div>
           </div>
           <div class="front-bias-col">
             <div class="front-bias-tf">1D</div>
             <div class="front-badge chip-bear" id="fb-1d">BEARISH</div>
             <div class="neg" id="fv-1d" style="font-size:9.5px; font-weight:700;">-0.48%</div>
+            <div class="bias-bar-track"><div class="bias-bar-fill neut" id="bb-1d"></div></div>
           </div>
         </div>
       </div>
@@ -1019,7 +1493,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <input id="gpApiModel" placeholder="openai/gpt-oss-120b" />
         <div class="hint">
           Groq free/dev: use model <b>openai/gpt-oss-120b</b> (or openai/gpt-oss-20b). Old llama-3.3-70b is enterprise-only now.
-          Key stays in this browser only. Snapshot + your question go to the model.
+          Default Groq key is pre-filled; paste your own anytime and Save. Stored in this browser only.
         </div>
         <div class="gp-compose-row" style="margin-top:10px;">
           <button class="gp-send" type="button" onclick="gpAiSaveSettings()">Save API settings</button>
@@ -1509,6 +1983,12 @@ function updateChartBiasesLive() {
       const sign = info.delta >= 0 ? '+' : '';
       fVal.textContent = `${sign}${info.delta.toFixed(2)}%`;
       fVal.className = info.delta >= 0 ? 'pos' : 'neg';
+    }
+    const bar = document.getElementById('bb-' + tf);
+    if (bar && info) {
+      const mag = Math.min(100, Math.abs(info.delta) * 80);
+      bar.style.width = Math.max(6, mag) + '%';
+      bar.className = 'bias-bar-fill ' + (info.delta > 0.02 ? 'bull' : (info.delta < -0.02 ? 'bear' : 'neut'));
     }
   };
   ['3m', '5m', '15m', '1h', '1d'].forEach(updateUI);
@@ -2756,6 +3236,14 @@ function drawTradingViewChart() {
   ctx.font = "bold 8.5px sans-serif";
   ctx.fillStyle = "#444444";
   ctx.fillText(`${tMins}:${tSecs}`, badgeX + (badgeW / 2), liveY + 9);
+
+  // Trade overlay (entry / SL / TP)
+  try {
+    if (typeof deskDrawTradeOverlay === 'function') {
+      deskDrawTradeOverlay(ctx, getY, chartW, chartH, topPad, state.chartAsset === 'dxy' ? 3 : 2);
+    }
+  } catch (e) {}
+
   ctx.restore();
 }
 
@@ -3762,7 +4250,160 @@ function updateLiveButtonStatus() {
     btn.classList.add("stale");
     if (label) label.textContent = "SYNC";
   }
+  // Latency badge
+  const badge = document.getElementById('latencyBadge');
+  if (badge) {
+    const ageMs = Math.min(
+      (Date.now() - (_dxyLastOk || 0)),
+      state.gold_price > 500 ? 1500 : 99999
+    );
+    const ageSec = Math.max(0, Math.round((Date.now() - (_dxyLastOk || Date.now())) / 1000));
+    badge.textContent = ageSec <= 2 ? 'Updated ' + ageSec + 's ago' : 'Updated ' + ageSec + 's ago';
+    badge.className = 'latency-badge' + (ageSec > 8 ? ' bad' : (ageSec > 4 ? ' warn' : ''));
+  }
+  try { deskPairHeat(); } catch(e) {}
+  try { deskAlertEngineTick(); } catch(e) {}
 }
+
+function deskPairHeat() {
+  const map = [
+    ['lp-dxy-chg', 'DXY'],
+    ['lp-eur-chg', 'EUR'],
+    ['lp-aud-chg', 'AUD'],
+    ['lp-jpy-chg', 'JPY'],
+    ['lp-chf-chg', 'CHF'],
+    ['lp-us10y-chg', 'US10Y']
+  ];
+  map.forEach(([id]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const row = el.closest('.live-pair-row');
+    if (!row) return;
+    row.classList.remove('hot-pos', 'hot-neg');
+    const t = (el.textContent || '').replace('%','').trim();
+    const v = parseFloat(t);
+    if (!isFinite(v)) return;
+    if (v > 0.05) row.classList.add('hot-pos');
+    else if (v < -0.05) row.classList.add('hot-neg');
+    row.title = el.textContent + ' · tap pairs panel for full book';
+  });
+}
+
+function deskShowAlert(title, body, tone) {
+  const stack = document.getElementById('alertStack');
+  if (!stack) return;
+  const el = document.createElement('div');
+  el.className = 'alert-toast ' + (tone || 'warn');
+  el.innerHTML = '<div class="at-title">' + title + '</div><div class="at-body">' + body + '</div>';
+  stack.appendChild(el);
+  setTimeout(() => { try { el.remove(); } catch(e) {} }, 7000);
+}
+
+let _deskAlertLast = { key: '', t: 0 };
+function deskAlertEngineTick() {
+  const score = state.smoothed_score || 0;
+  const gold = state.gold_price || 0;
+  const open = state.gold_open_session || 0;
+  if (!(gold > 500)) return;
+  let key = '', title = '', body = '', tone = 'warn';
+  if (score >= 25) {
+    key = 'strong_buy';
+    title = 'STRONG BUY pressure';
+    body = 'Composite ' + score.toFixed(1) + ' · Gold $' + gold.toFixed(2) + '. Momentum aligned higher.';
+    tone = 'bull';
+  } else if (score <= -25) {
+    key = 'strong_sell';
+    title = 'STRONG SELL pressure';
+    body = 'Composite ' + score.toFixed(1) + ' · Gold $' + gold.toFixed(2) + '. Momentum aligned lower.';
+    tone = 'bear';
+  } else if (open > 0 && gold < open && ((open - gold) / open * 100) < 0.08) {
+    key = 'near_support';
+    title = 'Near session support';
+    body = 'Gold $' + gold.toFixed(2) + ' vs open $' + open.toFixed(2) + '. Watch hold/break.';
+    tone = 'warn';
+  } else if (open > 0 && gold > open && ((gold - open) / open * 100) < 0.08) {
+    key = 'near_resist';
+    title = 'Near session resistance';
+    body = 'Gold $' + gold.toFixed(2) + ' vs open $' + open.toFixed(2) + '. Break or reject next.';
+    tone = 'warn';
+  }
+  if (!key) return;
+  const now = Date.now();
+  if (_deskAlertLast.key === key && (now - _deskAlertLast.t) < 120000) return;
+  _deskAlertLast = { key, t: now };
+  deskShowAlert(title, body, tone);
+}
+
+function deskTradeTicket(kind) {
+  const px = state.gold_price || 0;
+  const open = state.gold_open_session || px;
+  if (!(px > 500)) {
+    deskShowAlert('No price', 'Gold feed not ready.', 'warn');
+    return;
+  }
+  const support = Math.min(px, open) - Math.max(0.8, px * 0.0004);
+  const resist = Math.max(px, open) + Math.max(0.8, px * 0.0004);
+  let msg = '';
+  if (kind === 'long') {
+    msg = 'LONG ticket · Entry ~ $' + px.toFixed(2) + ' · Stop $' + support.toFixed(2) + ' · Target $' + resist.toFixed(2);
+  } else if (kind === 'stop') {
+    msg = 'STOP suggestion · $' + support.toFixed(2) + ' (below session/structure ref)';
+  } else {
+    msg = 'TARGET suggestion · $' + resist.toFixed(2) + ' (above session/structure ref)';
+  }
+  // Sync floating toolbar fields
+  try {
+    const entEl = document.getElementById('ftbEntry');
+    const slEl = document.getElementById('ftbSl');
+    const tpEl = document.getElementById('ftbTp');
+    if (entEl) entEl.value = px.toFixed(2);
+    if (kind === 'long' || kind === 'stop') { if (slEl) slEl.value = support.toFixed(2); }
+    if (kind === 'long' || kind === 'target') { if (tpEl) tpEl.value = resist.toFixed(2); }
+    if (kind === 'long') {
+      deskTradeLevels = { entry: px, sl: support, tp: resist, side: 'buy' };
+      if (typeof deskUi !== 'undefined' && deskUi.overlayEnabled && typeof drawTradingViewChart === 'function') {
+        try { drawTradingViewChart(); } catch (e) {}
+      }
+    }
+  } catch (e) {}
+  try { navigator.clipboard && navigator.clipboard.writeText(msg); } catch(e) {}
+  deskShowAlert('Trade ticket', msg + ' · copied if clipboard allowed', kind === 'stop' ? 'bear' : (kind === 'long' ? 'bull' : 'warn'));
+}
+
+async function deskExportSnapshot() {
+  try {
+    const root = document.querySelector('.card') || document.body;
+    // Simple export: capture main card via foreignObject is hard; use text summary + open print
+    const snap = {
+      t: new Date().toISOString(),
+      gold: state.gold_price,
+      goldPct: state.gold_pct,
+      dxy: state.dxy_price,
+      dxyPct: state.dxy_pct,
+      score: state.smoothed_score,
+      signal: state.signal_text,
+      bias: state.tf_biases
+    };
+    const blob = new Blob([JSON.stringify(snap, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'gold-desk-snapshot-' + Date.now() + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    // Also try canvas from composite chart
+    const c = document.getElementById('compScoreCanvas');
+    if (c) {
+      const a2 = document.createElement('a');
+      a2.href = c.toDataURL('image/png');
+      a2.download = 'composite-score-' + Date.now() + '.png';
+      a2.click();
+    }
+    deskShowAlert('Export', 'Snapshot JSON + composite PNG downloaded.', 'bull');
+  } catch (e) {
+    deskShowAlert('Export failed', String(e && e.message || e), 'warn');
+  }
+}
+
 
 function forceLiveSync() {
   const label = document.getElementById("liveBtnLabel");
@@ -4771,6 +5412,299 @@ async function refreshFootprintChart() {
 }
 
 
+
+/* ===== TRADE DESK UI STATE ===== */
+const DESK_UI_KEY = 'gold_desk_ui_state_v1';
+const DESK_PROFILE_KEY = 'gold_desk_layout_profile_v1';
+const defaultDeskUi = {
+  overlayEnabled: true,
+  pinMode: true,
+  toolbarVisible: true,
+  hotKeysEnabled: true,
+  showScoreBanner: true,
+  footprintMode: 'both', // front | slide | both | off
+  ticket: { side: 'buy', size: 1, entry: 0, sl: 0, tp: 0 }
+};
+let deskUi = { ...defaultDeskUi };
+let deskTradeLevels = { entry: 0, sl: 0, tp: 0, side: 'buy' };
+
+function deskUiLoad() {
+  try {
+    const s = JSON.parse(localStorage.getItem(DESK_UI_KEY) || '{}');
+    deskUi = { ...defaultDeskUi, ...s, ticket: { ...defaultDeskUi.ticket, ...(s.ticket || {}) } };
+  } catch (e) { deskUi = { ...defaultDeskUi }; }
+}
+function deskUiSave() {
+  try { localStorage.setItem(DESK_UI_KEY, JSON.stringify(deskUi)); } catch (e) {}
+}
+function deskUiSet(key, val) {
+  deskUi[key] = val;
+  deskUiSave();
+  deskApplyUi();
+  if (key === 'overlayEnabled' && typeof drawTradingViewChart === 'function') {
+    try { drawTradingViewChart(); } catch (e) {}
+  }
+}
+function deskApplyUi() {
+  const bar = document.getElementById('floatingTradeBar');
+  if (bar) bar.classList.toggle('hidden', !deskUi.toolbarVisible);
+  const map = [
+    ['ftbOverlayChk', 'overlayEnabled'],
+    ['ftbPinChk', 'pinMode'],
+    ['ftbHotChk', 'hotKeysEnabled'],
+    ['setOverlay', 'overlayEnabled'],
+    ['setPin', 'pinMode'],
+    ['setToolbar', 'toolbarVisible'],
+    ['setHot', 'hotKeysEnabled'],
+    ['setScore', 'showScoreBanner']
+  ];
+  map.forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el && el.type === 'checkbox') el.checked = !!deskUi[key];
+  });
+  const fp = document.getElementById('setFpMode');
+  if (fp) fp.value = deskUi.footprintMode || 'both';
+  const scoreEl = document.getElementById('ftbScoreBanner');
+  if (scoreEl) {
+    scoreEl.style.display = deskUi.showScoreBanner ? '' : 'none';
+    const sc = state.smoothed_score || 0;
+    const sig = state.signal_text || 'NEUTRAL';
+    scoreEl.textContent = sig + ' · ' + (sc >= 0 ? '+' : '') + sc.toFixed(1);
+    scoreEl.className = 'ftb-score' + (sc >= 8 ? ' bull' : (sc <= -8 ? ' bear' : ''));
+  }
+  // Footprint mode
+  // Footprint mode: hide side-drawer footprint item when off
+  try {
+    document.querySelectorAll('.side-drawer-item.fp').forEach(btn => {
+      btn.style.display = deskUi.footprintMode === 'off' ? 'none' : '';
+    });
+  } catch (e) {}
+  // Sync ticket inputs if empty
+  const ent = document.getElementById('ftbEntry');
+  if (ent && !ent.value && state.gold_price > 500) ent.value = state.gold_price.toFixed(2);
+}
+
+function openDeskSettings() {
+  const el = document.getElementById('deskSettingsOverlay');
+  if (el) el.classList.add('show');
+  deskApplyUi();
+}
+function closeDeskSettings() {
+  const el = document.getElementById('deskSettingsOverlay');
+  if (el) el.classList.remove('show');
+}
+
+function deskReadTicketInputs() {
+  const num = (id) => parseFloat((document.getElementById(id) || {}).value) || 0;
+  return {
+    size: num('ftbSize') || 1,
+    entry: num('ftbEntry'),
+    sl: num('ftbSl'),
+    tp: num('ftbTp')
+  };
+}
+function deskWriteTicketInputs(t) {
+  const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = Number(v).toFixed(2); };
+  set('ftbEntry', t.entry);
+  set('ftbSl', t.sl);
+  set('ftbTp', t.tp);
+  if (t.size) { const el = document.getElementById('ftbSize'); if (el) el.value = t.size; }
+}
+
+function deskPlaceSide(side) {
+  const t = deskReadTicketInputs();
+  const px = state.gold_price || t.entry;
+  if (!(px > 500)) { deskShowAlert('No price', 'Gold feed not ready', 'warn'); return; }
+  if (!t.entry) t.entry = px;
+  if (!t.sl) t.sl = side === 'buy' ? px - Math.max(1.5, px * 0.0006) : px + Math.max(1.5, px * 0.0006);
+  if (!t.tp) t.tp = side === 'buy' ? px + Math.max(4.5, px * 0.0018) : px - Math.max(4.5, px * 0.0018);
+  deskWriteTicketInputs(t);
+  deskTradeLevels = { entry: t.entry, sl: t.sl, tp: t.tp, side };
+  deskUi.ticket = { ...t, side };
+  deskUiSave();
+  if (deskUi.overlayEnabled) {
+    try { drawTradingViewChart(); } catch (e) {}
+  }
+  const msg = (side === 'buy' ? 'LONG' : 'SHORT') + ' · E ' + t.entry.toFixed(2) + ' · SL ' + t.sl.toFixed(2) + ' · TP ' + t.tp.toFixed(2);
+  try { navigator.clipboard && navigator.clipboard.writeText(msg); } catch (e) {}
+  deskShowAlert(side === 'buy' ? 'Long ticket' : 'Short ticket', msg, side === 'buy' ? 'bull' : 'bear');
+}
+
+function deskPinToChart() {
+  if (!deskUi.pinMode) { deskShowAlert('Pin mode off', 'Enable Pin mode in toolbar/settings', 'warn'); return; }
+  const t = deskReadTicketInputs();
+  const px = state.gold_price || 0;
+  if (!t.entry && px > 500) t.entry = px;
+  if (!t.entry) return;
+  if (!t.sl) t.sl = t.entry - Math.max(1.5, t.entry * 0.0006);
+  if (!t.tp) t.tp = t.entry + Math.max(4.5, t.entry * 0.0018);
+  deskWriteTicketInputs(t);
+  deskTradeLevels = { entry: t.entry, sl: t.sl, tp: t.tp, side: deskUi.ticket.side || 'buy' };
+  deskUi.overlayEnabled = true;
+  deskUiSave();
+  deskApplyUi();
+  try { openChartModal('gold'); } catch (e) {}
+  setTimeout(() => { try { drawTradingViewChart(); } catch (e) {} }, 200);
+  deskShowAlert('Pinned', 'Entry/SL/TP drawn on gold chart', 'bull');
+}
+
+function deskClearTradeOverlay() {
+  deskTradeLevels = { entry: 0, sl: 0, tp: 0, side: 'buy' };
+  try { drawTradingViewChart(); } catch (e) {}
+  deskShowAlert('Overlay cleared', 'Trade lines removed', 'warn');
+}
+
+function deskDrawTradeOverlay(ctx, getY, chartW, chartH, topPad, digits) {
+  if (!deskUi || !deskUi.overlayEnabled) return;
+  const lv = deskTradeLevels || {};
+  const lines = [
+    { p: lv.entry, c: '#ffffff', label: 'ENTRY' },
+    { p: lv.sl, c: '#f87171', label: 'SL' },
+    { p: lv.tp, c: '#34d399', label: 'TP' }
+  ];
+  ctx.save();
+  lines.forEach(L => {
+    if (!(L.p > 0)) return;
+    const y = Math.round(getY(L.p)) + 0.5;
+    ctx.strokeStyle = L.c;
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(chartW, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = L.c;
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(L.label + ' ' + Number(L.p).toFixed(digits), 8, y - 4);
+  });
+  // Live P&L box
+  if (lv.entry > 0 && state.gold_price > 500) {
+    const side = lv.side === 'sell' ? -1 : 1;
+    const pnl = (state.gold_price - lv.entry) * side;
+    const pnlPct = (pnl / lv.entry) * 100;
+    ctx.fillStyle = 'rgba(15,18,26,0.85)';
+    ctx.fillRect(8, topPad + 6, 150, 36);
+    ctx.strokeStyle = pnl >= 0 ? '#34d399' : '#f87171';
+    ctx.strokeRect(8, topPad + 6, 150, 36);
+    ctx.fillStyle = pnl >= 0 ? '#34d399' : '#f87171';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText((pnl >= 0 ? '+' : '') + pnl.toFixed(2) + '  (' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%)', 14, topPad + 28);
+  }
+  ctx.restore();
+}
+
+function deskSaveProfile() {
+  const bar = document.getElementById('floatingTradeBar');
+  const profile = {
+    ui: deskUi,
+    toolbar: bar ? { top: bar.style.top, left: bar.style.left, right: bar.style.right } : null,
+    levels: deskTradeLevels
+  };
+  try { localStorage.setItem(DESK_PROFILE_KEY, JSON.stringify(profile)); } catch (e) {}
+  deskShowAlert('Profile saved', 'Layout + UI toggles stored locally', 'bull');
+}
+function deskLoadProfile() {
+  try {
+    const p = JSON.parse(localStorage.getItem(DESK_PROFILE_KEY) || 'null');
+    if (!p) { deskShowAlert('No profile', 'Save a profile first', 'warn'); return; }
+    if (p.ui) { deskUi = { ...defaultDeskUi, ...p.ui }; deskUiSave(); }
+    if (p.levels) deskTradeLevels = p.levels;
+    const bar = document.getElementById('floatingTradeBar');
+    if (bar && p.toolbar) {
+      if (p.toolbar.top) bar.style.top = p.toolbar.top;
+      if (p.toolbar.left) { bar.style.left = p.toolbar.left; bar.style.right = 'auto'; }
+      if (p.toolbar.right) bar.style.right = p.toolbar.right;
+    }
+    deskApplyUi();
+    try { drawTradingViewChart(); } catch (e) {}
+    deskShowAlert('Profile loaded', 'UI restored', 'bull');
+  } catch (e) {
+    deskShowAlert('Load failed', String(e.message || e), 'warn');
+  }
+}
+
+function deskInitToolbarDrag() {
+  const bar = document.getElementById('floatingTradeBar');
+  const handle = document.getElementById('ftbDragHandle');
+  if (!bar || !handle) return;
+  let drag = null;
+  handle.addEventListener('pointerdown', (e) => {
+    drag = { x: e.clientX, y: e.clientY, top: bar.offsetTop, left: bar.offsetLeft };
+    handle.setPointerCapture(e.pointerId);
+  });
+  handle.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const nx = drag.left + (e.clientX - drag.x);
+    const ny = drag.top + (e.clientY - drag.y);
+    bar.style.left = Math.max(0, nx) + 'px';
+    bar.style.top = Math.max(0, ny) + 'px';
+    bar.style.right = 'auto';
+  });
+  handle.addEventListener('pointerup', () => { drag = null; });
+}
+
+function deskInitHotkeys() {
+  document.addEventListener('keydown', (e) => {
+    if (!deskUi.hotKeysEnabled) return;
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (e.ctrlKey && e.key === 'Enter') {
+      e.preventDefault();
+      deskPlaceSide((deskUi.ticket && deskUi.ticket.side) || 'buy');
+    } else if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      deskTradeTicket('stop');
+      const t = deskReadTicketInputs();
+      // after suggest, pull from alert path: recompute
+      const px = state.gold_price || 0;
+      const open = state.gold_open_session || px;
+      if (px > 500) {
+        const sl = Math.min(px, open) - Math.max(0.8, px * 0.0004);
+        const el = document.getElementById('ftbSl');
+        if (el) el.value = sl.toFixed(2);
+      }
+    } else if (e.ctrlKey && (e.key === 't' || e.key === 'T')) {
+      e.preventDefault();
+      const px = state.gold_price || 0;
+      const open = state.gold_open_session || px;
+      if (px > 500) {
+        const tp = Math.max(px, open) + Math.max(0.8, px * 0.0004);
+        const el = document.getElementById('ftbTp');
+        if (el) el.value = tp.toFixed(2);
+      }
+    } else if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) {
+      e.preventDefault();
+      deskUiSet('overlayEnabled', !deskUi.overlayEnabled);
+    } else if (e.ctrlKey && (e.key === 'b' || e.key === 'B')) {
+      e.preventDefault();
+      deskUiSet('toolbarVisible', !deskUi.toolbarVisible);
+    } else if (e.ctrlKey && e.key === ',') {
+      e.preventDefault();
+      openDeskSettings();
+    }
+  });
+}
+
+function deskBootUi() {
+  deskUiLoad();
+  deskApplyUi();
+  deskInitToolbarDrag();
+  deskInitHotkeys();
+  // seed entry
+  setTimeout(() => {
+    const ent = document.getElementById('ftbEntry');
+    if (ent && state.gold_price > 500 && !ent.value) ent.value = state.gold_price.toFixed(2);
+    deskApplyUi();
+  }, 1500);
+  setInterval(() => { try { deskApplyUi(); } catch(e) {} }, 3000);
+}
+document.addEventListener('DOMContentLoaded', deskBootUi);
+setTimeout(deskBootUi, 800);
+
+
 /* ===== GP AI — REAL LLM AGENT (OpenAI-compatible) ===== */
 let _gpAiOpen = false;
 let _gpAiBusy = false;
@@ -4778,15 +5712,26 @@ let _gpAiHistory = []; // {role, content} for API (no system)
 const GP_LS_KEY = 'gp_ai_llm_settings_v1';
 
 function gpAiLoadSettings() {
+  const DEFAULT_GP = {
+    base: 'https://api.groq.com/openai/v1',
+    key: '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',
+    model: 'openai/gpt-oss-120b'
+  };
   try {
     const cfg = JSON.parse(localStorage.getItem(GP_LS_KEY) || '{}') || {};
+    // Seed built-in key only when user has never saved settings
+    if (!cfg.key) cfg.key = DEFAULT_GP.key;
+    if (!cfg.base) cfg.base = DEFAULT_GP.base;
+    if (!cfg.model) cfg.model = DEFAULT_GP.model;
     // Migrate deprecated Groq free-tier models
     if (cfg.model === 'llama-3.3-70b-versatile' || cfg.model === 'llama-3.1-8b-instant') {
       cfg.model = 'openai/gpt-oss-120b';
-      try { localStorage.setItem(GP_LS_KEY, JSON.stringify(cfg)); } catch (e) {}
     }
+    try { localStorage.setItem(GP_LS_KEY, JSON.stringify(cfg)); } catch (e) {}
     return cfg;
-  } catch (e) { return {}; }
+  } catch (e) {
+    return { ...DEFAULT_GP };
+  }
 }
 function gpAiSaveSettings() {
   const base = (document.getElementById('gpApiBase') || {}).value || '';
@@ -4846,6 +5791,144 @@ function gpAiPushUI(role, content) {
 function gpAiPushSystem(msg) {
   gpAiPushUI('system', msg);
 }
+
+/* ===== GP AI MINI BOT ===== */
+let _gpMiniOpen = false;
+
+function gpMiniToggle() {
+  if (_gpMiniOpen) gpMiniClose();
+  else gpMiniOpen();
+}
+function gpMiniOpen() {
+  const panel = document.getElementById('gpMiniPanel');
+  const btn = document.getElementById('gpMiniBtn');
+  if (!panel) return;
+  panel.classList.add('show');
+  if (btn) btn.classList.add('open');
+  _gpMiniOpen = true;
+  const input = document.getElementById('gpMiniInput');
+  if (input) {
+    setTimeout(() => input.focus(), 120);
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); gpMiniSend(); }
+    };
+  }
+}
+function gpMiniClose() {
+  const panel = document.getElementById('gpMiniPanel');
+  const btn = document.getElementById('gpMiniBtn');
+  if (panel) panel.classList.remove('show');
+  if (btn) btn.classList.remove('open');
+  _gpMiniOpen = false;
+}
+function gpMiniOpenFull() {
+  gpMiniClose();
+  if (typeof openGpAi === 'function') openGpAi();
+}
+function gpMiniPush(role, text) {
+  const chat = document.getElementById('gpMiniChat');
+  if (!chat) return;
+  const div = document.createElement('div');
+  div.className = 'mb ' + (role === 'user' ? 'me' : (role === 'system' ? 'sys' : 'ai'));
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+async function gpMiniSend() {
+  const input = document.getElementById('gpMiniInput');
+  if (!input) return;
+  const q = (input.value || '').trim();
+  if (!q) return;
+  input.value = '';
+  gpMiniPush('user', q);
+  const sendBtn = document.getElementById('gpMiniSend');
+  if (sendBtn) sendBtn.disabled = true;
+  gpMiniPush('system', 'Thinking…');
+  try {
+    // Reuse full agent pipeline when available
+    if (typeof gpAgentRun === 'function' && typeof gpAiLoadSettings === 'function') {
+      const cfg = gpAiLoadSettings();
+      if (!cfg.key) {
+        // remove thinking bubble
+        const chat = document.getElementById('gpMiniChat');
+        if (chat && chat.lastChild) chat.lastChild.remove();
+        gpMiniPush('system', 'Set API key in full GP AI (↗) first.');
+        return;
+      }
+      // Run agent but capture into mini UI by temporarily hooking push
+      const prevPush = typeof gpAiPushUI === 'function' ? gpAiPushUI : null;
+      let assistantText = '';
+      window.gpAiPushUI = function(role, content) {
+        if (role === 'assistant') {
+          assistantText = content;
+          const chat = document.getElementById('gpMiniChat');
+          // remove trailing "Thinking…" sys bubble
+          if (chat) {
+            const nodes = chat.querySelectorAll('.mb.sys');
+            if (nodes.length) {
+              const last = nodes[nodes.length - 1];
+              if ((last.textContent || '').includes('Thinking')) last.remove();
+            }
+          }
+          gpMiniPush('ai', content);
+        } else if (role === 'system') {
+          // skip noisy system in mini except errors
+          if (/error|api|key/i.test(content || '')) {
+            const chat = document.getElementById('gpMiniChat');
+            if (chat) {
+              const nodes = chat.querySelectorAll('.mb.sys');
+              if (nodes.length) {
+                const last = nodes[nodes.length - 1];
+                if ((last.textContent || '').includes('Thinking')) last.remove();
+              }
+            }
+            gpMiniPush('system', content);
+          }
+        }
+        // still allow full chat to update if open
+        if (prevPush) prevPush(role, content);
+      };
+      await gpAgentRun(q);
+      window.gpAiPushUI = prevPush;
+      if (!assistantText) {
+        const chat = document.getElementById('gpMiniChat');
+        if (chat) {
+          const nodes = chat.querySelectorAll('.mb.sys');
+          if (nodes.length) {
+            const last = nodes[nodes.length - 1];
+            if ((last.textContent || '').includes('Thinking')) last.remove();
+          }
+        }
+      }
+    } else {
+      const chat = document.getElementById('gpMiniChat');
+      if (chat && chat.lastChild) chat.lastChild.remove();
+      gpMiniPush('system', 'Agent core not loaded.');
+    }
+  } catch (e) {
+    const chat = document.getElementById('gpMiniChat');
+    if (chat && chat.lastChild && (chat.lastChild.textContent || '').includes('Thinking')) chat.lastChild.remove();
+    gpMiniPush('system', 'Error: ' + ((e && e.message) || e));
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+  }
+}
+function gpMiniQuick(text) {
+  const input = document.getElementById('gpMiniInput');
+  if (input) input.value = text;
+  gpMiniSend();
+}
+// Outside click closes mini panel
+document.addEventListener('click', (e) => {
+  if (!_gpMiniOpen) return;
+  const panel = document.getElementById('gpMiniPanel');
+  const btn = document.getElementById('gpMiniBtn');
+  if (!panel || !btn) return;
+  if (panel.contains(e.target) || btn.contains(e.target)) return;
+  gpMiniClose();
+});
+
+
 function openGpAi() {
   const el = document.getElementById('gpAiOverlay');
   if (!el) return;
