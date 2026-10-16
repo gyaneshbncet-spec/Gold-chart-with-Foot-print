@@ -76,6 +76,463 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
 .btn-chart:active { background: #966b0a; }
 .btn-footprint-tab { background: linear-gradient(135deg, #059669 0%, #0d9488 100%); border: 1px solid #10b981; color: #ffffff; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35); font-weight: 800; letter-spacing: 0.4px; animation: pulseFootprintBtn 2.2s infinite ease-in-out; }
 .btn-footprint-tab:active { transform: scale(0.97); }
+
+/* ===== SIDE DRAWER (Grok-style list, terminal colors) ===== */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+.header-left h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.side-fab {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #2a3142;
+  background: #151822;
+  color: #c8cdd8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  padding: 0;
+}
+.side-fab:active { background: #1e2433; transform: scale(0.94); }
+.side-fab.open { background: #1a2030; border-color: #3b82f6; color: #93c5fd; }
+
+.side-drawer-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9001;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+}
+.side-drawer-backdrop.show { display: block; }
+
+.side-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(300px, 86vw);
+  z-index: 9002;
+  background: #0b0d12;
+  border-right: 1px solid #1f2430;
+  box-shadow: 12px 0 40px rgba(0,0,0,0.65);
+  transform: translateX(-105%);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 18px 14px 24px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.side-drawer.show { transform: translateX(0); }
+
+.side-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding: 0 4px;
+}
+.side-drawer-head .sd-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f3f4f6;
+  letter-spacing: 0.2px;
+}
+.side-drawer-head .sd-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #151822;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.side-drawer-head .sd-close:active { background: #1e2433; }
+
+.side-drawer-section {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin: 14px 6px 8px;
+}
+
+.side-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  border: none;
+  border-radius: 14px;
+  background: #141824;
+  color: #e5e7eb;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.side-drawer-item:active { background: #1c2230; transform: scale(0.985); }
+.side-drawer-item .sd-ico {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #1c2230;
+}
+.side-drawer-item .sd-ico svg { display: block; }
+.side-drawer-item .sd-text { flex: 1; line-height: 1.25; }
+.side-drawer-item .sd-sub {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: #787b86;
+  margin-top: 2px;
+}
+.side-drawer-item.fp {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.22) 0%, rgba(13, 148, 136, 0.18) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+.side-drawer-item.fp .sd-ico {
+  background: linear-gradient(135deg, #059669, #0d9488);
+  color: #fff;
+}
+.side-drawer-item.fp .sd-text { color: #ecfdf5; }
+.side-drawer-item.gold .sd-ico {
+  background: linear-gradient(135deg, #b48312, #966b0a);
+  color: #fff;
+}
+.side-drawer-item.dxy .sd-ico {
+  background: linear-gradient(135deg, #2563eb, #1e3a5f);
+  color: #fff;
+}
+
+/* ===== GP AI PANEL ===== */
+.gp-ai-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(4px);
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0;
+}
+.gp-ai-overlay.show { display: flex; }
+.gp-ai-panel {
+  width: 100%;
+  max-width: 480px;
+  height: min(88vh, 720px);
+  background: #0b0d12;
+  border: 1px solid #243044;
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -12px 40px rgba(0,0,0,0.65);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.gp-ai-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #1f2430;
+  background: linear-gradient(180deg, #121826 0%, #0b0d12 100%);
+}
+.gp-ai-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gp-ai-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.45);
+}
+.gp-ai-brand h2 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #f3f4f6;
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+.gp-ai-brand p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #8b93a7;
+}
+.gp-ai-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #34d399;
+  margin-left: 6px;
+}
+.gp-ai-live i {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+  animation: livePulse 1.4s ease-in-out infinite;
+  display: inline-block;
+}
+.gp-ai-close {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: none; background: #151822; color: #9ca3af;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.gp-ai-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px 18px;
+  -webkit-overflow-scrolling: touch;
+}
+.gp-ai-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.gp-ai-toolbar button {
+  border: 1px solid #2a3142;
+  background: #151822;
+  color: #c8cdd8;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.gp-ai-toolbar button:active { background: #1e2433; }
+.gp-ai-toolbar button.primary {
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  border-color: transparent;
+  color: #fff;
+}
+.gp-card {
+  background: #12161f;
+  border: 1px solid #243044;
+  border-radius: 12px;
+  padding: 12px 13px;
+  margin-bottom: 10px;
+}
+.gp-card h3 {
+  font-size: 12px;
+  font-weight: 800;
+  color: #9ca3af;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+.gp-card .gp-main {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #f3f4f6;
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+.gp-card .gp-detail {
+  font-size: 12.5px;
+  color: #a0a8b8;
+  line-height: 1.45;
+}
+.gp-card.bull { border-color: rgba(16,185,129,0.4); background: linear-gradient(135deg, rgba(5,150,105,0.12), #12161f); }
+.gp-card.bear { border-color: rgba(239,68,68,0.4); background: linear-gradient(135deg, rgba(239,68,68,0.1), #12161f); }
+.gp-card.warn { border-color: rgba(245,158,11,0.45); background: linear-gradient(135deg, rgba(245,158,11,0.1), #12161f); }
+.gp-card.info { border-color: rgba(59,130,246,0.4); }
+.gp-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-right: 6px;
+  margin-bottom: 4px;
+}
+.gp-tag.bull { background: rgba(16,185,129,0.18); color: #34d399; }
+.gp-tag.bear { background: rgba(239,68,68,0.18); color: #f87171; }
+.gp-tag.neut { background: rgba(148,163,184,0.15); color: #94a3b8; }
+.gp-tag.warn { background: rgba(245,158,11,0.18); color: #fbbf24; }
+.gp-list { list-style: none; margin: 0; padding: 0; }
+.gp-list li {
+  font-size: 12.5px;
+  color: #c8cdd8;
+  padding: 6px 0;
+  border-bottom: 1px solid #1a2030;
+  line-height: 1.4;
+}
+.gp-list li:last-child { border-bottom: none; }
+.gp-meta {
+  font-size: 10.5px;
+  color: #6b7280;
+  margin-top: 8px;
+  text-align: right;
+}
+.side-drawer-item.gpai .sd-ico {
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  color: #fff;
+}
+.side-drawer-item.gpai {
+  background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(37,99,235,0.12));
+  border: 1px solid rgba(124,58,237,0.35);
+}
+.gp-ai-panel { max-width: 520px; height: min(92vh, 820px); }
+.gp-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 120px;
+}
+.gp-msg {
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.gp-msg.user {
+  background: #1a2332;
+  border: 1px solid #2a3a52;
+  color: #e5e7eb;
+  align-self: flex-end;
+}
+.gp-msg.assistant {
+  background: #12161f;
+  border: 1px solid #2a3142;
+  color: #e5e7eb;
+}
+.gp-msg.system {
+  background: rgba(124,58,237,0.1);
+  border: 1px solid rgba(124,58,237,0.3);
+  color: #c4b5fd;
+  font-size: 12px;
+}
+.gp-msg .gp-role {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #8b93a7;
+  margin-bottom: 4px;
+}
+.gp-msg.assistant .gp-role { color: #a78bfa; }
+.gp-compose {
+  border-top: 1px solid #1f2430;
+  padding: 10px 12px 12px;
+  background: #0d1017;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gp-compose textarea {
+  width: 100%;
+  min-height: 56px;
+  max-height: 120px;
+  resize: vertical;
+  border-radius: 10px;
+  border: 1px solid #2a3142;
+  background: #0b0d12;
+  color: #e5e7eb;
+  padding: 10px 12px;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+}
+.gp-compose textarea:focus { border-color: #7c3aed; }
+.gp-compose-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.gp-compose-row button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.gp-send {
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  color: #fff;
+  flex: 1;
+}
+.gp-send:disabled { opacity: 0.5; }
+.gp-settings-box {
+  background: #12161f;
+  border: 1px solid #2a3142;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.gp-settings-box label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8b93a7;
+  margin-bottom: 4px;
+  margin-top: 8px;
+}
+.gp-settings-box label:first-child { margin-top: 0; }
+.gp-settings-box input, .gp-settings-box select {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid #2a3142;
+  background: #0b0d12;
+  color: #e5e7eb;
+  font-size: 12.5px;
+  outline: none;
+}
+.gp-settings-box .hint {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+.gp-typing { color: #a78bfa; font-size: 12px; font-style: italic; }
+
+
 @keyframes pulseFootprintBtn { 0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); } 50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } }
 .front-bias-hub { background: #131722; border: 1px solid #1f2430; border-radius: 14px; padding: 12px; margin-bottom: 14px; }
 .front-bias-header { font-size: 12px; font-weight: 700; color: #9aa0a6; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -101,6 +558,33 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
 .news-item-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 6px; border-radius: 6px; background: #11141e; border: 1px solid #191f2b; }
 .news-item-name { font-size: 11.5px; color: #e1e4ea; font-weight: 600; }
 .news-item-time { font-size: 11px; font-weight: 700; color: #00f59b; font-family: monospace; }
+.pairs-accordion { background: #11141e; border: 1px solid #1f2533; border-radius: 10px; margin-bottom: 4px; overflow: hidden; }
+.pairs-accordion .news-tab-header { background: #131722; }
+.pairs-pill {
+  background: rgba(59, 130, 246, 0.18);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.pairs-accordion .news-tab-content {
+  display: none;
+  padding: 10px 10px 6px;
+  border-top: 1px solid #1a202c;
+  background: #0c0e14;
+}
+.pairs-accordion.open .news-tab-content { display: block; }
+.pairs-accordion.open .news-tab-chevron { transform: rotate(180deg); }
+.pairs-accordion .dashboard-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  border-radius: 0;
+}
 .dashboard-card { width: 100%; background-color: #161a1e; border: 1px solid #242930; border-radius: 12px; padding: 14px 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); box-sizing: border-box; }
 .asset-row { position: relative; margin-bottom: 12px; border-bottom: 1px solid #1f242b; padding-bottom: 10px; overflow: hidden; min-width: 0; }
 .asset-row:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
@@ -238,15 +722,75 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   </div>
 </div>
 
+<!-- ===== SIDE DRAWER ===== -->
+<div class="side-drawer-backdrop" id="sideDrawerBackdrop" onclick="closeSideDrawer()"></div>
+<aside class="side-drawer" id="sideDrawer">
+  <div class="side-drawer-head">
+    <span class="sd-title">Tools</span>
+    <button class="sd-close" onclick="closeSideDrawer()" aria-label="Close">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="side-drawer-section">Order flow</div>
+  <button class="side-drawer-item fp" onclick="openFootprintModal(); closeSideDrawer();">
+    <span class="sd-ico">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+      </svg>
+    </span>
+    <span class="sd-text">AI Footprint<span class="sd-sub">Live order flow · Binance volume</span></span>
+  </button>
+
+  <div class="side-drawer-section">Charts</div>
+  <button class="side-drawer-item gold" onclick="openChartModal('gold'); closeSideDrawer();">
+    <span class="sd-ico">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 3h18v18H3V3z"/>
+      </svg>
+    </span>
+    <span class="sd-text">Gold Chart<span class="sd-sub">XAU/USD · trendlines</span></span>
+  </button>
+  <button class="side-drawer-item dxy" onclick="openChartModal('dxy'); closeSideDrawer();">
+    <span class="sd-ico">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 3h18v18H3V3z"/>
+      </svg>
+    </span>
+    <span class="sd-text">DXY Chart<span class="sd-sub">US Dollar Index</span></span>
+  </button>
+
+  <div class="side-drawer-section">AI Agent</div>
+  <button class="side-drawer-item gpai" onclick="openGpAi(); closeSideDrawer();">
+    <span class="sd-ico"><span style="font-size:12px;font-weight:800;">GP</span></span>
+    <span class="sd-text">GP AI<span class="sd-sub">Real LLM agent · API brain + tools</span></span>
+  </button>
+
+  <div class="side-drawer-section">System</div>
+  <button class="side-drawer-item" onclick="forceLiveSync(); closeSideDrawer();">
+    <span class="sd-ico"><span style="font-size:16px;">📡</span></span>
+    <span class="sd-text">Force Live Sync<span class="sd-sub">Refresh all feeds</span></span>
+  </button>
+
+</aside>
+
 <div class="card">
   <div class="header-row">
-    <h1>Gold (XAU/USD) Live Correlation</h1>
+    <div class="header-left">
+      <button class="side-fab" id="sideFab" onclick="toggleSideDrawer()" title="Menu" aria-label="Open menu">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+        </svg>
+      </button>
+      <h1>Gold (XAU/USD) Live Correlation</h1>
+    </div>
     <div class="header-actions">
       <button class="btn-live" id="liveBtn" onclick="forceLiveSync()" title="Live feed active — tap to force sync">
         <span class="live-dot"></span>
         <span id="liveBtnLabel">LIVE</span>
       </button>
-      <button class="btn-header-action" onclick="lockTerminal()">🔒 Lock</button>
     </div>
   </div>
   <div class="gold-spot" id="gold-spot">Gold spot: Syncing real-time feed...</div>
@@ -274,27 +818,19 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         </div>
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
-        <button class="btn-chart btn-footprint-tab" onclick="openFootprintModal()">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+      <div style="display:flex; gap:10px; margin-bottom:14px;">
+        <button class="btn-chart" style="flex:1; margin-bottom:0;" onclick="openChartModal('gold')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 3h18v18H3V3z"/>
           </svg>
-          ⚡ AI FOOTPRINT (REAL-TIME ORDER FLOW)
+          Open Gold Chart
         </button>
-        <div style="display:flex; gap:10px;">
-          <button class="btn-chart" style="flex:1; margin-bottom:0;" onclick="openChartModal('gold')">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 3h18v18H3V3z"/>
-            </svg>
-            Open Gold Chart
-          </button>
-          <button class="btn-chart" style="flex:1; margin-bottom:0; background:#1e3a5f;" onclick="openChartModal('dxy')">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 3h18v18H3V3z"/>
-            </svg>
-            Open DXY Chart
-          </button>
-        </div>
+        <button class="btn-chart" style="flex:1; margin-bottom:0; background:#1e3a5f;" onclick="openChartModal('dxy')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 3h18v18H3V3z"/>
+          </svg>
+          Open DXY Chart
+        </button>
       </div>
 
       <div class="front-bias-hub">
@@ -354,85 +890,148 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
     </div>
 
     <div class="tablet-col-right">
-      <div class="dashboard-card" style="margin-bottom:0;">
-        <div class="asset-row live-pair-row">
-          <div class="live-pair-main">
-            <div class="live-pair-left">
-              <span class="live-pair-name">DXY</span>
-              <span class="live-pair-desc">US Dollar Index</span>
+      <div class="pairs-accordion" id="pairsAccordion">
+        <div class="news-tab-header" onclick="togglePairsAccordion()">
+          <div class="news-tab-left">
+            <span class="pairs-pill">LIVE</span>
+            <span class="news-tab-headline" id="pairsHeadTitle">DXY · US10Y · FX Pairs</span>
+          </div>
+          <div class="news-tab-right">
+            <span class="news-compact-timer" id="pairsHeadDxy" style="color:#e1e4ea;">—</span>
+            <span class="news-tab-chevron" id="pairsChevron">▼</span>
+          </div>
+        </div>
+        <div class="news-tab-content" id="pairsContent">
+          <div class="dashboard-card" style="margin-bottom:0;">
+            <div class="asset-row live-pair-row">
+              <div class="live-pair-main">
+                <div class="live-pair-left">
+                  <span class="live-pair-name">DXY</span>
+                  <span class="live-pair-desc">US Dollar Index</span>
+                </div>
+                <div class="live-pair-right">
+                  <span class="live-pair-price" id="lp-dxy">—</span>
+                  <span class="live-pair-chg" id="lp-dxy-chg">—</span>
+                </div>
+              </div>
+              <span class="weight-subtitle">35% · Direct market proximity</span>
             </div>
-            <div class="live-pair-right">
-              <span class="live-pair-price" id="lp-dxy">—</span>
-              <span class="live-pair-chg" id="lp-dxy-chg">—</span>
+            <div class="asset-row live-pair-row">
+              <div class="live-pair-main">
+                <div class="live-pair-left">
+                  <span class="live-pair-name">US10Y</span>
+                  <span class="live-pair-desc" id="lp-us10y-desc">10Y Treasury Yield</span>
+                </div>
+                <div class="live-pair-right" id="lp-us10y-box">
+                  <span class="live-pair-price" id="lp-us10y">—</span>
+                  <span class="live-pair-chg" id="lp-us10y-chg">—</span>
+                </div>
+              </div>
+              <span class="weight-subtitle" id="lp-us10y-w">25% · Yield up = gold headwind</span>
+            </div>
+            <div class="asset-row live-pair-row">
+              <div class="live-pair-main">
+                <div class="live-pair-left">
+                  <span class="live-pair-name">EURUSD</span>
+                  <span class="live-pair-desc">Euro / US Dollar</span>
+                </div>
+                <div class="live-pair-right">
+                  <span class="live-pair-price" id="lp-eur">—</span>
+                  <span class="live-pair-chg" id="lp-eur-chg">—</span>
+                </div>
+              </div>
+              <span class="weight-subtitle">15% · High correlation</span>
+            </div>
+            <div class="asset-row live-pair-row">
+              <div class="live-pair-main">
+                <div class="live-pair-left">
+                  <span class="live-pair-name">AUDUSD</span>
+                  <span class="live-pair-desc">Australian Dollar / USD</span>
+                </div>
+                <div class="live-pair-right">
+                  <span class="live-pair-price" id="lp-aud">—</span>
+                  <span class="live-pair-chg" id="lp-aud-chg">—</span>
+                </div>
+              </div>
+              <span class="weight-subtitle">10% · Mod/High correlation</span>
+            </div>
+            <div class="asset-row live-pair-row">
+              <div class="live-pair-main">
+                <div class="live-pair-left">
+                  <span class="live-pair-name">USDJPY</span>
+                  <span class="live-pair-desc">US Dollar / Japanese Yen</span>
+                </div>
+                <div class="live-pair-right">
+                  <span class="live-pair-price" id="lp-jpy">—</span>
+                  <span class="live-pair-chg" id="lp-jpy-chg">—</span>
+                </div>
+              </div>
+              <span class="weight-subtitle">10% · Moderate inverse</span>
+            </div>
+            <div class="asset-row live-pair-row">
+              <div class="live-pair-main">
+                <div class="live-pair-left">
+                  <span class="live-pair-name">USDCHF</span>
+                  <span class="live-pair-desc">US Dollar / Swiss Franc</span>
+                </div>
+                <div class="live-pair-right">
+                  <span class="live-pair-price" id="lp-chf">—</span>
+                  <span class="live-pair-chg" id="lp-chf-chg">—</span>
+                </div>
+              </div>
+              <span class="weight-subtitle">5% · Mod/High inverse</span>
             </div>
           </div>
-          <span class="weight-subtitle">35% · Direct market proximity</span>
         </div>
-        <div class="asset-row live-pair-row">
-          <div class="live-pair-main">
-            <div class="live-pair-left">
-              <span class="live-pair-name">US10Y</span>
-              <span class="live-pair-desc" id="lp-us10y-desc">10Y Treasury Yield</span>
-            </div>
-            <div class="live-pair-right" id="lp-us10y-box">
-              <span class="live-pair-price" id="lp-us10y">—</span>
-              <span class="live-pair-chg" id="lp-us10y-chg">—</span>
-            </div>
-          </div>
-          <span class="weight-subtitle" id="lp-us10y-w">25% · Yield up = gold headwind</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== GP AI — REAL LLM AGENT ===== -->
+<div class="gp-ai-overlay" id="gpAiOverlay">
+  <div class="gp-ai-panel">
+    <div class="gp-ai-head">
+      <div class="gp-ai-brand">
+        <div class="gp-ai-avatar">GP</div>
+        <div>
+          <h2>GP AI <span class="gp-ai-live"><i></i>AGENT</span></h2>
+          <p>LLM brain · terminal + web tools</p>
         </div>
-        <div class="asset-row live-pair-row">
-          <div class="live-pair-main">
-            <div class="live-pair-left">
-              <span class="live-pair-name">EURUSD</span>
-              <span class="live-pair-desc">Euro / US Dollar</span>
-            </div>
-            <div class="live-pair-right">
-              <span class="live-pair-price" id="lp-eur">—</span>
-              <span class="live-pair-chg" id="lp-eur-chg">—</span>
-            </div>
-          </div>
-          <span class="weight-subtitle">15% · High correlation</span>
+      </div>
+      <button class="gp-ai-close" onclick="closeGpAi()" aria-label="Close">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="gp-ai-body" id="gpAiBody">
+      <div class="gp-ai-toolbar">
+        <button class="primary" onclick="gpAiAutoBrief()">⚡ Live brief</button>
+        <button onclick="gpAiToggleSettings()">⚙ API</button>
+        <button onclick="gpAiClearChat()">Clear</button>
+      </div>
+      <div id="gpAiSettings" class="gp-settings-box" style="display:none;">
+        <label>API Base URL (OpenAI-compatible)</label>
+        <input id="gpApiBase" placeholder="https://api.groq.com/openai/v1" />
+        <label>API Key</label>
+        <input id="gpApiKey" type="password" placeholder="Paste your key (stored locally only)" />
+        <label>Model</label>
+        <input id="gpApiModel" placeholder="openai/gpt-oss-120b" />
+        <div class="hint">
+          Groq free/dev: use model <b>openai/gpt-oss-120b</b> (or openai/gpt-oss-20b). Old llama-3.3-70b is enterprise-only now.
+          Key stays in this browser only. Snapshot + your question go to the model.
         </div>
-        <div class="asset-row live-pair-row">
-          <div class="live-pair-main">
-            <div class="live-pair-left">
-              <span class="live-pair-name">AUDUSD</span>
-              <span class="live-pair-desc">Australian Dollar / USD</span>
-            </div>
-            <div class="live-pair-right">
-              <span class="live-pair-price" id="lp-aud">—</span>
-              <span class="live-pair-chg" id="lp-aud-chg">—</span>
-            </div>
-          </div>
-          <span class="weight-subtitle">10% · Mod/High correlation</span>
+        <div class="gp-compose-row" style="margin-top:10px;">
+          <button class="gp-send" type="button" onclick="gpAiSaveSettings()">Save API settings</button>
         </div>
-        <div class="asset-row live-pair-row">
-          <div class="live-pair-main">
-            <div class="live-pair-left">
-              <span class="live-pair-name">USDJPY</span>
-              <span class="live-pair-desc">US Dollar / Japanese Yen</span>
-            </div>
-            <div class="live-pair-right">
-              <span class="live-pair-price" id="lp-jpy">—</span>
-              <span class="live-pair-chg" id="lp-jpy-chg">—</span>
-            </div>
-          </div>
-          <span class="weight-subtitle">10% · Moderate inverse</span>
-        </div>
-        <div class="asset-row live-pair-row">
-          <div class="live-pair-main">
-            <div class="live-pair-left">
-              <span class="live-pair-name">USDCHF</span>
-              <span class="live-pair-desc">US Dollar / Swiss Franc</span>
-            </div>
-            <div class="live-pair-right">
-              <span class="live-pair-price" id="lp-chf">—</span>
-              <span class="live-pair-chg" id="lp-chf-chg">—</span>
-            </div>
-          </div>
-          <span class="weight-subtitle">5% · Mod/High inverse</span>
-        </div>
+      </div>
+      <div class="gp-chat" id="gpAiChat"></div>
+      <div class="gp-meta" id="gpAiMeta">Configure API key to enable full LLM agent</div>
+    </div>
+    <div class="gp-compose">
+      <textarea id="gpAiInput" placeholder="Ask GP AI anything — bias, levels, news, what to add to this terminal…" rows="2"></textarea>
+      <div class="gp-compose-row">
+        <button class="gp-send" id="gpAiSendBtn" type="button" onclick="gpAiSend()">Send to GP AI</button>
       </div>
     </div>
   </div>
@@ -2314,6 +2913,9 @@ function openChartModal(asset) {
     if (dot) { dot.textContent = 'G'; dot.style.background = '#f59e0b'; }
   }
   document.getElementById("chartModal").style.display = "flex";
+  const sr = document.getElementById('sideFab');
+  if (sr) sr.style.display = 'none';
+  closeAllSidePanels();
   triggerRealtimeRender();
   if (candleHistory.length > 0 && candlesMatchAsset(candleHistory, state.chartAsset)) {
     fetchRealCandles(state.tf_interval, false);
@@ -2324,14 +2926,16 @@ function openChartModal(asset) {
 
 function closeChartModal() {
   document.getElementById("chartModal").style.display = "none";
+  const sr = document.getElementById('sideFab');
+  if (sr) sr.style.display = '';
 }
 
 /* =====================================================================
    === FOOTPRINT ENGINE RENDERING SHELL ===
    ===================================================================== */
 let FP_TICK_SIZE = 0.20;
-let fpCandleWidthCustom = 58;
-const FP_GAP = 8;
+let fpCandleWidthCustom = 68;
+const FP_GAP = 10;
 const FP_PRICE_W = 72;
 let fpZoom = 1.0;
 let fpFollowLive = true;
@@ -2412,23 +3016,19 @@ function autoCenterFp() {
 
   const ref = (state.gold_price > 500) ? state.gold_price : (fpLivePrice || 4200);
 
-  // Compute range from visible candles so history fits (especially M15)
+  // Scale from real candle high/low — no artificial TF caps that squash real wicks
   let minP = ref, maxP = ref;
-  const start = Math.max(0, fpCandles.length - 12);
+  const start = Math.max(0, fpCandles.length - 16);
   for (let i = start; i < fpCandles.length; i++) {
     const c = fpCandles[i];
-    if (c.low < minP) minP = c.low;
-    if (c.high > maxP) maxP = c.high;
+    if (c.low > 500 && c.low < minP) minP = c.low;
+    if (c.high > 500 && c.high > maxP) maxP = c.high;
   }
-  let range = Math.max(maxP - minP, 1.2);
-  // Pad 20%
-  range *= 1.25;
-  // Cap by TF so M1 stays tight, M15 can open up
-  const maxRange = fpTfMinutes <= 1 ? 4.0 : (fpTfMinutes <= 5 ? 8.0 : 16.0);
-  if (range > maxRange) range = maxRange;
+  let range = Math.max(maxP - minP, 1.5);
+  range *= 1.3; // pad so wicks aren't clipped
 
   fpPixelsPerDollar = (h * 0.72) / range;
-  fpPixelsPerDollar = Math.max(12, Math.min(140, fpPixelsPerDollar));
+  fpPixelsPerDollar = Math.max(8, Math.min(160, fpPixelsPerDollar));
   fpViewCenter = (minP + maxP) / 2 || ref;
   fpPanX = w - (fpCandles.length * (FP_CANDLE_WIDTH() + FP_GAP)) - 40;
   fpPanY = h / 2;
@@ -2527,19 +3127,13 @@ function drawFpChart() {
     const cx = fpPanX + idx * (FP_CANDLE_WIDTH() + FP_GAP);
     if (cx + FP_CANDLE_WIDTH() < -40 || cx > w + 40) continue;
 
-    // Real interbank OHLC only — clamp any leftover absurd range so scale stays real
+    // Draw exact candle OHLC — no range clamps (closed bars are frozen immutable)
     let dH = Math.max(c.high, c.open, c.close);
     let dL = Math.min(c.low,  c.open, c.close);
     if (!(dH > 500) || !(dL > 500)) {
       const mid = ((c.open > 500 ? c.open : 0) + (c.close > 500 ? c.close : 0)) / 2 || (fpLivePrice || 4200);
-      dH = Math.max(c.open, c.close, mid) + 0.25;
-      dL = Math.min(c.open, c.close, mid) - 0.25;
-    }
-    const refDraw = (fpLivePrice > 500) ? fpLivePrice : ((c.close > 500) ? c.close : 4200);
-    const maxDrawRange = fpTfMinutes <= 1 ? 12 : (fpTfMinutes <= 5 ? 25 : 50);
-    if ((dH - dL) > maxDrawRange) {
-      dH = Math.max(c.open, c.close, refDraw) + 0.4;
-      dL = Math.min(c.open, c.close, refDraw) - 0.4;
+      dH = Math.max(c.open || mid, c.close || mid, mid) + 0.25;
+      dL = Math.min(c.open || mid, c.close || mid, mid) - 0.25;
     }
 
     const isUp = c.close >= c.open;
@@ -2574,76 +3168,135 @@ function drawFpChart() {
       fpCtxChart.fillText('LIVE ●', cx + FP_CANDLE_WIDTH() / 2, highY - 8);
     }
 
-    const halfW = FP_CANDLE_WIDTH() / 2;
-    // Levels inside real candle high-low (with small pad so edge prints still show)
-    const sortedPrices = Array.from(c.levels.keys())
-      .filter(p => p >= dL - 0.25 && p <= dH + 0.25)
-      .sort((a, b) => a - b);
+    const cw = FP_CANDLE_WIDTH();
+    const halfW = cw / 2;
+    const wickTop = Math.min(highY, lowY);
+    const wickBot = Math.max(highY, lowY);
 
-    // Row height based on actual tick spacing, clamped for readability
-    const calcRowH = Math.abs(fpPriceToY(0) - fpPriceToY(FP_TICK_SIZE));
-    const rowH = Math.max(11, Math.min(18, calcRowH || 14));
+    // Ensure every candle with volume has a POC
+    if (!(c.pocPrice > 0) || !c.levels.has(c.pocPrice)) {
+      let bestVol = -1, bestP = 0;
+      c.levels.forEach((lvl, p) => {
+        const vol = (lvl._a || 0) + (lvl._b || 0) || (lvl.bid || 0) + (lvl.ask || 0);
+        if (vol > bestVol) { bestVol = vol; bestP = p; }
+      });
+      if (bestP > 0) c.pocPrice = bestP;
+    }
 
-    for (let lIdx = 0; lIdx < sortedPrices.length; lIdx++) {
-      const p = sortedPrices[lIdx];
-      const lvl = c.levels.get(p);
-      if (!lvl || (lvl.bid <= 0 && lvl.ask <= 0)) continue;
+    // STABLE price buckets — independent of zoom/pan so cells never jitter.
+    // Bucket size is fixed in PRICE space (not pixels).
+    const tick = FP_TICK_SIZE || 0.1;
+    const tickPx = Math.max(0.5, Math.abs(fpPriceToY(0) - fpPriceToY(tick)));
+    // Merge N ticks into one row only when pixels are too tight; N is discrete so
+    // small pan/zoom changes don't flip the set of displayed rows.
+    const mergeN = tickPx < 9 ? (tickPx < 5 ? 4 : 2) : 1;
+    const bucket = tick * mergeN;
 
-      const y = fpPriceToY(p);
-      // Keep cells inside the visible area
-      if (y < -rowH || y > h + rowH) continue;
+    // Aggregate levels into stable buckets (price-aligned)
+    const buckets = new Map(); // bucketPrice → {bid, ask, _b, _a}
+    c.levels.forEach((lvl, p) => {
+      if (p < dL - 0.001 || p > dH + 0.001) return;
+      const bid = lvl.bid || 0, ask = lvl.ask || 0;
+      const _b = lvl._b || 0, _a = lvl._a || 0;
+      if (bid <= 0 && ask <= 0 && _b <= 0 && _a <= 0) return;
+      const bp = Math.round(p / bucket) * bucket;
+      const b = buckets.get(bp) || { bid: 0, ask: 0, _b: 0, _a: 0 };
+      b.bid += bid; b.ask += ask; b._b += _b; b._a += _a;
+      buckets.set(bp, b);
+    });
+
+    // POC bucket
+    let pocBucket = 0;
+    if (c.pocPrice > 0) pocBucket = Math.round(c.pocPrice / bucket) * bucket;
+
+    const displayPrices = Array.from(buckets.keys()).sort((a, b) => b - a);
+
+    const fmtVol = (n) => {
+      if (!(n > 0)) return '0';
+      if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+      if (n >= 100) return String(Math.round(n));
+      return n.toFixed(1);
+    };
+
+    // Each cell is locked to its price Y — no lastBottom pushing (that caused jitter)
+    for (let lIdx = 0; lIdx < displayPrices.length; lIdx++) {
+      const p = displayPrices[lIdx];
+      const lvl = buckets.get(p);
+      if (!lvl) continue;
+
+      // Cell spans exactly one bucket in price space → stable under pan/zoom
+      const yTop = fpPriceToY(p + bucket / 2);
+      const yBot = fpPriceToY(p - bucket / 2);
+      let cellTop = Math.min(yTop, yBot);
+      let cellBot = Math.max(yTop, yBot);
+
+      // Clip to wick only (no reposition)
+      if (cellBot <= wickTop || cellTop >= wickBot) continue;
+      if (cellTop < wickTop) cellTop = wickTop;
+      if (cellBot > wickBot) cellBot = wickBot;
+      const ch = cellBot - cellTop;
+      if (ch < 3) continue;
+
+      const isPoc = (p === pocBucket);
 
       let buyImbalance = false, sellImbalance = false;
-      if (lIdx > 0) {
-        const lowerLvl = c.levels.get(sortedPrices[lIdx - 1]);
-        if (lowerLvl) {
-          if (lvl.ask >= lowerLvl.bid * 2.7 && lvl.ask > 3) buyImbalance = true;
-          if (lvl.bid >= lowerLvl.ask * 2.7 && lvl.bid > 3) sellImbalance = true;
+      if (lIdx + 1 < displayPrices.length) {
+        const lower = buckets.get(displayPrices[lIdx + 1]);
+        if (lower) {
+          if (lvl.ask >= lower.bid * 2.5 && lvl.ask > 2) buyImbalance = true;
+          if (lvl.bid >= lower.ask * 2.5 && lvl.bid > 2) sellImbalance = true;
         }
       }
 
-      const cellTop = y - rowH / 2;
+      if (isPoc) {
+        fpCtxChart.fillStyle = 'rgba(245, 158, 11, 0.22)';
+      } else {
+        fpCtxChart.fillStyle = 'rgba(12, 16, 24, 0.92)';
+      }
+      fpCtxChart.fillRect(cx, cellTop, cw, ch);
 
-      // Imbalance background
       if (sellImbalance) {
-        fpCtxChart.fillStyle = 'rgba(242, 54, 69, 0.30)';
-        fpCtxChart.fillRect(cx, cellTop, halfW, rowH);
+        fpCtxChart.fillStyle = 'rgba(242, 54, 69, 0.35)';
+        fpCtxChart.fillRect(cx, cellTop, halfW, ch);
       }
       if (buyImbalance) {
-        fpCtxChart.fillStyle = 'rgba(8, 153, 129, 0.30)';
-        fpCtxChart.fillRect(cx + halfW, cellTop, halfW, rowH);
+        fpCtxChart.fillStyle = 'rgba(8, 153, 129, 0.35)';
+        fpCtxChart.fillRect(cx + halfW, cellTop, halfW, ch);
       }
 
-      // POC highlight
-      if (p === c.pocPrice) {
+      if (isPoc) {
         fpCtxChart.strokeStyle = '#f59e0b';
-        fpCtxChart.lineWidth = 1.5;
-        fpCtxChart.strokeRect(cx + 0.5, cellTop + 0.5, FP_CANDLE_WIDTH() - 1, rowH - 1);
+        fpCtxChart.lineWidth = 2;
+        fpCtxChart.strokeRect(cx + 0.5, cellTop + 0.5, cw - 1, ch - 1);
+      } else {
+        fpCtxChart.strokeStyle = 'rgba(45, 55, 72, 0.95)';
+        fpCtxChart.lineWidth = 0.6;
+        fpCtxChart.strokeRect(cx, cellTop, cw, ch);
       }
 
-      // Cell border
-      fpCtxChart.strokeStyle = 'rgba(30, 36, 50, 0.9)';
-      fpCtxChart.lineWidth = 0.5;
-      fpCtxChart.strokeRect(cx, cellTop, FP_CANDLE_WIDTH(), rowH);
+      fpCtxChart.fillStyle = isPoc ? 'rgba(180, 130, 20, 0.9)' : 'rgba(50, 60, 78, 0.95)';
+      fpCtxChart.fillRect(cx + halfW - 0.5, cellTop, 1, ch);
 
-      // Center divider
-      fpCtxChart.fillStyle = 'rgba(34, 40, 56, 0.9)';
-      fpCtxChart.fillRect(cx + halfW - 0.5, cellTop, 1, rowH);
-
-      // Volume text – vertically centered in the cell
-      const fmtVol = (n) => n >= 100 ? Math.round(n) : (n > 0 ? n.toFixed(1) : "0");
-      const fontSize = Math.min(9, Math.max(7.5, rowH * 0.62));
-      fpCtxChart.font = `${fontSize}px monospace`;
-      fpCtxChart.textAlign = 'center';
-      fpCtxChart.textBaseline = 'middle';   // key for precise vertical centering
-
-      fpCtxChart.fillStyle = sellImbalance ? '#fca5a5' : '#94a3b8';
-      fpCtxChart.fillText(fmtVol(lvl.bid), cx + halfW * 0.5, y);
-
-      fpCtxChart.fillStyle = buyImbalance ? '#86efac' : '#cbd5e1';
-      fpCtxChart.fillText(fmtVol(lvl.ask), cx + halfW * 1.5, y);
-
-      fpCtxChart.textBaseline = 'alphabetic'; // reset
+      // Hide text when row is too small (zoom out) — still no position shift
+      if (ch >= 8) {
+        const fontSize = Math.max(8, Math.min(11, ch * 0.7));
+        fpCtxChart.font = `bold ${fontSize}px monospace`;
+        fpCtxChart.textAlign = 'center';
+        fpCtxChart.textBaseline = 'middle';
+        const textY = cellTop + ch / 2;
+        if (isPoc) {
+          fpCtxChart.fillStyle = '#fde68a';
+          fpCtxChart.fillText(fmtVol(lvl.bid), cx + halfW * 0.5, textY);
+          fpCtxChart.fillStyle = '#fef3c7';
+          fpCtxChart.fillText(fmtVol(lvl.ask), cx + halfW * 1.5, textY);
+        } else {
+          fpCtxChart.fillStyle = sellImbalance ? '#fecaca' : '#cbd5e1';
+          fpCtxChart.fillText(fmtVol(lvl.bid), cx + halfW * 0.5, textY);
+          fpCtxChart.fillStyle = buyImbalance ? '#bbf7d0' : '#e2e8f0';
+          fpCtxChart.fillText(fmtVol(lvl.ask), cx + halfW * 1.5, textY);
+        }
+        fpCtxChart.textBaseline = 'alphabetic';
+      }
     }
   }
 
@@ -3333,6 +3986,19 @@ function tickNewsCountdown() {
   }
 }
 
+function togglePairsAccordion() {
+  const acc = document.getElementById('pairsAccordion');
+  if (!acc) return;
+  acc.classList.toggle('open');
+  const content = document.getElementById('pairsContent');
+  if (content) content.style.display = acc.classList.contains('open') ? 'block' : 'none';
+}
+function syncPairsHeaderSummary() {
+  const dxyEl = document.getElementById('lp-dxy');
+  const head = document.getElementById('pairsHeadDxy');
+  if (dxyEl && head && dxyEl.textContent) head.textContent = dxyEl.textContent;
+}
+
 function toggleFrontNewsDrawer() {
   const content = document.getElementById("drawerContent");
   const chevron = document.getElementById("drawerChevron");
@@ -3362,18 +4028,74 @@ const RF_BASE = 10;
 const RF_KEEP_MS = 6 * 3600000;
 const rfStore = new Map();
 let rfWs = null, rfGot = false, rfOpenAt = 0, rfLastId = 0, rfBusy = false, rfQueue = [], rfPing = null;
+// Permanent freeze for CLOSED bars: OHLC + footprint levels + POC.
+// Once closed, volume numbers never change when live price moves.
+// Key: `${tfMinutes}_${barSlot}` → { o, h, l, c, fromReal, levels, pocPrice, _d, _v, _cvd }
+const fpFrozenOHLC = new Map();
+function fpFreezeKey(tf, slot) { return tf + '_' + slot; }
+function fpCloneLevels(src) {
+  const m = new Map();
+  if (!src) return m;
+  src.forEach((lvl, p) => {
+    m.set(p, {
+      _b: lvl._b || 0,
+      _a: lvl._a || 0,
+      bid: lvl.bid || 0,
+      ask: lvl.ask || 0
+    });
+  });
+  return m;
+}
+function fpFreezeBar(tf, slot, o, h, l, c, force, levels, pocPrice, _d, _v, _cvd) {
+  if (!(slot > 0) || !(o > 500)) return;
+  const k = fpFreezeKey(tf, slot);
+  const existing = fpFrozenOHLC.get(k);
+  if (existing && !force) {
+    // Already frozen — only attach levels if they were missing and we now have them
+    if ((!existing.levels || existing.levels.size === 0) && levels && levels.size > 0) {
+      existing.levels = fpCloneLevels(levels);
+      existing.pocPrice = pocPrice || existing.pocPrice || 0;
+      existing._d = _d || 0;
+      existing._v = _v || 0;
+      existing._cvd = _cvd || 0;
+    }
+    return;
+  }
+  fpFrozenOHLC.set(k, {
+    o: +o,
+    h: Math.max(+h, +o, +c),
+    l: Math.min(+l, +o, +c),
+    c: +c,
+    fromReal: !!force,
+    levels: fpCloneLevels(levels),
+    pocPrice: pocPrice || 0,
+    _d: _d || 0,
+    _v: _v || 0,
+    _cvd: _cvd || 0
+  });
+}
+function fpGetFrozen(tf, slot) {
+  return fpFrozenOHLC.get(fpFreezeKey(tf, slot)) || null;
+}
+function fpClearFreezeTF(tf) {
+  const prefix = tf + '_';
+  for (const k of [...fpFrozenOHLC.keys()]) {
+    if (k.startsWith(prefix)) fpFrozenOHLC.delete(k);
+  }
+}
 
-// Fetch real OHLC history for the footprint timeframe (same source as main chart)
+// Fetch real OHLC history for the footprint timeframe (SAME API as main gold chart)
 async function fetchFpRealHistory(minutes) {
   if (fpRealLoading) return;
   fpRealLoading = true;
   const interval = minutes + 'm';
   try {
-    // Same interbank source as main gold chart — enough bars for real OHLC backbone
-    const data = await fetchJson(`https://biquote.io/api/XAUUSD/ohlc?interval=${interval}&limit=120`);
+    // Identical interbank source + limit style as main chart
+    const data = await fetchJson(`https://biquote.io/api/XAUUSD/ohlc?interval=${interval}&limit=200`);
     let bars = (data && data.bars) ? data.bars.slice() : [];
     if (bars.length > 1 && new Date(bars[0].openTime) > new Date(bars[bars.length - 1].openTime)) bars.reverse();
     const ms = minutes * 60000;
+    const nowSlot = Math.floor(Date.now() / ms) * ms;
     fpRealHistory = bars.map(b => {
       const t = new Date(b.openTime || b.time || b.t).getTime();
       const slot = Math.floor(t / ms) * ms;
@@ -3387,7 +4109,15 @@ async function fetchFpRealHistory(minutes) {
         c: +b.close || +b.c
       };
     }).filter(b => b.o > 500 && b.barSlot > 0);
-    if (fpRealHistory.length > 80) fpRealHistory = fpRealHistory.slice(-80);
+    if (fpRealHistory.length > 150) fpRealHistory = fpRealHistory.slice(-150);
+
+    // Seed freeze from real API for every CLOSED bar (force overwrite bad early freezes)
+    for (let i = 0; i < fpRealHistory.length; i++) {
+      const rc = fpRealHistory[i];
+      if (rc.barSlot < nowSlot) {
+        fpFreezeBar(minutes, rc.barSlot, rc.o, rc.h, rc.l, rc.c, true);
+      }
+    }
   } catch (e) {
     // fallback: main chart history (same interbank OHLC)
     if (typeof candleHistory !== 'undefined' && candleHistory.length) {
@@ -3434,26 +4164,22 @@ function rfFinal(c) {
 }
 
 function rfStoreTrade(p, q, buy, ts) {
-  // Reject nonsense prices / sizes
-  if (!(p > 500 && p < 10000) || !(q > 0)) return;
-  // Live trades (last 2 min): map volume to interbank so numbers sit on the real candle.
-  // Older backfilled trades: keep original trade price; rfBuild clamps into each bar's range.
-  const age = Date.now() - ts;
-  const mapP = (age < 120000 && state.gold_price > 500) ? state.gold_price : p;
+  // AUTHENTIC: store at the REAL Binance trade price only — never rewrite to gold_price.
+  if (!(p > 500 && p < 20000) || !(q > 0)) return;
   const s = Math.floor(ts / 60000) * 60000;
   let b = rfStore.get(s);
   if (!b) {
-    b = { o: mapP, h: mapP, l: mapP, c: mapP, lv: new Map() };
+    b = { o: p, h: p, l: p, c: p, lv: new Map() };
     rfStore.set(s, b);
     for (const t of rfStore.keys()) {
       if (t < s - RF_KEEP_MS) rfStore.delete(t);
     }
   }
-  b.c = mapP;
-  if (mapP > b.h) b.h = mapP;
-  if (mapP < b.l) b.l = mapP;
+  b.c = p;
+  if (p > b.h) b.h = p;
+  if (p < b.l) b.l = p;
 
-  const k = Math.round(mapP * RF_BASE);
+  const k = Math.round(p * RF_BASE);
   const v = b.lv.get(k) || b.lv.set(k, [0, 0]).get(k);
   v[buy ? 1 : 0] += q;
 }
@@ -3473,10 +4199,21 @@ function rfBuild(min) {
     volBySlot.get(t).push(rfStore.get(s));
   }
 
-  // --- Real OHLC backbone: main chart history first (exact match), then fpRealHistory ---
+  // --- Real OHLC backbone (same interbank API as main gold chart) ---
   const realByTime = new Map();
-  // Prefer main interbank candleHistory when TF matches — same source as front gold chart
-  if (typeof candleHistory !== 'undefined' && candleHistory.length) {
+  // 1) fpRealHistory always (fetched for this exact footprint TF)
+  if (fpRealHistory && fpRealHistory.length) {
+    for (let i = 0; i < fpRealHistory.length; i++) {
+      const rc = fpRealHistory[i];
+      if (rc.barSlot > 0 && +rc.o > 500) {
+        realByTime.set(rc.barSlot, {
+          barSlot: rc.barSlot, o: +rc.o, h: +rc.h, l: +rc.l, c: +rc.c
+        });
+      }
+    }
+  }
+  // 2) Main chart candleHistory when same TF + gold — overrides for live-synced match
+  if ((state.chartAsset || 'gold') === 'gold' && typeof candleHistory !== 'undefined' && candleHistory.length) {
     const mainMs = (state.tf_seconds || 60) * 1000;
     if (mainMs === ms) {
       for (let i = 0; i < candleHistory.length; i++) {
@@ -3487,14 +4224,6 @@ function rfBuild(min) {
             barSlot: rt, o: +rc.o, h: +rc.h, l: +rc.l, c: +rc.c
           });
         }
-      }
-    }
-  }
-  if (fpRealHistory && fpRealHistory.length) {
-    for (let i = 0; i < fpRealHistory.length; i++) {
-      const rc = fpRealHistory[i];
-      if (rc.barSlot > 0 && +rc.o > 500 && !realByTime.has(rc.barSlot)) {
-        realByTime.set(rc.barSlot, rc);
       }
     }
   }
@@ -3516,26 +4245,26 @@ function rfBuild(min) {
     const volBars = volBySlot.get(t) || [];
     const realCandle = realByTime.get(t);
 
-    // OHLC MUST come from interbank / real history only — never Binance prices.
-    // Crypto is volume-only (mapped into the real body later).
+    // OHLC priority: freeze (real) → real API candle → live interbank only.
+    // NEVER invent closed bars from volume/current price (that caused mismatch).
     let o, h, l, c_;
-    if (realCandle && realCandle.o > 500) {
+    const frozen = !isLast ? fpGetFrozen(min, t) : null;
+    if (frozen) {
+      o = frozen.o; h = frozen.h; l = frozen.l; c_ = frozen.c;
+    } else if (realCandle && realCandle.o > 500) {
       o = +realCandle.o;
       h = +realCandle.h;
       l = +realCandle.l;
       c_ = +realCandle.c;
+      if (!isLast) fpFreezeBar(min, t, o, h, l, c_, true);
     } else if (isLast && realP > 500) {
-      // Live bar with no history yet — pure interbank
-      o = realP; h = realP; l = realP; c_ = realP;
-    } else if (volBars.length && realP > 500) {
-      // Volume exists but no real OHLC for this slot:
-      // draw a flat interbank bar (volume still overlays). Do NOT use crypto OHLC.
       o = realP; h = realP; l = realP; c_ = realP;
     } else {
-      continue; // no trustworthy price for this slot
+      // No real OHLC for this closed slot — skip (do not draw fake flat bars)
+      continue;
     }
 
-    // Live candle: close = interbank; high/low expand only with interbank
+    // Live bar only: expand high/low with interbank price
     if (isLast && realP > 500) {
       if (!o || o < 500) o = realP;
       c_ = realP;
@@ -3545,21 +4274,6 @@ function rfBuild(min) {
 
     h = Math.max(h, o, c_);
     l = Math.min(l, o, c_);
-    // Reject broken / absurd ranges (crypto contamination leftover)
-    const maxRange = min <= 1 ? 12 : (min <= 5 ? 25 : 50);
-    if (!(h > 500) || !(l > 500) || (h - l) > maxRange) {
-      const mid = ((o > 500 ? o : 0) + (c_ > 500 ? c_ : 0)) / 2 || realP || 4200;
-      h = Math.max(o, c_, mid) + 0.35;
-      l = Math.min(o, c_, mid) - 0.35;
-    }
-    // Keep closed bars near interbank when we only have live price as reference
-    if (!realCandle && realP > 500) {
-      const maxDrift = min <= 1 ? 3 : (min <= 5 ? 6 : 12);
-      h = Math.min(h, realP + maxDrift);
-      l = Math.max(l, realP - maxDrift);
-      h = Math.max(h, o, c_);
-      l = Math.min(l, o, c_);
-    }
 
     const c = {
       time: t,
@@ -3577,39 +4291,35 @@ function rfBuild(min) {
       isLive: isLast
     };
 
-    // Overlay footprint volume across the FULL candle body.
-    // Crypto prices often sit $1–5 off interbank — map them proportionally
-    // into [low, high] so volume fills the body instead of piling on edges.
-    let cLo = Infinity, cHi = -Infinity;
+    // AUTHENTIC footprint: real Binance trade prices + one rigid bar offset.
+    // No stretch. Offset = interbank mid − volume-weighted crypto mid (capped).
+    let cSum = 0, cN = 0;
     for (let k = 0; k < volBars.length; k++) {
-      volBars[k].lv.forEach((_, key) => {
+      volBars[k].lv.forEach((v, key) => {
         const pk = key / RF_BASE;
-        if (pk < cLo) cLo = pk;
-        if (pk > cHi) cHi = pk;
+        const qty = (v[0] || 0) + (v[1] || 0);
+        cSum += pk * qty;
+        cN += qty;
       });
     }
-    const hasCryptoRange = (cHi > cLo + 0.001);
     const bodyLo = l;
     const bodyHi = h;
-    const bodySpan = Math.max(bodyHi - bodyLo, FP_TICK_SIZE);
+    const bodyMid = (bodyLo + bodyHi) / 2;
+    const cryptoMid = cN > 0 ? (cSum / cN) : bodyMid;
+    let offset = 0;
+    if (cN > 0 && isFinite(cryptoMid) && isFinite(bodyMid)) {
+      const rawOff = bodyMid - cryptoMid;
+      if (Math.abs(rawOff) < 15) offset = rawOff;
+    }
+    // Live bar: keep offset stable across rebuilds
+    if (isLast && c._fpOffset != null) offset = c._fpOffset;
+    c._fpOffset = offset;
 
     for (let k = 0; k < volBars.length; k++) {
       volBars[k].lv.forEach((v, key) => {
         const raw = key / RF_BASE;
-        let lvlKey;
-        if (hasCryptoRange) {
-          // Linear map crypto level → interbank candle body
-          let ratio = (raw - cLo) / (cHi - cLo);
-          if (ratio < 0) ratio = 0;
-          if (ratio > 1) ratio = 1;
-          lvlKey = bodyLo + ratio * bodySpan;
-        } else if (raw >= bodyLo && raw <= bodyHi) {
-          lvlKey = raw;
-        } else {
-          lvlKey = (bodyLo + bodyHi) / 2;
-        }
-        lvlKey = rfKey(lvlKey);
-        // Keep inside body
+        let lvlKey = rfKey(raw + offset);
+        if (lvlKey < bodyLo - FP_TICK_SIZE || lvlKey > bodyHi + FP_TICK_SIZE) return;
         if (lvlKey < bodyLo) lvlKey = rfKey(bodyLo);
         if (lvlKey > bodyHi) lvlKey = rfKey(bodyHi);
         const lvl = rfLevel(c.levels, lvlKey);
@@ -3645,71 +4355,70 @@ function rfAnchor() {
 }
 
 function rfRebuild() {
-  // Snapshot closed OHLC + live levels so rebuild stays smooth
-  const prevClosed = new Map();
+  // Snapshot prior live levels for smooth mid-bar rebuild
   let prevLive = null;
+  const nowMs = fpTfMinutes * 60000;
+  const liveSlot = Math.floor(Date.now() / nowMs) * nowMs;
+
   for (let i = 0; i < fpCandles.length; i++) {
     const prev = fpCandles[i];
     if (!prev || !prev.barSlot) continue;
-    if (prev.isLive) {
+    if (prev.isLive || prev.barSlot === liveSlot) {
       prevLive = prev;
     } else {
-      prevClosed.set(prev.barSlot, {
-        open: prev.open, high: prev.high, low: prev.low, close: prev.close
-      });
+      // Freeze OHLC + footprint levels so closed bar data never changes
+      fpFreezeBar(fpTfMinutes, prev.barSlot, prev.open, prev.high, prev.low, prev.close,
+        false, prev.levels, prev.pocPrice, prev._d, prev._v, prev._cvd);
     }
+  }
+  // Live bar just closed → freeze final OHLC + volume snapshot
+  if (prevLive && prevLive.barSlot !== liveSlot) {
+    fpFreezeBar(fpTfMinutes, prevLive.barSlot, prevLive.open, prevLive.high, prevLive.low, prevLive.close,
+      false, prevLive.levels, prevLive.pocPrice, prevLive._d, prevLive._v, prevLive._cvd);
   }
 
   fpCandles = rfBuild(fpTfMinutes);
   rfWait.style.display = fpCandles.length ? 'none' : 'flex';
   if (!fpCandles.length) return;
 
-  // Closed bars: prefer interbank real history; only use snapshot if no real OHLC
-  const realBySlot = new Map();
-  if (fpRealHistory && fpRealHistory.length) {
-    for (let i = 0; i < fpRealHistory.length; i++) {
-      const rc = fpRealHistory[i];
-      if (rc.barSlot > 0 && +rc.o > 500) realBySlot.set(rc.barSlot, rc);
-    }
-  }
-  if (typeof candleHistory !== 'undefined' && candleHistory.length) {
-    const mainMs = (state.tf_seconds || 60) * 1000;
-    const fpMs = fpTfMinutes * 60000;
-    if (mainMs === fpMs) {
-      for (let i = 0; i < candleHistory.length; i++) {
-        const rc = candleHistory[i];
-        const rt = rc.barSlot || 0;
-        if (rt > 0 && +rc.o > 500) realBySlot.set(rt, { o: +rc.o, h: +rc.h, l: +rc.l, c: +rc.c });
-      }
-    }
-  }
+  // Restore frozen OHLC + levels on every closed bar (immutable)
   for (let i = 0; i < fpCandles.length; i++) {
     const c = fpCandles[i];
-    if (c.isLive) continue;
-    const real = realBySlot.get(c.barSlot);
-    if (real && real.o > 500) {
-      c.open = +real.o; c.high = +real.h; c.low = +real.l; c.close = +real.c;
-    } else {
-      const snap = prevClosed.get(c.barSlot);
-      if (snap && snap.open > 500) {
-        c.open = snap.open; c.high = snap.high; c.low = snap.low; c.close = snap.close;
-      }
+    if (c.barSlot === liveSlot) {
+      c.isLive = true;
+      continue;
     }
     c.isLive = false;
-  }
-  // Guarantee only the true wall-clock bar is marked live
-  const nowMs = fpTfMinutes * 60000;
-  const liveSlot = Math.floor(Date.now() / nowMs) * nowMs;
-  for (let i = 0; i < fpCandles.length; i++) {
-    fpCandles[i].isLive = (fpCandles[i].barSlot === liveSlot);
+    const fr = fpGetFrozen(fpTfMinutes, c.barSlot);
+    if (fr) {
+      c.open = fr.o;
+      c.high = fr.h;
+      c.low = fr.l;
+      c.close = fr.c;
+      // Restore locked footprint numbers — do not keep rebuild-mapped volume
+      if (fr.levels && fr.levels.size > 0) {
+        c.levels = fpCloneLevels(fr.levels);
+        c.pocPrice = fr.pocPrice || 0;
+        c._d = fr._d || 0;
+        c._v = fr._v || 0;
+        c._cvd = fr._cvd || 0;
+        rfFinal(c);
+      }
+    } else {
+      // First close — lock current OHLC + levels
+      fpFreezeBar(fpTfMinutes, c.barSlot, c.open, c.high, c.low, c.close,
+        false, c.levels, c.pocPrice, c._d, c._v, c._cvd);
+    }
   }
 
   if (state.gold_price > 500) {
     fpLivePrice = state.gold_price;
     const last = fpCandles[fpCandles.length - 1];
-    if (last) {
-      // Same live bar: merge prior live levels so numbers keep flowing (no reset)
+    if (last && last.isLive) {
+      // Same live bar: merge prior live levels so volume keeps flowing
       if (prevLive && prevLive.barSlot === last.barSlot && prevLive.levels && prevLive.levels.size) {
+        // Keep stable offset so levels don't jump on rebuild
+        if (prevLive._fpOffset != null) last._fpOffset = prevLive._fpOffset;
         prevLive.levels.forEach((pl, pk) => {
           const nl = rfLevel(last.levels, pk);
           nl._b = Math.max(nl._b, pl._b);
@@ -3717,7 +4426,6 @@ function rfRebuild() {
           nl.bid = rfR(nl._b);
           nl.ask = rfR(nl._a);
         });
-        // Recompute aggregates from merged levels
         last._d = 0; last._v = 0;
         let best = -1;
         last.levels.forEach((lvl, pk) => {
@@ -3730,24 +4438,14 @@ function rfRebuild() {
         });
         last._cvd = (prevLive._cvd || 0);
         rfFinal(last);
-        // Preserve prior live open; high/low only if still near interbank (no crypto wicks)
         if (prevLive.open > 500) last.open = prevLive.open;
-        const maxLiveDrift = fpTfMinutes <= 1 ? 4 : (fpTfMinutes <= 5 ? 8 : 15);
-        if (prevLive.high > 500 && prevLive.high <= state.gold_price + maxLiveDrift) {
-          if (prevLive.high > last.high) last.high = prevLive.high;
-        }
-        if (prevLive.low > 500 && prevLive.low >= state.gold_price - maxLiveDrift) {
-          if (prevLive.low < last.low) last.low = prevLive.low;
-        }
+        if (prevLive.high > last.high) last.high = prevLive.high;
+        if (prevLive.low < last.low && prevLive.low > 500) last.low = prevLive.low;
       }
       if (!last.open || last.open < 500) last.open = state.gold_price;
       last.close = state.gold_price;
       if (state.gold_price > last.high) last.high = state.gold_price;
       if (state.gold_price < last.low || !(last.low > 500)) last.low = state.gold_price;
-      // Hard clamp live bar to interbank neighborhood — kills forced tall candles
-      const maxLiveDrift = fpTfMinutes <= 1 ? 4 : (fpTfMinutes <= 5 ? 8 : 15);
-      if (last.high > state.gold_price + maxLiveDrift) last.high = Math.max(state.gold_price, last.open) + 0.5;
-      if (last.low < state.gold_price - maxLiveDrift) last.low = Math.min(state.gold_price, last.open) - 0.5;
       last.high = Math.max(last.high, last.open, last.close);
       last.low = Math.min(last.low, last.open, last.close);
       const minPad = 0.12;
@@ -3765,11 +4463,32 @@ function rfRebuild() {
 }
 
 function rfApply(c, p, q, buy) {
-  // OHLC from interbank only; volume levels keyed to interbank so numbers sit on the real candle
-  const refPrice = (state.gold_price > 500) ? state.gold_price : p;
-  if (!(refPrice > 500)) return;
+  // HARD RULE: never mutate a closed / frozen candle
+  if (!c || !c.isLive) return;
+  if (fpGetFrozen(fpTfMinutes, c.barSlot)) return;
+  if (!(p > 500 && p < 20000) || !(q > 0)) return;
 
-  const k = rfKey(refPrice);
+  // OHLC from interbank only (front gold chart)
+  const goldP = (state.gold_price > 500) ? state.gold_price : 0;
+
+  // AUTHENTIC volume: place at real Binance trade price + stable bar offset.
+  // Offset is locked on first print so levels never jump when gold ticks.
+  if (c._fpOffset == null) {
+    c._fpOffset = (goldP > 500) ? (goldP - p) : 0;
+    if (Math.abs(c._fpOffset) > 15) c._fpOffset = 0;
+  }
+  let lvlPrice = p + c._fpOffset;
+  // Keep inside current candle range (expand range with gold first)
+  if (goldP > 500) {
+    if (!c.open || c.open < 500) c.open = goldP;
+    c.close = goldP;
+    if (goldP > c.high) c.high = goldP;
+    if (goldP < c.low || !(c.low > 500)) c.low = goldP;
+  }
+  if (c.low > 500 && lvlPrice < c.low) lvlPrice = c.low;
+  if (c.high > 500 && lvlPrice > c.high) lvlPrice = c.high;
+
+  const k = rfKey(lvlPrice);
   const l = rfLevel(c.levels, k);
   if (buy) {
     l._a += q;
@@ -3784,17 +4503,13 @@ function rfApply(c, p, q, buy) {
   }
   c._v += q;
 
-  // OHLC only from interbank — expand high/low with real price, never shrink
-  if (!c.open || c.open < 500) c.open = refPrice;
-  c.close = refPrice;
-  if (refPrice > c.high) c.high = refPrice;
-  if (refPrice < c.low || !(c.low > 500)) c.low = refPrice;
-
   // Tiny pad so a flat bar still has a visible body
-  const minPad = 0.12;
-  if (c.high - c.low < minPad * 2) {
-    c.high = Math.max(c.high, refPrice + minPad);
-    c.low  = Math.min(c.low,  refPrice - minPad);
+  if (goldP > 500) {
+    const minPad = 0.12;
+    if (c.high - c.low < minPad * 2) {
+      c.high = Math.max(c.high, goldP + minPad);
+      c.low  = Math.min(c.low,  goldP - minPad);
+    }
   }
 
   rfFinal(c);
@@ -3956,17 +4671,21 @@ function syncLivePriceToFootprint() {
   const t = document.getElementById('rfTicker') || document.getElementById('fpLiveTicker');
   if (t) t.textContent = state.gold_price.toFixed(2);
   if (fpCandles.length > 0) {
+    const ms = fpTfMinutes * 60000;
+    const liveSlot = Math.floor(Date.now() / ms) * ms;
     const last = fpCandles[fpCandles.length - 1];
-    last.isLive = true;
-    if (!last.open || last.open < 500) last.open = state.gold_price;
-    last.close = state.gold_price;
-    // Expand high/low only — never shrink (preserves real wick as price moves)
-    if (state.gold_price > last.high) last.high = state.gold_price;
-    if (state.gold_price < last.low || !(last.low > 500)) last.low = state.gold_price;
-    const minPad = 0.12;
-    if (last.high - last.low < minPad * 2) {
-      last.high = Math.max(last.high, state.gold_price + minPad);
-      last.low  = Math.min(last.low,  state.gold_price - minPad);
+    // Only mutate the true live bar — closed bars are frozen
+    if (last.barSlot === liveSlot && !fpGetFrozen(fpTfMinutes, last.barSlot)) {
+      last.isLive = true;
+      if (!last.open || last.open < 500) last.open = state.gold_price;
+      last.close = state.gold_price;
+      if (state.gold_price > last.high) last.high = state.gold_price;
+      if (state.gold_price < last.low || !(last.low > 500)) last.low = state.gold_price;
+      const minPad = 0.12;
+      if (last.high - last.low < minPad * 2) {
+        last.high = Math.max(last.high, state.gold_price + minPad);
+        last.low  = Math.min(last.low,  state.gold_price - minPad);
+      }
     }
   }
   ensureLivePriceVisible();
@@ -3977,55 +4696,473 @@ function seedInstantCandles() { return []; }
 async function loadRealFootprintCandles() { return false; }
 
 async function changeFpTF(m) {
+  if (m === fpTfMinutes) return;
+
+  // Freeze closed bars of outgoing TF (OHLC + footprint levels)
+  const outMs = fpTfMinutes * 60000;
+  const outLive = Math.floor(Date.now() / outMs) * outMs;
+  for (let i = 0; i < fpCandles.length; i++) {
+    const c = fpCandles[i];
+    if (c && c.barSlot && c.barSlot !== outLive && c.open > 500) {
+      fpFreezeBar(fpTfMinutes, c.barSlot, c.open, c.high, c.low, c.close,
+        false, c.levels, c.pocPrice, c._d, c._v, c._cvd);
+    }
+  }
+
   fpTfMinutes = m;
   FP_TICK_SIZE = RF_TICKS[m] || 0.2;
   [1, 5, 15].forEach(x => {
     const b = document.getElementById('fpBtn' + x);
     if (b) b.classList.toggle('active', x === m);
   });
-  // Clear stale candles so old TF highs cannot stick
+
+  // Instant switch: rebuild from any cached freeze / volume we already have
   fpCandles = [];
   _rfLastBarSlot = 0;
-  await fetchFpRealHistory(m);
-  // If main chart is on same TF, pull its interbank history for exact match
-  if (typeof fetchRealCandles === 'function') {
-    const wantInterval = m === 1 ? '1m' : (m === 5 ? '5m' : '15m');
-    if (state.tf_interval === wantInterval && typeof candleHistory !== 'undefined') {
-      // already loaded
-    } else {
-      try { await fetchRealCandles(wantInterval, false); } catch (e) {}
-    }
-  }
+  fpViewCenter = 0;
   rfRebuild();
   resizeFpCanvases();
-  fpViewCenter = 0;
   autoCenterFp();
   syncLivePriceToFootprint();
-  // Background volume refresh for denser history prints
-  rfBackfill();
+
+  // Background: fetch real OHLC for this TF (does not block UI)
+  fetchFpRealHistory(m).then(() => {
+    if (fpTfMinutes !== m) return; // user switched again
+    rfRebuild();
+    autoCenterFp();
+    syncLivePriceToFootprint();
+  }).catch(() => {});
 }
 
 /** Full reload of real OHLC + volume — used by ↻ button and on every modal open */
 async function refreshFootprintChart() {
   const btn = document.getElementById('fpRefreshBtn');
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
+  const tf = fpTfMinutes;
   try {
+    fpClearFreezeTF(tf);
     fpCandles = [];
     _rfLastBarSlot = 0;
     fpViewCenter = 0;
-    await fetchFpRealHistory(fpTfMinutes);
-    await rfBackfill(); // rebuilds inside
+    // Instant rebuild from whatever we already have
     rfRebuild();
     resizeFpCanvases();
     autoCenterFp();
     syncLivePriceToFootprint();
     startAllTickFeed();
+
+    // Background: real OHLC then volume (UI already showing)
+    await fetchFpRealHistory(tf);
+    if (fpTfMinutes === tf) {
+      rfRebuild();
+      autoCenterFp();
+      syncLivePriceToFootprint();
+    }
+    // Volume backfill in background — don't block
+    rfBackfill().then(() => {
+      if (fpTfMinutes === tf) {
+        rfRebuild();
+        autoCenterFp();
+      }
+    }).catch(() => {});
   } finally {
     if (btn) { btn.textContent = '↻'; btn.disabled = false; }
   }
 }
 
+
+/* ===== GP AI — REAL LLM AGENT (OpenAI-compatible) ===== */
+let _gpAiOpen = false;
+let _gpAiBusy = false;
+let _gpAiHistory = []; // {role, content} for API (no system)
+const GP_LS_KEY = 'gp_ai_llm_settings_v1';
+
+function gpAiLoadSettings() {
+  try {
+    const cfg = JSON.parse(localStorage.getItem(GP_LS_KEY) || '{}') || {};
+    // Migrate deprecated Groq free-tier models
+    if (cfg.model === 'llama-3.3-70b-versatile' || cfg.model === 'llama-3.1-8b-instant') {
+      cfg.model = 'openai/gpt-oss-120b';
+      try { localStorage.setItem(GP_LS_KEY, JSON.stringify(cfg)); } catch (e) {}
+    }
+    return cfg;
+  } catch (e) { return {}; }
+}
+function gpAiSaveSettings() {
+  const base = (document.getElementById('gpApiBase') || {}).value || '';
+  const key = (document.getElementById('gpApiKey') || {}).value || '';
+  const model = (document.getElementById('gpApiModel') || {}).value || '';
+  const cfg = {
+    base: (base.trim() || 'https://api.groq.com/openai/v1').replace(/\/$/, ''),
+    key: key.trim(),
+    model: model.trim() || 'openai/gpt-oss-120b'
+  };
+  localStorage.setItem(GP_LS_KEY, JSON.stringify(cfg));
+  gpAiSetMeta('API settings saved locally');
+  const box = document.getElementById('gpAiSettings');
+  if (box) box.style.display = 'none';
+  if (cfg.key) gpAiPushSystem('LLM connected. Run Live brief or ask a question.');
+}
+function gpAiFillSettingsForm() {
+  const cfg = gpAiLoadSettings();
+  const b = document.getElementById('gpApiBase');
+  const k = document.getElementById('gpApiKey');
+  const m = document.getElementById('gpApiModel');
+  if (b) b.value = cfg.base || 'https://api.groq.com/openai/v1';
+  if (k) k.value = cfg.key || '';
+  if (m) m.value = cfg.model || 'openai/gpt-oss-120b';
+}
+function gpAiToggleSettings() {
+  const box = document.getElementById('gpAiSettings');
+  if (!box) return;
+  const show = box.style.display === 'none' || !box.style.display;
+  box.style.display = show ? 'block' : 'none';
+  if (show) gpAiFillSettingsForm();
+}
+function gpAiSetMeta(t) {
+  const m = document.getElementById('gpAiMeta');
+  if (m) m.textContent = t || '';
+}
+function gpAiClearChat() {
+  _gpAiHistory = [];
+  const chat = document.getElementById('gpAiChat');
+  if (chat) chat.innerHTML = '';
+  gpAiPushSystem('Chat cleared. Snapshot will be fresh on next message.');
+}
+function gpAiEscape(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function gpAiPushUI(role, content) {
+  const chat = document.getElementById('gpAiChat');
+  if (!chat) return;
+  const div = document.createElement('div');
+  div.className = 'gp-msg ' + role;
+  const label = role === 'user' ? 'You' : (role === 'assistant' ? 'GP AI' : 'System');
+  div.innerHTML = `<div class="gp-role">${label}</div>${gpAiEscape(content)}`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+function gpAiPushSystem(msg) {
+  gpAiPushUI('system', msg);
+}
+function openGpAi() {
+  const el = document.getElementById('gpAiOverlay');
+  if (!el) return;
+  el.classList.add('show');
+  _gpAiOpen = true;
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+  gpAiFillSettingsForm();
+  const cfg = gpAiLoadSettings();
+  if (!_gpAiHistory.length) {
+    if (!cfg.key) {
+      gpAiPushSystem('Add an API key (⚙ API). Recommended free: Groq → openai/gpt-oss-120b. Then tap Live brief.');
+    } else {
+      gpAiPushSystem('GP AI ready. Tap Live brief for a full market read, or ask anything.');
+    }
+  }
+  const input = document.getElementById('gpAiInput');
+  if (input) {
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        gpAiSend();
+      }
+    };
+  }
+}
+function closeGpAi() {
+  const el = document.getElementById('gpAiOverlay');
+  if (el) el.classList.remove('show');
+  _gpAiOpen = false;
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+}
+
+function gpReadBias() {
+  const keys = ['3m','5m','15m','1h','1d'];
+  const out = {};
+  keys.forEach(k => {
+    const b = (state.tf_biases && state.tf_biases[k]) || {};
+    const el = document.getElementById('fb-' + k);
+    const vel = document.getElementById('fv-' + k);
+    out[k] = {
+      text: (el && el.textContent) || b.text || 'NEUTRAL',
+      delta: parseFloat((vel && vel.textContent) || b.delta || 0) || 0
+    };
+  });
+  return out;
+}
+
+function gpTerminalSnapshot() {
+  const biases = gpReadBias();
+  const newsTitle = (document.getElementById('drawerNewsTitle') || {}).textContent || '';
+  const newsTimer = (document.getElementById('drawerNewsTimer') || {}).textContent || '';
+  const newsItems = [];
+  try {
+    document.querySelectorAll('#newsDrawerItems .news-item-row').forEach(row => {
+      newsItems.push(row.innerText.replace(/\s+/g, ' ').trim());
+    });
+  } catch (e) {}
+
+  // Recent candles summary if available
+  let goldCandles = [];
+  let dxyCandles = [];
+  try {
+    if (typeof candleHistory !== 'undefined' && Array.isArray(candleHistory) && candleHistory.length) {
+      const src = candleHistory.slice(-12);
+      goldCandles = src.map(c => ({
+        o: +c.o, h: +c.h, l: +c.l, c: +c.c, t: c.t || c.time || null
+      }));
+    }
+  } catch (e) {}
+  try {
+    if (typeof fpCandles !== 'undefined' && Array.isArray(fpCandles) && fpCandles.length) {
+      // footprint recent bars
+    }
+  } catch (e) {}
+
+  return {
+    time: new Date().toISOString(),
+    gold: {
+      price: state.gold_price,
+      pct: state.gold_pct,
+      change: state.gold_change,
+      sessionOpen: state.gold_open_session
+    },
+    dxy: { price: state.dxy_price, pct: state.dxy_pct, sessionOpen: state.dxy_open_session },
+    us10y: { value: state.tip_price || state.tip_yield_pts, pct: state.tip_yield_pct },
+    pairs: {
+      EURUSD: { price: state.eur_price, pct: state.eur_pct },
+      AUDUSD: { price: state.aud_price, pct: state.aud_pct },
+      USDJPY: { price: state.jpy_price, pct: state.jpy_pct },
+      USDCHF: { price: state.chf_price, pct: state.chf_pct }
+    },
+    composite: {
+      score: state.smoothed_score,
+      raw: state.comp_score,
+      signal: state.signal_text
+    },
+    structureBias: biases,
+    news: { headline: newsTitle, countdown: newsTimer, items: newsItems.slice(0, 8) },
+    chart: {
+      asset: state.chartAsset,
+      tf: state.tf_interval,
+      recentCandles: goldCandles
+    },
+    uiHints: {
+      hasFootprint: typeof openFootprintModal === 'function',
+      hasGoldChart: typeof openChartModal === 'function'
+    }
+  };
+}
+
+function gpSystemPrompt(snapshot) {
+  return `You are GP AI — a powerful live trading desk agent embedded inside a Gold / multi-asset terminal (HTML app).
+You have FULL access to the live terminal snapshot JSON below (prices, multi-timeframe bias, composite score, news calendar, pairs, recent candles).
+
+Your job:
+1) Give sharp, usable live advice (bias, breaks, support/resistance, which pair is driving gold).
+2) Use the snapshot as ground truth for numbers. Do not invent live prices.
+3) If you need external context (macro headlines, event details), output a single line exactly:
+SEARCH: <query>
+Then stop and wait. The host will run the search and send results back.
+4) If you need more candle context, output exactly:
+CANDLES: gold
+or
+CANDLES: dxy
+5) If suggesting HTML/terminal improvements, be specific and practical.
+6) Be concise, structured, professional. Not financial advice disclaimer in one short line at end.
+7) Prefer actionable bullets.
+
+LIVE TERMINAL SNAPSHOT:
+${JSON.stringify(snapshot, null, 2)}`;
+}
+
+async function gpWebSearch(query) {
+  const q = encodeURIComponent(query);
+  // DuckDuckGo Instant Answer API (often CORS-ok)
+  try {
+    const url = `https://api.duckduckgo.com/?q=${q}&format=json&no_html=1&skip_disambig=1`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (r.ok) {
+      const j = await r.json();
+      const bits = [];
+      if (j.AbstractText) bits.push(j.AbstractText);
+      if (j.Heading) bits.push('Heading: ' + j.Heading);
+      (j.RelatedTopics || []).slice(0, 5).forEach(t => {
+        if (t.Text) bits.push(t.Text);
+        else if (t.Topics) t.Topics.slice(0, 2).forEach(x => x.Text && bits.push(x.Text));
+      });
+      if (bits.length) return bits.join('\n').slice(0, 2500);
+    }
+  } catch (e) {}
+  // Fallback: Wikipedia opensearch
+  try {
+    const url = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${q}&limit=5&namespace=0&format=json&origin=*`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (r.ok) {
+      const j = await r.json();
+      const titles = j[1] || [];
+      const descs = j[2] || [];
+      return titles.map((t, i) => `${t}: ${descs[i] || ''}`).join('\n').slice(0, 2000);
+    }
+  } catch (e) {}
+  return 'Search unavailable from browser (CORS/network). Rely on terminal snapshot and model knowledge.';
+}
+
+function gpCandlesTool(which) {
+  try {
+    if (which === 'dxy') {
+      // best effort from history if chart was dxy
+      if (typeof candleHistory !== 'undefined' && state.chartAsset === 'dxy' && candleHistory.length) {
+        return JSON.stringify(candleHistory.slice(-30).map(c => ({ o:c.o,h:c.h,l:c.l,c:c.c,t:c.t||c.time })), null, 0);
+      }
+      return JSON.stringify({ note: 'DXY candles not in memory; DXY price ' + state.dxy_price + ' pct ' + state.dxy_pct });
+    }
+    if (typeof candleHistory !== 'undefined' && candleHistory.length) {
+      return JSON.stringify(candleHistory.slice(-30).map(c => ({ o:c.o,h:c.h,l:c.l,c:c.c,t:c.t||c.time })), null, 0);
+    }
+  } catch (e) {}
+  return JSON.stringify({ gold: state.gold_price, pct: state.gold_pct, open: state.gold_open_session });
+}
+
+async function gpCallLLM(messages) {
+  const cfg = gpAiLoadSettings();
+  if (!cfg.key) {
+    throw new Error('No API key. Open ⚙ API and save a Groq/OpenRouter/OpenAI-compatible key.');
+  }
+  const base = (cfg.base || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
+  const model = cfg.model || 'openai/gpt-oss-120b';
+  const r = await fetch(base + '/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + cfg.key
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature: 0.35,
+      max_tokens: 1200
+    }),
+    signal: AbortSignal.timeout(60000)
+  });
+  const txt = await r.text();
+  let data;
+  try { data = JSON.parse(txt); } catch (e) { throw new Error('Bad API response: ' + txt.slice(0, 200)); }
+  if (!r.ok) {
+    const err = (data && data.error && (data.error.message || data.error)) || txt.slice(0, 240);
+    throw new Error('API ' + r.status + ': ' + err);
+  }
+  const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  if (!content) throw new Error('Empty model response');
+  return content.trim();
+}
+
+async function gpAgentRun(userText) {
+  if (_gpAiBusy) return;
+  _gpAiBusy = true;
+  const btn = document.getElementById('gpAiSendBtn');
+  if (btn) btn.disabled = true;
+  gpAiSetMeta('GP AI thinking…');
+
+  const snapshot = gpTerminalSnapshot();
+  const messages = [
+    { role: 'system', content: gpSystemPrompt(snapshot) },
+    ..._gpAiHistory.slice(-12),
+    { role: 'user', content: userText }
+  ];
+
+  try {
+    let reply = await gpCallLLM(messages);
+    // Tool loop (max 2 rounds)
+    for (let round = 0; round < 2; round++) {
+      const searchMatch = reply.match(/^\s*SEARCH:\s*(.+)\s*$/mi);
+      const candleMatch = reply.match(/^\s*CANDLES:\s*(gold|dxy)\s*$/mi);
+      if (searchMatch) {
+        const q = searchMatch[1].trim();
+        gpAiPushSystem('Web search: ' + q);
+        const result = await gpWebSearch(q);
+        messages.push({ role: 'assistant', content: reply });
+        messages.push({ role: 'user', content: 'SEARCH_RESULT for "' + q + '":\n' + result + '\n\nContinue your analysis for the trader. Do not output SEARCH unless needed again.' });
+        reply = await gpCallLLM(messages);
+        continue;
+      }
+      if (candleMatch) {
+        const which = candleMatch[1].toLowerCase();
+        gpAiPushSystem('Loading ' + which + ' candles…');
+        const result = gpCandlesTool(which);
+        messages.push({ role: 'assistant', content: reply });
+        messages.push({ role: 'user', content: 'CANDLES_RESULT (' + which + '):\n' + result + '\n\nContinue.' });
+        reply = await gpCallLLM(messages);
+        continue;
+      }
+      break;
+    }
+
+    _gpAiHistory.push({ role: 'user', content: userText });
+    _gpAiHistory.push({ role: 'assistant', content: reply });
+    if (_gpAiHistory.length > 20) _gpAiHistory = _gpAiHistory.slice(-20);
+    gpAiPushUI('assistant', reply);
+    gpAiSetMeta('GP AI · ' + new Date().toLocaleTimeString() + ' · model ready');
+  } catch (e) {
+    gpAiPushSystem('Error: ' + ((e && e.message) || e));
+    gpAiSetMeta('Error — check API key / model / network');
+  } finally {
+    _gpAiBusy = false;
+    if (btn) btn.disabled = false;
+  }
+}
+
+function gpAiSend() {
+  const input = document.getElementById('gpAiInput');
+  if (!input) return;
+  const text = (input.value || '').trim();
+  if (!text) return;
+  input.value = '';
+  gpAiPushUI('user', text);
+  gpAgentRun(text);
+}
+
+function gpAiAutoBrief() {
+  const prompt = `Give a LIVE desk brief now using the terminal snapshot:
+1) Gold bias & key level (support/break)
+2) Multi-TF structure agreement/conflict
+3) Which pair/macro driver matters most right now
+4) News risk from calendar
+5) One clear actionable plan (long/short/wait) with invalidation
+Keep it tight and practical.`;
+  gpAiPushUI('user', 'Live brief');
+  gpAgentRun(prompt);
+}
+
+/* ===== SIDE DRAWER ===== */
+function toggleSideDrawer() {
+  const drawer = document.getElementById('sideDrawer');
+  const back = document.getElementById('sideDrawerBackdrop');
+  const fab = document.getElementById('sideFab');
+  if (!drawer) return;
+  const open = !drawer.classList.contains('show');
+  drawer.classList.toggle('show', open);
+  if (back) back.classList.toggle('show', open);
+  if (fab) fab.classList.toggle('open', open);
+}
+function closeSideDrawer() {
+  const drawer = document.getElementById('sideDrawer');
+  const back = document.getElementById('sideDrawerBackdrop');
+  const fab = document.getElementById('sideFab');
+  if (drawer) drawer.classList.remove('show');
+  if (back) back.classList.remove('show');
+  if (fab) fab.classList.remove('open');
+}
+function closeAllSidePanels() { closeSideDrawer(); }
+
 async function openFootprintModal() {
+  closeAllSidePanels();
+  const sr = document.getElementById('sideFab');
+  if (sr) sr.style.display = 'none';
   FP_TICK_SIZE = RF_TICKS[fpTfMinutes] || 0.2;
   document.getElementById('footprintModal').style.display = 'flex';
   document.documentElement.style.overflow = 'hidden';
@@ -4058,6 +5195,8 @@ function closeFootprintModal() {
   document.documentElement.style.overflow = '';
   document.body.style.overflow = '';
   document.body.style.touchAction = '';
+  const sr = document.getElementById('sideFab');
+  if (sr) sr.style.display = '';
   // Keep tick feed + rfStore running so volume keeps building while modal is closed
 }
 
