@@ -7,10 +7,22 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080a0f">
+<meta name="description" content="Gold (XAU/USD) live correlation terminal with multi-asset feeds, AI footprint, and trade desk tools.">
+<meta name="application-name" content="Gold Live Terminal">
+<meta name="apple-mobile-web-app-title" content="Gold Terminal">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="msapplication-TileColor" content="#080a0f">
+<meta name="msapplication-navbutton-color" content="#080a0f">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
+
 <style>
 * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-<link rel="manifest" href="manifest.json">
-  html, body { background-color: #050608; color: #e1e4ea; width: 100%; min-height: 100%; }
+html, body { background-color: #050608; color: #e1e4ea; width: 100%; min-height: 100%; }
 body { padding: 12px 8px; display: flex; justify-content: center; align-items: flex-start; overflow-x: hidden; }
 .pin-lock-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #050608; z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
 .pin-title { font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 6px; letter-spacing: 0.5px; }
@@ -8542,5 +8554,17 @@ function initApp() {
 
 initApp();
 </script>
+
+<script>
+/* PWA service worker — required for installability & PWA Builder */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js', { scope: './' })
+      .then(function (reg) { console.log('[PWA] SW registered:', reg.scope); })
+      .catch(function (err) { console.warn('[PWA] SW failed:', err); });
+  });
+}
+</script>
+
 </body>
 </html>
