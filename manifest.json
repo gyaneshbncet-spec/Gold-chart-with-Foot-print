@@ -1,21 +1,39 @@
 {
-  "name": "Gold Live Terminal",
-  "short_name": "Gold Terminal",
+  "name": "GP LIVE 2.0",
+  "short_name": "GP LIVE",
   "description": "Gold (XAU/USD) live correlation terminal with multi-asset feeds, AI footprint, and trade desk tools.",
   "id": "/Gold-chart-with-Foot-print/",
   "start_url": "/Gold-chart-with-Foot-print/",
   "scope": "/Gold-chart-with-Foot-print/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#050608",
+  "background_color": "#080a0f",
   "theme_color": "#080a0f",
   "lang": "en",
   "icons": [
     {
-      "src": "/Gold-chart-with-Foot-print/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/Gold-chart-with-Foot-print/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/Gold-chart-with-Foot-print/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Gold-chart-with-Foot-print/icons/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/Gold-chart-with-Foot-print/icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
