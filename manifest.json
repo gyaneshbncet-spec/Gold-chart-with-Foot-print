@@ -2,58 +2,20 @@
   "name": "Gold Live Terminal",
   "short_name": "Gold Terminal",
   "description": "Gold (XAU/USD) live correlation terminal with multi-asset feeds, AI footprint, and trade desk tools.",
-  "id": "/",
-  "start_url": "./index.html",
-  "scope": "./",
+  "id": "/Gold-chart-with-Foot-print/",
+  "start_url": "/Gold-chart-with-Foot-print/",
+  "scope": "/Gold-chart-with-Foot-print/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
   "background_color": "#050608",
   "theme_color": "#080a0f",
   "lang": "en",
-  "dir": "ltr",
-  "categories": ["finance", "business", "utilities"],
   "icons": [
     {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-192-maskable.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "icons/icon-512-maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "icons/icon.svg",
+      "src": "/Gold-chart-with-Foot-print/icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     }
-  ],
-  "screenshots": [],
-  "shortcuts": [
-    {
-      "name": "Open Terminal",
-      "short_name": "Terminal",
-      "description": "Launch Gold Live Terminal",
-      "url": "./index.html",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
-    }
-  ],
-  "prefer_related_applications": false
+  ]
 }
