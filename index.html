@@ -137,6 +137,26 @@ body { padding: 12px 8px; display: flex; justify-content: center; align-items: f
   color: #c4b5fd;
   font-size: 11.5px;
 }
+.ai-px-chip {
+  display: inline-block;
+  background: rgba(124, 58, 237, 0.22);
+  border: 1px solid rgba(167, 139, 250, 0.55);
+  color: #e9d5ff;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  padding: 1px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 0 1px;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.ai-px-chip:hover {
+  background: rgba(250, 204, 21, 0.25);
+  border-color: #fbbf24;
+  color: #fef3c7;
+  transform: translateY(-1px);
+}
+.gp-msg .ai-px-chip { font-size: 12.5px; }
 .desk-chat-quick {
   display: flex;
   gap: 6px;
@@ -193,9 +213,52 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
 .btn-live .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #00f59b; box-shadow: 0 0 8px rgba(0, 245, 155, 0.85); animation: livePulse 1.4s ease-in-out infinite; }
 .btn-live.stale { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.5); color: #f59e0b; }
 .btn-live.stale .live-dot { background: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.7); animation: none; }
+.btn-live.closed {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #f87171;
+}
+.btn-live.closed .live-dot {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.85);
+  animation: none;
+}
 @keyframes livePulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.85); } }
 .gold-spot { font-size: 13.5px; color: #8e95a5; margin-bottom: 4px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.session-status { font-size: 11px; color: #00f59b; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 5px; }
+.session-status { font-size: 11px; color: #00f59b; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+.session-status.is-closed { color: #ffab00; }
+.market-closed-banner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.55);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.22);
+}
+.market-closed-banner.show { display: flex; }
+.mcb-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+  flex-shrink: 0;
+}
+.mcb-text {
+  font-size: 14px; font-weight: 900; color: #fca5a5;
+  letter-spacing: 0.7px;
+  text-shadow: 0 0 12px rgba(248,113,113,0.55);
+}
+.mcb-sub {
+  font-size: 12px; color: #e2e8f0; font-weight: 600;
+  margin-left: auto;
+}
+.session-status.is-closed { color: #f87171 !important; font-weight: 800; font-size: 12px; }
+@keyframes mcbPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
 .signal-card { background: #131722; border: 1px solid #1f2430; border-radius: 14px; padding: 14px; text-align: center; margin-bottom: 14px; }
 .comp-title { font-size: 12px; color: #787b86; font-weight: 500; }
 .comp-action { font-size: 24px; font-weight: 800; margin: 6px 0 10px 0; }
@@ -1104,6 +1167,30 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
 #footprintModal .modal-container { height: 94vh; max-height: 96vh; }
 @media (max-width: 767px) { #footprintModal .modal-container { height: 100%; max-height: 100vh; } }
 .tv-top-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-bottom: 1px solid #1a1e29; background: #0c0e14; flex-shrink: 0; min-height: 48px; gap: 6px; }
+.chart-mkt-closed {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(239, 68, 68, 0.14);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+.chart-mkt-closed.show { display: flex; }
+.chart-mkt-closed .cmc-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #ef4444; box-shadow: 0 0 8px #ef4444; flex-shrink: 0;
+}
+.chart-mkt-closed .cmc-sub {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
 .tv-left-group { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto; }
 .tv-asset-info { display: flex; flex-direction: column; min-width: 0; }
 .tv-asset-title { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1183,6 +1270,487 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   .fp-exit-btn { padding: 4px 8px; font-size: 10px; }
   .fp-width-hover-zone .fp-w-btn-group { opacity: 0.9; pointer-events: auto; }
 }
+
+/* ===== AI VISUAL — One Canvas node engine ===== */
+.av-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9600;
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(6px);
+  justify-content: center;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+}
+.av-overlay.show { display: flex; }
+.av-panel {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  background: #060b14;
+  background-image:
+    radial-gradient(circle at 50% 40%, rgba(0, 210, 255, 0.08) 0%, transparent 65%),
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 28px 28px, 28px 28px;
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+  max-height: 100vh;
+}
+@media (min-width: 768px) {
+  .av-overlay { padding: 8px; align-items: center; }
+  .av-panel {
+    height: min(96vh, 880px);
+    max-height: 96vh;
+    border-radius: 14px;
+    border: 1px solid rgba(0, 210, 255, 0.25);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.75);
+  }
+}
+.av-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(0, 210, 255, 0.25);
+  flex-shrink: 0;
+  gap: 10px;
+}
+.av-head-title { font-size: 13px; font-weight: 800; letter-spacing: 0.4px; color: #e2e8f0; }
+.av-head-title span { color: #00f2fe; }
+.av-head-steps { font-size: 11px; color: #64748b; }
+.av-head-steps b { color: #00f2fe; font-weight: 600; }
+.av-close {
+  width: 34px; height: 34px; border-radius: 50%; border: none;
+  background: #151822; color: #9ca3af; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.av-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 6px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.av-status-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  flex-shrink: 0;
+}
+@media (max-width: 520px) {
+  .av-status-row { grid-template-columns: 1fr 1fr; }
+}
+.av-status-box {
+  background: rgba(13, 22, 39, 0.78);
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.av-status-label {
+  font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 700;
+}
+.av-status-state {
+  font-size: 13px; font-weight: 900; margin: 1px 0; letter-spacing: 0.3px;
+}
+.av-state-open { color: #00e676; text-shadow: 0 0 12px rgba(0,230,118,0.55); }
+.av-state-closed { color: #f87171; text-shadow: 0 0 12px rgba(248,113,113,0.45); }
+.av-state-warn { color: #fbbf24; text-shadow: 0 0 12px rgba(251,191,36,0.5); }
+.av-state-alert {
+  color: #ff5252;
+  text-shadow: 0 0 14px rgba(255,82,82,0.75), 0 0 28px rgba(255,82,82,0.35);
+  animation: avNewsAlert 1.2s ease-in-out infinite;
+}
+.av-status-box.news-hot {
+  border-color: rgba(255, 82, 82, 0.65) !important;
+  background: rgba(255, 82, 82, 0.1) !important;
+  box-shadow: 0 0 20px rgba(255, 82, 82, 0.2);
+}
+.av-status-sub { font-size: 11px; color: #94a3b8; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@keyframes avNewsAlert {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.85; filter: brightness(1.25); }
+}
+.av-ticker {
+  background: rgba(0, 242, 254, 0.04);
+  border-top: 1px solid rgba(0, 210, 255, 0.25);
+  border-bottom: 1px solid rgba(0, 210, 255, 0.25);
+  padding: 5px 10px;
+  font-size: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  flex-shrink: 0;
+  color: #64748b;
+}
+.av-ticker b { color: #e2e8f0; }
+.av-up { color: #00e676; }
+.av-down { color: #ff5252; }
+.av-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+@media (min-width: 860px) {
+  .av-stage {
+    grid-template-columns: minmax(180px, 220px) minmax(260px, 1fr) minmax(180px, 230px);
+    align-items: stretch;
+  }
+}
+#av-connector-svg {
+  display: block;
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 1;
+}
+.av-col-header {
+  font-size: 10.5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;
+  margin-bottom: 4px; display: flex; align-items: center; gap: 7px;
+}
+.av-step-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 1px solid #00f2fe; color: #00f2fe; font-size: 10px;
+}
+.av-sense-title {
+  font-size: 11.5px; font-weight: 700;
+  display: flex; align-items: center; gap: 7px;
+}
+.av-sense-meta { font-size: 10.5px; color: #64748b; margin-top: 3px; }
+.av-column {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  overflow: hidden;
+}
+.av-core-column {
+  align-items: center;
+  text-align: center;
+  justify-content: flex-start;
+  gap: 6px;
+}
+#avSensesCol, #avGatesCol {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.av-core-reactor {
+  position: relative; width: 120px; height: 120px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  margin: 0 auto;
+  z-index: 5;
+  overflow: visible;
+  flex-shrink: 0;
+}
+@media (min-width: 860px) {
+  .av-core-reactor { width: 130px; height: 130px; }
+}
+.av-core-reactor::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(8,14,28,0.98) 0%, rgba(8,14,28,0.95) 62%, transparent 72%);
+  pointer-events: none;
+  z-index: 0;
+}
+.av-core-reactor::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,242,254,0.16) 0%, transparent 68%);
+  animation: avCoreAura 2.8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+.av-core-ring-svg {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  transform: rotate(-90deg);
+  z-index: 1;
+  overflow: visible;
+}
+.av-ring-bg {
+  fill: #0a1322;
+  stroke: rgba(0,242,254,0.16);
+  stroke-width: 5;
+}
+.av-ring-glow {
+  fill: none;
+  stroke: rgba(0,242,254,0.2);
+  stroke-width: 14;
+  stroke-linecap: butt;
+  stroke-dasharray: 565;
+  stroke-dashoffset: 280;
+  filter: blur(5px);
+  transition: stroke-dashoffset 0.7s ease;
+}
+.av-ring-meter {
+  fill: none; stroke: #00f2fe; stroke-width: 7; stroke-linecap: butt;
+  stroke-dasharray: 565; stroke-dashoffset: 280;
+  filter: drop-shadow(0 0 8px #00f2fe) drop-shadow(0 0 18px rgba(0,242,254,0.75));
+  transition: stroke-dashoffset 0.7s ease, stroke 0.3s;
+}
+/* Packet runs ONLY on the filled arc — no corner ticks on empty side */
+.av-ring-flow {
+  fill: none;
+  stroke: #e0fbff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 28 537;
+  stroke-dashoffset: 0;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 12px #00f2fe);
+  animation: avArcFlow 1.35s linear infinite;
+  pointer-events: none;
+}
+.av-core-score {
+  position: relative; z-index: 3;
+  font-size: 26px; font-weight: 800; color: #00f2fe;
+  text-shadow: 0 0 12px rgba(0,242,254,1), 0 0 24px rgba(0,242,254,0.5);
+  animation: avScoreGlow 1.6s ease-in-out infinite;
+}
+.av-core-signal {
+  position: relative; z-index: 3;
+  font-size: 12px; font-weight: 900; letter-spacing: 0.5px;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #94a3b8;
+  text-shadow: none;
+  border: 1px solid transparent;
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.av-core-signal.buy {
+  color: #00e676;
+  background: rgba(0,230,118,0.1);
+  border-color: rgba(0,230,118,0.45);
+  text-shadow: 0 0 14px rgba(0,230,118,0.7);
+  box-shadow: 0 0 16px rgba(0,230,118,0.2);
+}
+.av-core-signal.sell {
+  color: #ff5252;
+  background: rgba(255,82,82,0.1);
+  border-color: rgba(255,82,82,0.45);
+  text-shadow: 0 0 14px rgba(255,82,82,0.7);
+  box-shadow: 0 0 16px rgba(255,82,82,0.2);
+}
+.av-core-signal.neutral {
+  color: #fbbf24;
+  background: rgba(251,191,36,0.1);
+  border-color: rgba(251,191,36,0.4);
+  text-shadow: 0 0 12px rgba(251,191,36,0.55);
+}
+.av-core-signal.closed {
+  color: #f87171;
+  background: rgba(248,113,113,0.12);
+  border-color: rgba(248,113,113,0.5);
+  text-shadow: 0 0 14px rgba(248,113,113,0.65);
+  box-shadow: 0 0 18px rgba(239,68,68,0.25);
+}
+.av-core-gates { position: relative; z-index: 3; font-size: 11.5px; color: #cbd5e1; font-weight: 700; margin-top: 3px; }
+.av-council { margin-top: 2px; font-size: 9px; color: #64748b; letter-spacing: 0.5px; flex-shrink: 0; }
+.av-council span { color: #00e676; text-shadow: 0 0 8px rgba(0,230,118,0.5); }
+.av-thesis {
+  margin-top: 2px;
+  background: rgba(0,242,254,0.06);
+  border: 1px solid rgba(0,210,255,0.35);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  width: 100%;
+  max-width: 100%;
+  color: #e2e8f0;
+  text-align: left;
+  line-height: 1.3;
+  box-shadow: 0 0 12px rgba(0,242,254,0.08);
+  flex-shrink: 0;
+  max-height: 36px;
+  overflow: hidden;
+}
+.av-sense-node {
+  background: rgba(13, 22, 39, 0.82);
+  border: 1px solid rgba(0, 210, 255, 0.28);
+  border-radius: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 0 rgba(0,242,254,0);
+  flex-shrink: 0;
+}
+.av-sense-node:hover, .av-sense-node.active {
+  border-color: rgba(0, 242, 254, 0.95);
+  box-shadow: 0 0 14px rgba(0, 242, 254, 0.28), inset 0 0 10px rgba(0,242,254,0.06);
+  transform: translateX(2px);
+}
+.av-gate-node {
+  background: rgba(13, 22, 39, 0.82);
+  border: 1px solid rgba(0, 210, 255, 0.28);
+  border-radius: 6px;
+  padding: 5px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  flex-shrink: 0;
+}
+.av-gate-node:hover {
+  border-color: rgba(0,242,254,0.55);
+  box-shadow: 0 0 12px rgba(0,242,254,0.12);
+}
+.av-gate-symbol { font-size: 11.5px; font-weight: 700; }
+.av-gate-status { font-size: 10px; color: #64748b; margin-top: 2px; }
+.av-badge {
+  font-size: 9.5px; padding: 3px 8px; border-radius: 4px;
+  background: rgba(0,242,254,0.14); border: 1px solid #00f2fe; color: #00f2fe;
+  white-space: nowrap; flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(0,242,254,0.2);
+}
+.av-badge.sync { border-color: #00e676; color: #00e676; background: rgba(0,230,118,0.12); box-shadow: 0 0 8px rgba(0,230,118,0.25); }
+.av-badge.watch { border-color: #ffab00; color: #ffab00; background: rgba(255,171,0,0.12); box-shadow: 0 0 8px rgba(255,171,0,0.2); }
+.av-badge.idle { border-color: #64748b; color: #94a3b8; background: rgba(100,116,139,0.12); box-shadow: none; }
+.av-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #00f2fe; box-shadow: 0 0 10px #00f2fe;
+  flex-shrink: 0;
+  animation: avDotPulse 1.8s ease-in-out infinite;
+}
+.av-dot.green { background: #00e676; box-shadow: 0 0 10px #00e676; }
+.av-dot.amber { background: #ffab00; box-shadow: 0 0 10px #ffab00; }
+.av-dot.red { background: #ff5252; box-shadow: 0 0 10px #ff5252; }
+.av-wire-bg { fill: none; stroke: rgba(0,242,254,0.28); stroke-width: 1.8; }
+.av-wire-pulse {
+  fill: none;
+  stroke: #00f2fe;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 14 90;
+  animation: avFlowPulse 1.1s linear infinite;
+  filter: drop-shadow(0 0 5px #00f2fe) drop-shadow(0 0 12px rgba(0,242,254,0.85));
+}
+.av-wire-pulse.slow {
+  stroke-width: 2;
+  stroke-dasharray: 10 110;
+  animation-duration: 1.8s;
+  opacity: 0.65;
+}
+@keyframes avFlowPulse {
+  from { stroke-dashoffset: 104; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes avArcFlow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -565; }
+}
+@keyframes avScoreGlow {
+  0%, 100% { text-shadow: 0 0 10px rgba(0,242,254,0.7), 0 0 22px rgba(0,242,254,0.3); transform: scale(1); }
+  50% { text-shadow: 0 0 20px rgba(0,242,254,1), 0 0 40px rgba(0,242,254,0.65); transform: scale(1.03); }
+}
+@keyframes avCoreAura {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+@keyframes avDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+.av-gp-box {
+  margin-top: 2px;
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  box-shadow: 0 0 14px rgba(124, 58, 237, 0.14);
+  text-align: left;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.av-gp-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: linear-gradient(90deg, rgba(124,58,237,0.3), rgba(0,242,254,0.1));
+  border-bottom: 1px solid rgba(167,139,250,0.25);
+  flex-shrink: 0;
+}
+.av-gp-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #c4b5fd;
+}
+.av-gp-status {
+  font-size: 9.5px;
+  color: #94a3b8;
+  margin-left: auto;
+}
+.av-gp-status.busy { color: #fbbf24; }
+.av-gp-status.ok { color: #34d399; }
+.av-gp-status.err { color: #f87171; }
+.av-gp-refresh {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(167,139,250,0.4);
+  background: rgba(15,18,30,0.8);
+  color: #c4b5fd;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.av-gp-refresh:hover { background: rgba(124,58,237,0.3); color: #fff; }
+.av-gp-body {
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #e2e8f0;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  -webkit-overflow-scrolling: touch;
+}
+.av-gp-body .av-gp-line { margin-bottom: 6px; }
+
+/* Desktop: keep everything inside panel — no overflow */
+@media (min-width: 860px) {
+  .av-core-reactor { width: 128px !important; height: 128px !important; flex-shrink: 0; }
+  .av-core-score { font-size: 24px !important; }
+  .av-core-column { min-height: 0; overflow: hidden; }
+  .av-gp-box { min-height: 0; }
+}
+@media (max-width: 859px) {
+  .av-body { overflow-y: auto; }
+  .av-stage { overflow: visible; flex: none; }
+  .av-gp-box { min-height: 120px; max-height: 180px; flex: none; }
+  .av-core-reactor { width: 110px; height: 110px; }
+  .av-core-score { font-size: 22px; }
+}
 </style>
 </head>
 <body>
@@ -1206,6 +1774,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
     <button type="button" onclick="gpMiniQuick('Live brief')">Live brief</button>
     <button type="button" onclick="gpMiniQuick('Gold bias and nearest support?')">Bias</button>
     <button type="button" onclick="gpMiniQuick('Any news risk for gold right now?')">News</button>
+    <button type="button" onclick="aiClearDrawnLevels()">Clear levels</button>
   </div>
   <div class="gp-mini-input">
     <input id="gpMiniInput" type="text" placeholder="Ask GP-AI…" autocomplete="off" />
@@ -1343,6 +1912,18 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
     <span class="sd-text">AI Footprint<span class="sd-sub">Live order flow · Binance volume</span></span>
   </button>
 
+  <div class="side-drawer-section">AI Agent</div>
+  <button class="side-drawer-item gpai" onclick="openGpAi(); closeSideDrawer();">
+    <span class="sd-ico"><span style="font-size:12px;font-weight:800;">GP</span></span>
+    <span class="sd-text">GP AI<span class="sd-sub">Real LLM agent · API brain + tools</span></span>
+  </button>
+  <button class="side-drawer-item" onclick="openAiVisual(); closeSideDrawer();" style="background:linear-gradient(135deg,rgba(0,242,254,0.12),rgba(0,230,118,0.08));border:1px solid rgba(0,242,254,0.35);">
+    <span class="sd-ico" style="background:linear-gradient(135deg,#00f2fe,#00e676);color:#060b14;">
+      <span style="font-size:11px;font-weight:900;">AV</span>
+    </span>
+    <span class="sd-text">AI Visual<span class="sd-sub">Node canvas · live senses · gates</span></span>
+  </button>
+
   <div class="side-drawer-section">Charts</div>
   <button class="side-drawer-item gold" onclick="openChartModal('gold'); closeSideDrawer();">
     <span class="sd-ico">
@@ -1359,12 +1940,6 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
       </svg>
     </span>
     <span class="sd-text">DXY Chart<span class="sd-sub">US Dollar Index</span></span>
-  </button>
-
-  <div class="side-drawer-section">AI Agent</div>
-  <button class="side-drawer-item gpai" onclick="openGpAi(); closeSideDrawer();">
-    <span class="sd-ico"><span style="font-size:12px;font-weight:800;">GP</span></span>
-    <span class="sd-text">GP AI<span class="sd-sub">Real LLM agent · API brain + tools</span></span>
   </button>
 
   <div class="side-drawer-section">Trade desk</div>
@@ -1401,6 +1976,11 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   </div>
   <div class="gold-spot" id="gold-spot">Gold spot: Syncing real-time feed...</div>
   <div class="session-status" id="session-status">● Real-Time Interbank Feed Synchronized</div>
+  <div class="market-closed-banner" id="marketClosedBanner" style="display:none;" role="status">
+    <span class="mcb-dot"></span>
+    <span class="mcb-text" id="marketClosedText">MARKET CLOSED</span>
+    <span class="mcb-sub" id="marketClosedSub">Weekend · gold / FX session offline</span>
+  </div>
 
   <div class="tablet-grid-layout">
     <div class="tablet-col-left">
@@ -1613,6 +2193,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
           <button type="button" onclick="deskChatQuick('Live brief')">Live brief</button>
           <button type="button" onclick="deskChatQuick('Gold bias and nearest support?')">Bias</button>
           <button type="button" onclick="deskChatQuick('Any news risk for gold right now?')">News</button>
+          <button type="button" onclick="aiClearDrawnLevels()">Clear levels</button>
         </div>
         <div class="desk-chat-compose">
           <input id="deskChatInput" type="text" placeholder="Ask GP-AI…" autocomplete="off" />
@@ -1672,6 +2253,124 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   </div>
 </div>
 
+<!-- ===== AI VISUAL — ONE CANVAS NODE ENGINE ===== -->
+<div class="av-overlay" id="aiVisualOverlay">
+  <div class="av-panel">
+    <div class="av-head">
+      <div>
+        <div class="av-head-title">AI VISUAL <span>//</span> LIVE NODE ENGINE</div>
+        <div class="av-head-steps"><b>intake</b> → <b>senses</b> → <b>core</b> → <b>gates</b></div>
+      </div>
+      <button class="av-close" type="button" onclick="closeAiVisual()" aria-label="Close">✕</button>
+    </div>
+    <div class="av-body">
+      <div class="av-status-row">
+        <div class="av-status-box">
+          <div class="av-status-label">SESSION · GOLD DESK</div>
+          <div class="av-status-state av-state-open" id="avSessionState">SYNCING</div>
+          <div class="av-status-sub" id="avSessionSub">reading interbank + bias matrix…</div>
+        </div>
+        <div class="av-status-box">
+          <div class="av-status-label">HIGH IMPACT NEWS</div>
+          <div class="av-status-state av-state-closed" id="avNewsState">—</div>
+          <div class="av-status-sub" id="avNewsSub">calendar feed</div>
+        </div>
+      </div>
+      <div class="av-ticker" id="avTicker">
+        <div><b>XAU/USD</b> <span id="avGoldBias">—</span></div>
+        <div><b>DXY</b> <span id="avDxyBias">—</span></div>
+        <div><b>SCORE</b> <span id="avScoreTick">—</span></div>
+        <div><b>SIGNAL</b> <span id="avSignalTick">—</span></div>
+      </div>
+      <div class="av-stage" id="avStage">
+        <svg id="av-connector-svg"></svg>
+        <div class="av-column" id="avSensesCol">
+          <div class="av-col-header"><span class="av-step-badge">2</span> SENSES · LIVE READINGS</div>
+          <div class="av-sense-node" data-key="structure" onclick="avSelectSense(this)">
+            <div class="av-sense-title"><span class="av-dot" id="avDotStruct"></span> structure (MTF)</div>
+            <div class="av-sense-meta" id="avMetaStruct">—</div>
+          </div>
+          <div class="av-sense-node" data-key="momentum" onclick="avSelectSense(this)">
+            <div class="av-sense-title"><span class="av-dot" id="avDotMom"></span> momentum / score</div>
+            <div class="av-sense-meta" id="avMetaMom">—</div>
+          </div>
+          <div class="av-sense-node" data-key="dxy" onclick="avSelectSense(this)">
+            <div class="av-sense-title"><span class="av-dot" id="avDotDxy"></span> DXY driver</div>
+            <div class="av-sense-meta" id="avMetaDxy">—</div>
+          </div>
+          <div class="av-sense-node" data-key="yield" onclick="avSelectSense(this)">
+            <div class="av-sense-title"><span class="av-dot" id="avDotYield"></span> US10Y yield</div>
+            <div class="av-sense-meta" id="avMetaYield">—</div>
+          </div>
+          <div class="av-sense-node" data-key="fx" onclick="avSelectSense(this)">
+            <div class="av-sense-title"><span class="av-dot" id="avDotFx"></span> FX correlation</div>
+            <div class="av-sense-meta" id="avMetaFx">—</div>
+          </div>
+          <div class="av-sense-node" data-key="news" onclick="avSelectSense(this)">
+            <div class="av-sense-title"><span class="av-dot" id="avDotNews"></span> news risk</div>
+            <div class="av-sense-meta" id="avMetaNews">—</div>
+          </div>
+        </div>
+        <div class="av-column av-core-column">
+          <div class="av-col-header"><span class="av-step-badge">3</span> CORE · ENGINE + THESIS</div>
+          <div class="av-core-reactor" id="avCoreHub">
+            <svg class="av-core-ring-svg" viewBox="0 0 200 200">
+              <circle class="av-ring-bg" cx="100" cy="100" r="90"></circle>
+              <circle class="av-ring-glow" id="avRingGlow" cx="100" cy="100" r="90"></circle>
+              <circle class="av-ring-meter" id="avRingMeter" cx="100" cy="100" r="90"></circle>
+              <circle class="av-ring-flow" id="avRingFlow" cx="100" cy="100" r="90"></circle>
+            </svg>
+            <div class="av-core-score" id="avCoreScore">0.00</div>
+          </div>
+          <div class="av-core-signal" id="avCoreSignal">NEUTRAL</div>
+          <div class="av-core-gates" id="avCoreGates">— gates</div>
+          <div class="av-council" id="avCouncil"><span>● GOLD DESK</span> ○ STRUCTURE ○ DRIVERS</div>
+          <div class="av-thesis" id="avThesis">THESIS · waiting for live snapshot…</div>
+          <div class="av-gp-box" id="avGpBox">
+            <div class="av-gp-head">
+              <span class="av-gp-title">GP AI VIEW · GOLD</span>
+              <span class="av-gp-status" id="avGpStatus">idle</span>
+              <button type="button" class="av-gp-refresh" onclick="avRunGpBrief(true)" title="Refresh GP AI">↻</button>
+            </div>
+            <div class="av-gp-body" id="avGpBody">Open AI Visual → auto gold brief. Refreshes on every 5m candle close.</div>
+          </div>
+        </div>
+        <div class="av-column" id="avGatesCol">
+          <div class="av-col-header"><span class="av-step-badge">4</span> GOLD GATES · DECISION</div>
+          <div class="av-gate-node">
+            <div>
+              <div class="av-gate-symbol">G1 · STRUCTURE</div>
+              <div class="av-gate-status" id="avGateGold">MTF alignment</div>
+            </div>
+            <span class="av-badge" id="avBadgeGold">—</span>
+          </div>
+          <div class="av-gate-node">
+            <div>
+              <div class="av-gate-symbol">G2 · MOMENTUM</div>
+              <div class="av-gate-status" id="avGateDxy">Composite score</div>
+            </div>
+            <span class="av-badge" id="avBadgeDxy">—</span>
+          </div>
+          <div class="av-gate-node">
+            <div>
+              <div class="av-gate-symbol">G3 · DXY DRIVER</div>
+              <div class="av-gate-status" id="avGateYield">Dollar vs gold</div>
+            </div>
+            <span class="av-badge" id="avBadgeYield">—</span>
+          </div>
+          <div class="av-gate-node">
+            <div>
+              <div class="av-gate-symbol">G4 · YIELD / FX / NEWS</div>
+              <div class="av-gate-status" id="avGateEur">Macro + calendar</div>
+            </div>
+            <span class="av-badge" id="avBadgeEur">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- TV CHART MODAL -->
 <div class="modal-overlay" id="chartModal">
   <div class="modal-container">
@@ -1692,6 +2391,11 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <button class="tv-ai-btn" id="tvAiZonesBtn" type="button" onclick="aiToggleZones()" title="AI Buy / Sell Zones">🤖 Zones</button>
         <button class="tv-close" onclick="closeChartModal()">✕</button>
       </div>
+    </div>
+    <div class="chart-mkt-closed" id="chartMktClosedBanner">
+      <span class="cmc-dot"></span>
+      <span>MARKET CLOSED</span>
+      <span class="cmc-sub" id="chartMktClosedSub">Gold / FX session offline</span>
     </div>
 
     <div class="chart-bias-bar">
@@ -1765,6 +2469,11 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <button class="fp-ai-btn" id="fpAiZonesBtn" type="button" onclick="aiToggleZones()" title="AI Buy / Sell Zones">🤖 Zones</button>
       </div>
       <button class="fp-exit-btn" onclick="closeFootprintModal()">✕ Exit</button>
+    </div>
+    <div class="chart-mkt-closed" id="fpMktClosedBanner">
+      <span class="cmc-dot"></span>
+      <span>MARKET CLOSED</span>
+      <span class="cmc-sub" id="fpMktClosedSub">Gold / FX session offline</span>
     </div>
 
     <div class="fp-chart-viewport" id="fpViewport">
@@ -3414,6 +4123,13 @@ function drawTradingViewChart() {
     }
   } catch (e) {}
 
+  // AI quick-draw levels + hover preview
+  try {
+    if (typeof aiDrawLevelsOnChart === 'function') {
+      aiDrawLevelsOnChart(ctx, getY, chartW);
+    }
+  } catch (e) {}
+
   ctx.restore();
 }
 
@@ -4337,6 +5053,96 @@ let _pollStartedAt = 0;
 let _dxyLastOk = 0;
 let _dxyInflight = false;
 
+/** Gold / FX cash session (America/New_York): Sun 17:00 → Fri 17:00. Closed weekends + Fri close→Sun open. */
+function getGoldMarketSession() {
+  const now = new Date();
+  let et;
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      weekday: 'short', hour: 'numeric', minute: 'numeric', hour12: false
+    }).formatToParts(now);
+    const map = {};
+    parts.forEach(p => { map[p.type] = p.value; });
+    const wd = map.weekday; // Sun Mon Tue...
+    let hour = parseInt(map.hour, 10);
+    if (hour === 24) hour = 0;
+    const minute = parseInt(map.minute, 10) || 0;
+    const mins = hour * 60 + minute;
+    const openMins = 17 * 60; // 17:00 ET
+
+    // Closed: Saturday all day
+    if (wd === 'Sat') {
+      return { open: false, reason: 'Saturday', detail: 'Weekend · reopens Sunday 17:00 New York' };
+    }
+    // Sunday: closed until 17:00 ET
+    if (wd === 'Sun') {
+      if (mins < openMins) {
+        return { open: false, reason: 'Sunday pre-open', detail: 'Opens Sunday 17:00 New York (IST Mon early morning)' };
+      }
+      return { open: true, reason: 'Sunday session', detail: 'Gold / FX cash session open' };
+    }
+    // Friday: closes 17:00 ET
+    if (wd === 'Fri') {
+      if (mins >= openMins) {
+        return { open: false, reason: 'Friday close', detail: 'Closed until Sunday 17:00 New York' };
+      }
+      return { open: true, reason: 'Friday session', detail: 'Gold / FX cash session open' };
+    }
+    // Mon–Thu: always open under this window
+    return { open: true, reason: wd + ' session', detail: 'Gold / FX cash session open' };
+  } catch (e) {
+    // Fallback: UTC weekend
+    const day = now.getUTCDay(); // 0 Sun .. 6 Sat
+    if (day === 6) return { open: false, reason: 'Saturday', detail: 'Weekend · market closed' };
+    if (day === 0) return { open: false, reason: 'Sunday', detail: 'Weekend · market closed' };
+    return { open: true, reason: 'weekday', detail: 'Session open' };
+  }
+}
+
+function updateMarketClosedBanner() {
+  const banner = document.getElementById('marketClosedBanner');
+  const textEl = document.getElementById('marketClosedText');
+  const subEl = document.getElementById('marketClosedSub');
+  const sess = document.getElementById('session-status');
+  const s = getGoldMarketSession();
+  const detail = s.detail || ((s.reason || '') + ' · gold / FX offline');
+
+  if (!s.open) {
+    if (banner) banner.classList.add('show');
+    if (textEl) textEl.textContent = 'MARKET CLOSED';
+    if (subEl) subEl.textContent = detail;
+    if (sess) {
+      sess.textContent = '● Market closed · ' + (s.reason || 'session offline');
+      sess.classList.add('is-closed');
+    }
+  } else {
+    if (banner) banner.classList.remove('show');
+    if (sess) {
+      sess.textContent = '● Real-Time Interbank Feed Synchronized';
+      sess.classList.remove('is-closed');
+    }
+  }
+
+  // Chart modals (Gold / DXY TV chart + Footprint)
+  const chartBan = document.getElementById('chartMktClosedBanner');
+  const chartSub = document.getElementById('chartMktClosedSub');
+  const fpBan = document.getElementById('fpMktClosedBanner');
+  const fpSub = document.getElementById('fpMktClosedSub');
+  if (!s.open) {
+    if (chartBan) chartBan.classList.add('show');
+    if (chartSub) chartSub.textContent = detail;
+    if (fpBan) fpBan.classList.add('show');
+    if (fpSub) fpSub.textContent = detail;
+  } else {
+    if (chartBan) chartBan.classList.remove('show');
+    if (fpBan) fpBan.classList.remove('show');
+  }
+
+  // Button color/label owned by updateLiveButtonStatus (avoids blink)
+  try { updateLiveButtonStatus(); } catch (e) {}
+}
+
 function paintLiveUI() {
   const now = Date.now();
   if (now - _lastUiPaint < 80) return;
@@ -4344,6 +5150,7 @@ function paintLiveUI() {
   try {
     recalculateMetricsInstant();
     updateLiveButtonStatus();
+    updateMarketClosedBanner();
     // CRITICAL: keep Footprint price in lock-step with main interbank feed
     syncLivePriceToFootprint();
   } catch (e) {}
@@ -4425,25 +5232,38 @@ function updateLiveButtonStatus() {
   const btn = document.getElementById("liveBtn");
   const label = document.getElementById("liveBtnLabel");
   if (!btn) return;
-  const dxyFresh = (Date.now() - (_dxyLastOk || 0)) < 8000;
-  const goldOk = state.gold_price > 500;
-  const isLive = dxyFresh || goldOk;
-  if (isLive) {
-    btn.classList.remove("stale");
-    if (label) label.textContent = "LIVE";
+
+  // Market hours win over feed freshness — stop LIVE/CLOSED blinking
+  let mktOpen = true;
+  try {
+    if (typeof getGoldMarketSession === 'function') {
+      mktOpen = !!getGoldMarketSession().open;
+    }
+  } catch (e) {}
+
+  if (!mktOpen) {
+    btn.classList.remove('stale');
+    btn.classList.add('closed');
+    if (label) label.textContent = 'CLOSED';
   } else {
-    btn.classList.add("stale");
-    if (label) label.textContent = "SYNC";
+    btn.classList.remove('closed');
+    const dxyFresh = (Date.now() - (_dxyLastOk || 0)) < 8000;
+    const goldOk = state.gold_price > 500;
+    const isLive = dxyFresh || goldOk;
+    if (isLive) {
+      btn.classList.remove('stale');
+      if (label) label.textContent = 'LIVE';
+    } else {
+      btn.classList.add('stale');
+      if (label) label.textContent = 'SYNC';
+    }
   }
+
   // Latency badge
   const badge = document.getElementById('latencyBadge');
   if (badge) {
-    const ageMs = Math.min(
-      (Date.now() - (_dxyLastOk || 0)),
-      state.gold_price > 500 ? 1500 : 99999
-    );
     const ageSec = Math.max(0, Math.round((Date.now() - (_dxyLastOk || Date.now())) / 1000));
-    badge.textContent = ageSec <= 2 ? 'Updated ' + ageSec + 's ago' : 'Updated ' + ageSec + 's ago';
+    badge.textContent = 'Updated ' + ageSec + 's ago';
     badge.className = 'latency-badge' + (ageSec > 8 ? ' bad' : (ageSec > 4 ? ' warn' : ''));
   }
   try { deskPairHeat(); } catch(e) {}
@@ -5613,6 +6433,210 @@ const defaultDeskUi = {
 let deskUi = { ...defaultDeskUi };
 let deskTradeLevels = { entry: 0, sl: 0, tp: 0, side: 'buy' };
 
+/* ===== AI ON-CHART LEVELS + ALERTS + HOVER ===== */
+let aiDrawnLevels = []; // { price, color, label, id }
+let aiHoverLevel = null; // number | null
+let aiPriceAlerts = []; // { id, asset, op, price, text, fired }
+let _aiLevelId = 1;
+let _aiAlertId = 1;
+
+function aiParsePriceTokens(text) {
+  // Match prices like 2650.50, 4168, ranges 4168-4170, 2650 – 2652
+  const re = /\b(\d{3,5}(?:\.\d{1,2})?)\s*[-–—]\s*(\d{3,5}(?:\.\d{1,2})?)\b|\b(\d{3,5}(?:\.\d{1,2})?)\b/g;
+  const out = [];
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    if (m[1] && m[2]) {
+      const a = parseFloat(m[1]), b = parseFloat(m[2]);
+      if (isFinite(a) && isFinite(b)) out.push({ start: m.index, end: m.index + m[0].length, raw: m[0], low: Math.min(a, b), high: Math.max(a, b), kind: 'range' });
+    } else if (m[3]) {
+      const p = parseFloat(m[3]);
+      // Filter noise: gold-like or dxy-like
+      if (isFinite(p) && ((p > 500 && p < 20000) || (p > 50 && p < 200))) {
+        out.push({ start: m.index, end: m.index + m[0].length, raw: m[0], price: p, kind: 'level' });
+      }
+    }
+  }
+  return out;
+}
+
+function aiParseAlerts(text) {
+  // ALERT: gold > 4168   |  ALERT: XAUUSD < 2650.5
+  const re = /ALERT\s*:\s*(gold|xau|xauusd|dxy)?\s*([<>]=?|=)\s*(\d{2,5}(?:\.\d{1,2})?)/gi;
+  const out = [];
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const asset = (m[1] || 'gold').toLowerCase();
+    const op = m[2];
+    const price = parseFloat(m[3]);
+    if (!isFinite(price)) continue;
+    out.push({ asset: asset.indexOf('dxy') >= 0 ? 'dxy' : 'gold', op, price, text: m[0] });
+  }
+  return out;
+}
+
+function aiEscapeHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function aiLinkifyMessage(text) {
+  const raw = String(text || '');
+  const tokens = aiParsePriceTokens(raw);
+  if (!tokens.length) return aiEscapeHtml(raw);
+
+  // Build HTML with clickable price chips (from end so indices stay valid)
+  let html = '';
+  let cursor = 0;
+  tokens.sort((a, b) => a.start - b.start);
+  tokens.forEach(t => {
+    html += aiEscapeHtml(raw.slice(cursor, t.start));
+    if (t.kind === 'range') {
+      const mid = ((t.low + t.high) / 2);
+      html += `<span class="ai-px-chip" data-price="${mid}" data-low="${t.low}" data-high="${t.high}" title="Click to draw zone · hover to preview">${aiEscapeHtml(t.raw)}</span>`;
+    } else {
+      html += `<span class="ai-px-chip" data-price="${t.price}" title="Click to draw level · hover to preview">${aiEscapeHtml(t.raw)}</span>`;
+    }
+    cursor = t.end;
+  });
+  html += aiEscapeHtml(raw.slice(cursor));
+  return html;
+}
+
+function aiBindChipHandlers(root) {
+  if (!root) return;
+  root.querySelectorAll('.ai-px-chip').forEach(el => {
+    if (el._aiBound) return;
+    el._aiBound = true;
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const low = parseFloat(el.getAttribute('data-low'));
+      const high = parseFloat(el.getAttribute('data-high'));
+      const price = parseFloat(el.getAttribute('data-price'));
+      if (isFinite(low) && isFinite(high)) {
+        aiDrawLevel(low, 'range-low');
+        aiDrawLevel(high, 'range-high');
+        if (typeof deskShowAlert === 'function') {
+          deskShowAlert('Levels drawn', low.toFixed(2) + ' – ' + high.toFixed(2), 'bull');
+        }
+      } else if (isFinite(price)) {
+        aiDrawLevel(price, 'level');
+        if (typeof deskShowAlert === 'function') {
+          deskShowAlert('Level drawn', price.toFixed(2), 'bull');
+        }
+      }
+      try { openChartModal(state.chartAsset || 'gold'); } catch (err) {}
+    });
+    el.addEventListener('mouseenter', () => {
+      const price = parseFloat(el.getAttribute('data-price'));
+      if (isFinite(price)) {
+        aiHoverLevel = price;
+        try { if (typeof drawTradingViewChart === 'function') drawTradingViewChart(); } catch (e) {}
+      }
+    });
+    el.addEventListener('mouseleave', () => {
+      aiHoverLevel = null;
+      try { if (typeof drawTradingViewChart === 'function') drawTradingViewChart(); } catch (e) {}
+    });
+  });
+}
+
+function aiDrawLevel(price, kind) {
+  if (!(price > 0)) return;
+  const id = _aiLevelId++;
+  const colors = {
+    'level': '#a78bfa',
+    'range-low': '#34d399',
+    'range-high': '#f87171'
+  };
+  aiDrawnLevels.push({
+    id,
+    price: +price,
+    color: colors[kind] || '#a78bfa',
+    label: kind === 'range-low' ? 'SUP' : (kind === 'range-high' ? 'RES' : 'LVL')
+  });
+  // Cap at 12 lines
+  if (aiDrawnLevels.length > 12) aiDrawnLevels = aiDrawnLevels.slice(-12);
+  try { if (typeof drawTradingViewChart === 'function') drawTradingViewChart(); } catch (e) {}
+}
+
+function aiClearDrawnLevels() {
+  aiDrawnLevels = [];
+  aiHoverLevel = null;
+  try { if (typeof drawTradingViewChart === 'function') drawTradingViewChart(); } catch (e) {}
+  if (typeof deskShowAlert === 'function') deskShowAlert('Levels cleared', 'AI chart lines removed', 'warn');
+}
+
+function aiRegisterAlertsFromText(text) {
+  // Alerts removed — no-op (kept for call-site compatibility)
+}
+function aiCheckPriceAlerts() {
+  // Alerts removed — no-op
+}
+
+function aiDrawLevelsOnChart(ctx, getY, chartW) {
+  const dig = (state.chartAsset === 'dxy') ? 3 : 2;
+  // Persistent levels
+  (aiDrawnLevels || []).forEach(L => {
+    if (!(L.price > 0)) return;
+    const y = Math.round(getY(L.price)) + 0.5;
+    ctx.save();
+    ctx.strokeStyle = L.color || '#a78bfa';
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(chartW, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = L.color || '#a78bfa';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText((L.label || 'LVL') + ' ' + L.price.toFixed(dig), 8, y - 4);
+    ctx.restore();
+  });
+  // Hover preview
+  if (aiHoverLevel && aiHoverLevel > 0) {
+    const y = Math.round(getY(aiHoverLevel)) + 0.5;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.95)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(chartW, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText('HOVER ' + aiHoverLevel.toFixed(dig), 8, y - 4);
+    ctx.restore();
+  }
+}
+
+function aiEnrichAndPushHtml(containerId, roleClass, text, isAssistant) {
+  const chat = document.getElementById(containerId);
+  if (!chat) return null;
+  const div = document.createElement('div');
+  div.className = roleClass;
+  if (isAssistant) {
+    div.innerHTML = aiLinkifyMessage(text);
+    aiRegisterAlertsFromText(text);
+  } else {
+    div.textContent = text;
+  }
+  chat.appendChild(div);
+  aiBindChipHandlers(div);
+  if (isAssistant) {
+    try { div.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {
+      chat.scrollTop = Math.max(0, div.offsetTop - 8);
+    }
+  } else {
+    chat.scrollTop = chat.scrollHeight;
+  }
+  return div;
+}
+
 /* ===== AI BUY / SELL ZONES ===== */
 let aiZones = { buy: null, sell: null, visible: false };
 
@@ -6117,8 +7141,14 @@ function gpAiPushUI(role, content) {
   const div = document.createElement('div');
   div.className = 'gp-msg ' + role;
   const label = role === 'user' ? 'You' : (role === 'assistant' ? 'GP AI' : 'System');
-  div.innerHTML = `<div class="gp-role">${label}</div>${gpAiEscape(content)}`;
+  if (role === 'assistant') {
+    div.innerHTML = `<div class="gp-role">${label}</div>${aiLinkifyMessage(content)}`;
+    aiRegisterAlertsFromText(content);
+  } else {
+    div.innerHTML = `<div class="gp-role">${label}</div>${gpAiEscape(content)}`;
+  }
   chat.appendChild(div);
+  aiBindChipHandlers(div);
   // Assistant replies: show from the START of the answer (not jump to the end)
   if (role === 'assistant') {
     try { div.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {
@@ -6156,8 +7186,14 @@ function deskChatPush(role, text) {
   if (!chat) return;
   const div = document.createElement('div');
   div.className = 'mb ' + (role === 'user' ? 'me' : (role === 'system' ? 'sys' : 'ai'));
-  div.textContent = text;
+  if (role === 'ai') {
+    div.innerHTML = aiLinkifyMessage(text);
+    aiRegisterAlertsFromText(text);
+  } else {
+    div.textContent = text;
+  }
   chat.appendChild(div);
+  aiBindChipHandlers(div);
   // AI answers: open at the start of the reply so the question context is readable
   if (role === 'ai') {
     try { div.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {
@@ -6303,8 +7339,14 @@ function gpMiniPush(role, text) {
   if (!chat) return;
   const div = document.createElement('div');
   div.className = 'mb ' + (role === 'user' ? 'me' : (role === 'system' ? 'sys' : 'ai'));
-  div.textContent = text;
+  if (role === 'ai') {
+    div.innerHTML = aiLinkifyMessage(text);
+    aiRegisterAlertsFromText(text);
+  } else {
+    div.textContent = text;
+  }
   chat.appendChild(div);
+  aiBindChipHandlers(div);
   // AI answers: show from the beginning of the reply
   if (role === 'ai') {
     try { div.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {
@@ -6528,16 +7570,16 @@ You have FULL access to the live terminal snapshot JSON below (prices, multi-tim
 Your job:
 1) Give sharp, usable live advice (bias, breaks, support/resistance, which pair is driving gold).
 2) Use the snapshot as ground truth for numbers. Do not invent live prices.
-3) If you need external context (macro headlines, event details), output a single line exactly:
+3) When you mention key levels, write the exact numbers clearly (e.g. 2650.50 or range 2648-2652). The UI makes those clickable to draw on the chart.
+4) If you need external context (macro headlines, event details), output a single line exactly:
 SEARCH: <query>
 Then stop and wait. The host will run the search and send results back.
-4) If you need more candle context, output exactly:
+5) If you need more candle context, output exactly:
 CANDLES: gold
 or
 CANDLES: dxy
-5) If suggesting HTML/terminal improvements, be specific and practical.
 6) Be concise, structured, professional. Not financial advice disclaimer in one short line at end.
-7) Prefer actionable bullets.
+7) Prefer actionable bullets with real price numbers from the snapshot. Do not output ALERT: lines.
 
 LIVE TERMINAL SNAPSHOT:
 ${JSON.stringify(snapshot, null, 2)}`;
@@ -6701,6 +7743,625 @@ Keep it tight and practical.`;
   gpAgentRun(prompt);
 }
 
+/* ===== AI VISUAL — LIVE NODE ENGINE ===== */
+let _avOpen = false;
+let _avSenseKey = 'structure';
+let _avSenseData = {};
+
+function avClamp01(v) {
+  return Math.max(0, Math.min(1, v));
+}
+
+function avBiasFromTf() {
+  const keys = ['3m', '5m', '15m', '1h', '1d'];
+  let bull = 0, bear = 0, n = 0;
+  keys.forEach(k => {
+    const b = (state.tf_biases && state.tf_biases[k]) || {};
+    const t = String(b.text || '').toUpperCase();
+    n++;
+    if (t.indexOf('BULL') >= 0) bull++;
+    else if (t.indexOf('BEAR') >= 0) bear++;
+  });
+  return { bull, bear, n, aligned: Math.max(bull, bear), direction: bull >= bear ? 'BULL' : (bear > bull ? 'BEAR' : 'MIXED') };
+}
+
+function avComputeSenses() {
+  const score = state.smoothed_score || 0;
+  const gold = state.gold_price || 0;
+  const goldPct = state.gold_pct || 0;
+  const dxy = state.dxy_price || 0;
+  const dxyPct = state.dxy_pct || 0;
+  const yieldPct = state.tip_yield_pct || 0;
+  const yieldPx = state.tip_price || state.tip_yield_pts || 0;
+  const eurPct = state.eur_pct || 0;
+  const audPct = state.aud_pct || 0;
+  const sig = String(state.signal_text || 'NEUTRAL').toUpperCase();
+  const mtf = avBiasFromTf();
+
+  // Structure score: MTF alignment 0–1
+  const structScore = avClamp01(0.35 + (mtf.aligned / Math.max(1, mtf.n)) * 0.55 + (Math.abs(score) > 15 ? 0.1 : 0));
+  // Momentum from composite score (-100..100 → 0..1)
+  const momScore = avClamp01(0.5 + (score / 100) * 0.5);
+  // DXY: inverse for gold — weak DXY helps gold
+  const dxyHelp = dxyPct < -0.05 ? 0.85 : (dxyPct > 0.05 ? 0.35 : 0.55);
+  // Yield: rising yields headwind for gold
+  const yieldScore = yieldPct > 0.05 ? 0.35 : (yieldPct < -0.05 ? 0.8 : 0.55);
+  // FX basket: EUR+AUD positive correlates with gold
+  const fxScore = avClamp01(0.5 + ((eurPct + audPct) / 2) / 100 * 8);
+  // News: if next event within 30m → elevated risk
+  let newsScore = 0.7;
+  let newsLabel = 'no red event near';
+  try {
+    if (typeof nextRedEvent !== 'undefined' && nextRedEvent && nextRedEvent.timestamp) {
+      const mins = (nextRedEvent.timestamp - Date.now()) / 60000;
+      if (mins > 0 && mins < 30) {
+        newsScore = 0.25;
+        newsLabel = 'HIGH RISK · ' + Math.round(mins) + 'm to ' + (nextRedEvent.title || 'event');
+      } else if (mins > 0 && mins < 120) {
+        newsScore = 0.45;
+        newsLabel = Math.round(mins) + 'm to ' + (nextRedEvent.title || 'event');
+      } else if (mins <= 0 && mins > -5) {
+        newsScore = 0.15;
+        newsLabel = 'LIVE RELEASE WINDOW';
+      } else {
+        newsLabel = (document.getElementById('drawerNewsTitle') || {}).textContent || 'calendar synced';
+      }
+    }
+  } catch (e) {}
+
+  // ——— GOLD-ONLY decision engine ———
+  // Gate 1 Structure aligned  2 Momentum ok  3 DXY not against  4 Yield not against  5 FX not against  6 News clear
+  const gStruct = structScore > 0.55;
+  const gMom = momScore > 0.45;
+  const gDxy = dxyHelp > 0.5;
+  const gYield = yieldScore > 0.45;
+  const gFx = fxScore > 0.45;
+  const gNews = newsScore > 0.4;
+  const gatesCleared = [gStruct, gMom, gDxy, gYield, gFx, gNews].filter(Boolean).length;
+
+  // Bull pressure vs bear pressure from gold drivers only
+  let bullPts = 0, bearPts = 0;
+  // Structure
+  if (mtf.direction === 'BULL') bullPts += 2;
+  else if (mtf.direction === 'BEAR') bearPts += 2;
+  // Composite score
+  if (score >= 12) bullPts += 2;
+  else if (score >= 5) bullPts += 1;
+  else if (score <= -12) bearPts += 2;
+  else if (score <= -5) bearPts += 1;
+  // Session gold %
+  if (goldPct >= 0.15) bullPts += 1;
+  else if (goldPct <= -0.15) bearPts += 1;
+  // DXY inverse
+  if (dxyPct < -0.05) bullPts += 1;
+  else if (dxyPct > 0.05) bearPts += 1;
+  // Yields
+  if (yieldPct < -0.05) bullPts += 1;
+  else if (yieldPct > 0.05) bearPts += 1;
+  // FX basket
+  if ((eurPct + audPct) > 0.1) bullPts += 1;
+  else if ((eurPct + audPct) < -0.1) bearPts += 1;
+  // Terminal signal text
+  if (sig.indexOf('BUY') >= 0) bullPts += 1;
+  if (sig.indexOf('SELL') >= 0) bearPts += 1;
+
+  // Core 0–1 still used for ring
+  const core = avClamp01((structScore * 0.28 + momScore * 0.28 + dxyHelp * 0.16 + yieldScore * 0.1 + fxScore * 0.1 + newsScore * 0.08));
+
+  // Final GOLD signal — needs enough gates + directional edge
+  let finalSignal = 'NEUTRAL';
+  let finalStrength = 'WAIT';
+  const edge = bullPts - bearPts;
+  const mktOpen = (typeof getGoldMarketSession === 'function') ? getGoldMarketSession().open : true;
+
+  if (!mktOpen) {
+    finalSignal = 'CLOSED';
+    finalStrength = 'NO TRADE';
+  } else if (newsScore < 0.35) {
+    finalSignal = 'NEUTRAL';
+    finalStrength = 'NEWS RISK';
+  } else if (gatesCleared >= 4 && edge >= 3) {
+    finalSignal = 'BUY GOLD';
+    finalStrength = gatesCleared >= 5 && edge >= 4 ? 'STRONG' : 'MODERATE';
+  } else if (gatesCleared >= 4 && edge <= -3) {
+    finalSignal = 'SELL GOLD';
+    finalStrength = gatesCleared >= 5 && edge <= -4 ? 'STRONG' : 'MODERATE';
+  } else if (edge >= 2 && score >= 8) {
+    finalSignal = 'BUY GOLD';
+    finalStrength = 'WEAK';
+  } else if (edge <= -2 && score <= -8) {
+    finalSignal = 'SELL GOLD';
+    finalStrength = 'WEAK';
+  } else {
+    finalSignal = 'NEUTRAL';
+    finalStrength = gatesCleared >= 4 ? 'WAIT SETUP' : 'GATES LOW';
+  }
+
+  let thesis = 'XAU/USD ONLY · ';
+  thesis += finalSignal + ' (' + finalStrength + ') · ';
+  thesis += mtf.direction + ' structure ' + mtf.aligned + '/' + mtf.n + ' · ';
+  thesis += 'score ' + score.toFixed(1) + ' · gates ' + gatesCleared + '/6 · edge ' + edge;
+
+  _avSenseData = {
+    structure: {
+      score: structScore,
+      meta: mtf.aligned + '/' + mtf.n + ' TF ' + mtf.direction.toLowerCase() + ' · score ' + score.toFixed(1),
+      thesis: 'Structure: ' + mtf.direction + ' across ' + mtf.aligned + ' of ' + mtf.n + ' timeframes. Composite ' + score.toFixed(1) + '.',
+      dot: mtf.direction === 'BULL' ? 'green' : (mtf.direction === 'BEAR' ? 'red' : 'amber')
+    },
+    momentum: {
+      score: momScore,
+      meta: 'composite ' + score.toFixed(1) + ' · ' + sig,
+      thesis: 'Momentum: smoothed score ' + score.toFixed(1) + ' / signal ' + sig + '. Session gold change ' + (goldPct >= 0 ? '+' : '') + goldPct.toFixed(2) + '%.',
+      dot: score >= 8 ? 'green' : (score <= -8 ? 'red' : 'amber')
+    },
+    dxy: {
+      score: dxyHelp,
+      meta: (dxy > 50 ? dxy.toFixed(3) : '—') + ' · ' + (dxyPct >= 0 ? '+' : '') + dxyPct.toFixed(2) + '%',
+      thesis: 'DXY driver: ' + (dxyPct < -0.05 ? 'weak dollar supports gold' : (dxyPct > 0.05 ? 'strong dollar headwind for gold' : 'neutral dollar tape')) + '.',
+      dot: dxyPct < -0.05 ? 'green' : (dxyPct > 0.05 ? 'red' : 'amber')
+    },
+    yield: {
+      score: yieldScore,
+      meta: (yieldPx > 0 ? yieldPx.toFixed(3) : '—') + ' · ' + (yieldPct >= 0 ? '+' : '') + yieldPct.toFixed(2) + '%',
+      thesis: 'US10Y: ' + (yieldPct > 0.05 ? 'yields rising — gold headwind' : (yieldPct < -0.05 ? 'yields easing — gold tailwind' : 'yields mixed / quiet')),
+      dot: yieldPct < -0.05 ? 'green' : (yieldPct > 0.05 ? 'red' : 'amber')
+    },
+    fx: {
+      score: fxScore,
+      meta: 'EUR ' + (eurPct >= 0 ? '+' : '') + eurPct.toFixed(2) + '% · AUD ' + (audPct >= 0 ? '+' : '') + audPct.toFixed(2) + '%',
+      thesis: 'FX basket: EUR/AUD co-move vs USD. Combined session ' + ((eurPct + audPct) / 2).toFixed(2) + '% avg.',
+      dot: (eurPct + audPct) > 0.1 ? 'green' : ((eurPct + audPct) < -0.1 ? 'red' : 'amber')
+    },
+    news: {
+      score: newsScore,
+      meta: newsLabel,
+      thesis: 'News risk: ' + newsLabel,
+      dot: newsScore < 0.35 ? 'red' : (newsScore < 0.55 ? 'amber' : 'green')
+    },
+    core: core,
+    gatesCleared: gatesCleared,
+    thesis: thesis,
+    sig: sig,
+    finalSignal: finalSignal,
+    finalStrength: finalStrength,
+    bullPts: bullPts,
+    bearPts: bearPts,
+    edge: edge,
+    gateFlags: { gStruct, gMom, gDxy, gYield, gFx, gNews },
+    gold: gold,
+    goldPct: goldPct,
+    dxy: dxy,
+    dxyPct: dxyPct,
+    yieldPx: yieldPx,
+    yieldPct: yieldPct,
+    eurPct: eurPct
+  };
+  return _avSenseData;
+}
+
+function avSetDot(id, kind) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'av-dot' + (kind === 'green' ? ' green' : (kind === 'red' ? ' red' : (kind === 'amber' ? ' amber' : '')));
+}
+
+function avPaint() {
+  const d = avComputeSenses();
+  // Session — respect cash-market hours (weekend / Fri close)
+  const mkt = (typeof getGoldMarketSession === 'function') ? getGoldMarketSession() : { open: true };
+  const goldOk = d.gold > 500;
+  const sessEl = document.getElementById('avSessionState');
+  const sessSub = document.getElementById('avSessionSub');
+  if (sessEl) {
+    if (!mkt.open) {
+      sessEl.textContent = 'CLOSED';
+      sessEl.className = 'av-status-state av-state-closed';
+    } else if (goldOk) {
+      sessEl.textContent = 'OPEN · LIVE';
+      sessEl.className = 'av-status-state av-state-open';
+    } else {
+      sessEl.textContent = 'SYNCING';
+      sessEl.className = 'av-status-state av-state-closed';
+    }
+  }
+  if (sessSub) {
+    if (!mkt.open) sessSub.textContent = mkt.detail || 'Gold / FX session offline';
+    else if (goldOk) sessSub.textContent = 'Gold $' + d.gold.toFixed(2) + ' · feed active';
+    else sessSub.textContent = 'waiting for interbank gold feed…';
+  }
+
+  // News panel — glow + symbols on high impact
+  const newsState = document.getElementById('avNewsState');
+  const newsSub = document.getElementById('avNewsSub');
+  const newsBox = newsState ? newsState.closest('.av-status-box') : null;
+  if (newsState) {
+    const ns = d.news.score;
+    if (newsBox) newsBox.classList.remove('news-hot');
+    if (ns < 0.35) {
+      newsState.textContent = '⚠ LOCKOUT RISK';
+      newsState.className = 'av-status-state av-state-alert';
+      if (newsBox) newsBox.classList.add('news-hot');
+    } else if (ns < 0.55) {
+      newsState.textContent = '⚡ WATCH';
+      newsState.className = 'av-status-state av-state-warn';
+    } else {
+      newsState.textContent = 'STANDBY';
+      newsState.className = 'av-status-state av-state-open';
+    }
+  }
+  if (newsSub) newsSub.textContent = d.news.meta;
+
+  // Ticker
+  const setTxt = (id, t, cls) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = t;
+    el.className = cls || '';
+  };
+  setTxt('avGoldBias', (d.goldPct >= 0 ? '+' : '') + d.goldPct.toFixed(2) + '% · ' + d.sig, d.goldPct >= 0 ? 'av-up' : 'av-down');
+  setTxt('avDxyBias', (d.dxyPct >= 0 ? '+' : '') + d.dxyPct.toFixed(2) + '%', d.dxyPct >= 0 ? 'av-up' : 'av-down');
+  setTxt('avScoreTick', (d.core * 100).toFixed(0) + ' / 100 core', d.core >= 0.55 ? 'av-up' : (d.core <= 0.4 ? 'av-down' : ''));
+  setTxt('avSignalTick', d.sig, d.sig.indexOf('BUY') >= 0 ? 'av-up' : (d.sig.indexOf('SELL') >= 0 ? 'av-down' : ''));
+
+  // Senses
+  const map = [
+    ['structure', 'avMetaStruct', 'avDotStruct'],
+    ['momentum', 'avMetaMom', 'avDotMom'],
+    ['dxy', 'avMetaDxy', 'avDotDxy'],
+    ['yield', 'avMetaYield', 'avDotYield'],
+    ['fx', 'avMetaFx', 'avDotFx'],
+    ['news', 'avMetaNews', 'avDotNews']
+  ];
+  map.forEach(([key, metaId, dotId]) => {
+    const s = d[key];
+    if (!s) return;
+    const meta = document.getElementById(metaId);
+    if (meta) meta.textContent = s.meta;
+    avSetDot(dotId, s.dot);
+  });
+
+  // Core ring + GOLD final signal
+  const coreEl = document.getElementById('avCoreScore');
+  const gatesEl = document.getElementById('avCoreGates');
+  const sigEl = document.getElementById('avCoreSignal');
+  const ring = document.getElementById('avRingMeter');
+  const glow = document.getElementById('avRingGlow');
+  if (coreEl) coreEl.textContent = d.core.toFixed(2);
+  if (gatesEl) {
+    gatesEl.textContent = d.gatesCleared + '/6 gates · edge ' + (d.edge >= 0 ? '+' : '') + d.edge;
+  }
+  if (sigEl) {
+    const fs = d.finalSignal || 'NEUTRAL';
+    const st = d.finalStrength || '';
+    sigEl.textContent = fs + (st ? ' · ' + st : '');
+    sigEl.className = 'av-core-signal';
+    if (fs.indexOf('BUY') >= 0) sigEl.classList.add('buy');
+    else if (fs.indexOf('SELL') >= 0) sigEl.classList.add('sell');
+    else if (fs.indexOf('CLOSED') >= 0) sigEl.classList.add('closed');
+    else sigEl.classList.add('neutral');
+  }
+  // Ring color follows final gold signal
+  if (ring) {
+    const circ = 565;
+    const filled = Math.max(8, d.core * circ);
+    const off = circ - filled;
+    ring.style.strokeDashoffset = String(off);
+    let col = '#00f2fe';
+    if ((d.finalSignal || '').indexOf('BUY') >= 0) col = '#00e676';
+    else if ((d.finalSignal || '').indexOf('SELL') >= 0) col = '#ff5252';
+    else if ((d.finalSignal || '').indexOf('CLOSED') >= 0) col = '#f87171';
+    ring.style.stroke = col;
+    if (glow) {
+      glow.style.strokeDashoffset = String(off);
+      glow.style.stroke = col === '#00f2fe' ? 'rgba(0,242,254,0.18)' : (col === '#00e676' ? 'rgba(0,230,118,0.18)' : 'rgba(255,82,82,0.18)');
+    }
+    const flow = document.getElementById('avRingFlow');
+    if (flow) {
+      const pkt = Math.min(32, Math.max(12, filled * 0.12));
+      const gapOnFill = Math.max(4, filled - pkt);
+      const empty = circ - filled;
+      flow.style.strokeDasharray = pkt + ' ' + (gapOnFill + empty);
+      flow.style.stroke = col === '#00f2fe' ? '#e0fbff' : col;
+    }
+  }
+
+  // Active sense thesis — prefer full gold thesis
+  const active = d[_avSenseKey] || d.structure;
+  const thesisEl = document.getElementById('avThesis');
+  if (thesisEl) {
+    thesisEl.textContent = 'THESIS · ' + (d.thesis || active.thesis || '—');
+  }
+
+  // Gold decision gates (not other pairs)
+  const setGate = (statusId, badgeId, status, badge, badgeClass) => {
+    const s = document.getElementById(statusId);
+    const b = document.getElementById(badgeId);
+    if (s) s.textContent = status;
+    if (b) { b.textContent = badge; b.className = 'av-badge' + (badgeClass ? ' ' + badgeClass : ''); }
+  };
+  const gf = d.gateFlags || {};
+  const score = state.smoothed_score || 0;
+  setGate('avGateGold', 'avBadgeGold',
+    (d.structure && d.structure.meta) || 'MTF',
+    gf.gStruct ? 'PASS' : 'FAIL',
+    gf.gStruct ? 'sync' : 'idle');
+  setGate('avGateDxy', 'avBadgeDxy',
+    'score ' + score.toFixed(1) + ' · ' + d.sig,
+    gf.gMom ? 'PASS' : 'FAIL',
+    gf.gMom ? 'sync' : 'idle');
+  setGate('avGateYield', 'avBadgeYield',
+    'DXY ' + (d.dxyPct >= 0 ? '+' : '') + d.dxyPct.toFixed(2) + '%',
+    gf.gDxy ? 'PASS' : 'FAIL',
+    gf.gDxy ? 'sync' : 'idle');
+  const macroOk = !!(gf.gYield && gf.gFx && gf.gNews);
+  setGate('avGateEur', 'avBadgeEur',
+    'Y ' + (d.yieldPct >= 0 ? '+' : '') + d.yieldPct.toFixed(2) + '% · FX · news',
+    macroOk ? 'PASS' : 'FAIL',
+    macroOk ? 'sync' : 'idle');
+
+  // Council line = final signal
+  const council = document.getElementById('avCouncil');
+  if (council) {
+    const fs = d.finalSignal || 'NEUTRAL';
+    council.innerHTML = '<span>● ' + fs + '</span> ○ ' + (d.finalStrength || '') + ' ○ gates ' + d.gatesCleared + '/6';
+  }
+
+  // Do NOT redraw wires every paint — it resets CSS flow animation
+}
+
+function avSelectSense(el) {
+  document.querySelectorAll('.av-sense-node').forEach(n => n.classList.remove('active'));
+  if (el) {
+    el.classList.add('active');
+    _avSenseKey = el.getAttribute('data-key') || 'structure';
+  }
+  const d = _avSenseData[_avSenseKey] || avComputeSenses()[_avSenseKey];
+  const thesisEl = document.getElementById('avThesis');
+  if (thesisEl && d) thesisEl.textContent = 'THESIS · ' + d.thesis;
+  const coreEl = document.getElementById('avCoreScore');
+  const ring = document.getElementById('avRingMeter');
+  if (d && coreEl) coreEl.textContent = d.score.toFixed(2);
+  if (d && ring) {
+    const circ = 565;
+    ring.style.strokeDashoffset = String(circ - d.score * circ);
+  }
+}
+
+function avDrawWires() {
+  const svg = document.getElementById('av-connector-svg');
+  const stage = document.getElementById('avStage');
+  const core = document.getElementById('avCoreHub');
+  if (!svg || !stage || !core) return;
+  svg.innerHTML = '';
+  // Always show SVG layer (mobile + desktop)
+  svg.style.display = 'block';
+  svg.style.position = 'absolute';
+  svg.style.top = '0';
+  svg.style.left = '0';
+  svg.style.width = '100%';
+  svg.style.height = '100%';
+  svg.style.pointerEvents = 'none';
+  svg.style.zIndex = '1';
+
+  const stageRect = stage.getBoundingClientRect();
+  const coreRect = core.getBoundingClientRect();
+  const wide = window.innerWidth >= 860;
+
+  const coreCX = coreRect.left - stageRect.left + coreRect.width / 2;
+  const coreCY = coreRect.top - stageRect.top + coreRect.height / 2;
+  // Stop wires just outside the ring — never pierce the circle (no corner stubs)
+  const radius = Math.min(coreRect.width, coreRect.height) * 0.42;
+  const coreLeftX = coreCX - radius;
+  const coreRightX = coreCX + radius;
+  const coreTopY = coreCY - radius;
+  const coreBotY = coreCY + radius;
+
+  const leftNodes = stage.querySelectorAll('#avSensesCol .av-sense-node');
+  const rightNodes = stage.querySelectorAll('#avGatesCol .av-gate-node');
+
+  const append = (pathData, delay) => {
+    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    bg.setAttribute('d', pathData);
+    bg.setAttribute('class', 'av-wire-bg');
+    svg.appendChild(bg);
+    const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    pulse.setAttribute('d', pathData);
+    pulse.setAttribute('class', 'av-wire-pulse');
+    pulse.style.animationDelay = (-delay) + 's';
+    svg.appendChild(pulse);
+    const pulse2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    pulse2.setAttribute('d', pathData);
+    pulse2.setAttribute('class', 'av-wire-pulse slow');
+    pulse2.style.animationDelay = (-delay - 0.4) + 's';
+    svg.appendChild(pulse2);
+  };
+
+  if (wide) {
+    // Desktop: senses (left) → core → gates (right)
+    leftNodes.forEach((node, idx) => {
+      const r = node.getBoundingClientRect();
+      const sx = r.right - stageRect.left;
+      const sy = r.top - stageRect.top + r.height / 2;
+      const c1 = sx + (coreLeftX - sx) * 0.5;
+      append(`M ${sx} ${sy} C ${c1} ${sy}, ${c1} ${coreCY}, ${coreLeftX} ${coreCY}`, idx * 0.25);
+    });
+    rightNodes.forEach((node, idx) => {
+      const r = node.getBoundingClientRect();
+      const ex = r.left - stageRect.left;
+      const ey = r.top - stageRect.top + r.height / 2;
+      const c1 = coreRightX + (ex - coreRightX) * 0.5;
+      append(`M ${coreRightX} ${coreCY} C ${c1} ${coreCY}, ${c1} ${ey}, ${ex} ${ey}`, idx * 0.3);
+    });
+  } else {
+    // Mobile: vertical flow senses → core → gates
+    leftNodes.forEach((node, idx) => {
+      const r = node.getBoundingClientRect();
+      // skip if node is not visible relative to stage
+      if (r.bottom < stageRect.top || r.top > stageRect.bottom) return;
+      const sx = r.left - stageRect.left + r.width / 2;
+      const sy = r.bottom - stageRect.top;
+      const cY = sy + (coreTopY - sy) * 0.5;
+      append(`M ${sx} ${sy} C ${sx} ${cY}, ${coreCX} ${cY}, ${coreCX} ${coreTopY}`, idx * 0.2);
+    });
+    rightNodes.forEach((node, idx) => {
+      const r = node.getBoundingClientRect();
+      if (r.bottom < stageRect.top || r.top > stageRect.bottom) return;
+      const ex = r.left - stageRect.left + r.width / 2;
+      const ey = r.top - stageRect.top;
+      const cY = coreBotY + (ey - coreBotY) * 0.5;
+      append(`M ${coreCX} ${coreBotY} C ${coreCX} ${cY}, ${ex} ${cY}, ${ex} ${ey}`, idx * 0.25);
+    });
+  }
+}
+
+let _avGpBusy = false;
+let _avLast5mKey = '';
+let _avGpLastText = '';
+
+function avSetGpStatus(text, cls) {
+  const el = document.getElementById('avGpStatus');
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'av-gp-status' + (cls ? ' ' + cls : '');
+}
+function avShowGpView(text, isError) {
+  const body = document.getElementById('avGpBody');
+  if (!body) return;
+  _avGpLastText = String(text || '');
+  body.textContent = _avGpLastText;
+  if (isError) avSetGpStatus('error', 'err');
+}
+
+async function avRunGpBrief(manual) {
+  if (_avGpBusy) return;
+  if (typeof gpAgentRun !== 'function' || typeof gpCallLLM !== 'function') {
+    avShowGpView('GP AI agent not loaded. Set API key in GP AI settings.', true);
+    return;
+  }
+  // Need API key (built-in default lives in gpAiLoadSettings)
+  let hasKey = false;
+  try {
+    const cfg = (typeof gpAiLoadSettings === 'function') ? gpAiLoadSettings() : null;
+    hasKey = !!(cfg && cfg.key && String(cfg.key).trim());
+  } catch (e) {}
+  if (!hasKey) {
+    avShowGpView('GP AI key missing. Open GP AI settings once to seed the built-in key, then refresh.', true);
+    avSetGpStatus('no key', 'err');
+    return;
+  }
+
+  _avGpBusy = true;
+  avSetGpStatus(manual ? 'refreshing…' : 'thinking…', 'busy');
+  const body = document.getElementById('avGpBody');
+  if (body) body.textContent = 'GP AI reading live snapshot…';
+
+  // Inject live gold engine signal into the brief
+  let engineLine = '';
+  try {
+    const d = avComputeSenses();
+    engineLine = 'ENGINE SIGNAL: ' + (d.finalSignal || 'NEUTRAL') + ' · ' + (d.finalStrength || '') +
+      ' · gates ' + d.gatesCleared + '/6 · edge ' + d.edge + ' · core ' + d.core.toFixed(2) + '\n';
+  } catch (e) {}
+  const prompt =
+    'AI VISUAL · GOLD ONLY (max 8 lines). Ignore other pairs as trade targets.\n' +
+    engineLine +
+    '1) Final call: BUY GOLD / SELL GOLD / NEUTRAL and why (use engine signal if aligned)\n' +
+    '2) Nearest gold support / resistance numbers\n' +
+    '3) DXY + US10Y as gold drivers only (one line)\n' +
+    '4) Structure TF bull/bear count\n' +
+    '5) One action for next 5–15 min on XAUUSD only\n' +
+    'No ALERT lines. Numbers from snapshot only.';
+
+  // Capture assistant reply without only relying on full chat UI
+  const prevPush = window.gpAiPushUI;
+  let captured = '';
+  window.gpAiPushUI = function(role, content) {
+    if (role === 'assistant') captured = String(content || '');
+    if (typeof prevPush === 'function') prevPush(role, content);
+  };
+
+  try {
+    await gpAgentRun(prompt);
+    if (captured) {
+      avShowGpView(captured, false);
+      avSetGpStatus('live · ' + new Date().toLocaleTimeString(), 'ok');
+    } else if (_avGpLastText) {
+      avSetGpStatus('updated', 'ok');
+    } else {
+      avShowGpView('GP AI returned empty. Try ↻ refresh.', true);
+    }
+  } catch (e) {
+    avShowGpView('GP AI error: ' + ((e && e.message) || e), true);
+  } finally {
+    window.gpAiPushUI = prevPush;
+    _avGpBusy = false;
+  }
+}
+
+function avGet5mBarKey() {
+  // Unique key for current 5-minute bucket (UTC)
+  const d = new Date();
+  const mins = d.getUTCMinutes();
+  const bucket = mins - (mins % 5);
+  return d.getUTCFullYear() + '-' + (d.getUTCMonth()+1) + '-' + d.getUTCDate() +
+    'T' + d.getUTCHours() + ':' + (bucket < 10 ? '0' : '') + bucket;
+}
+
+function avCheck5mCloseAndBrief() {
+  if (!_avOpen) return;
+  const key = avGet5mBarKey();
+  if (!_avLast5mKey) {
+    _avLast5mKey = key;
+    return;
+  }
+  if (key !== _avLast5mKey) {
+    _avLast5mKey = key;
+    // New 5m candle bucket → auto GP AI brief into AI Visual
+    avSetGpStatus('5m close…', 'busy');
+    avRunGpBrief(false);
+  }
+}
+
+function openAiVisual() {
+  const el = document.getElementById('aiVisualOverlay');
+  if (!el) return;
+  el.classList.add('show');
+  _avOpen = true;
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+  avPaint();
+  // default select structure
+  const first = document.querySelector('.av-sense-node[data-key="structure"]');
+  if (first) {
+    document.querySelectorAll('.av-sense-node').forEach(n => n.classList.remove('active'));
+    first.classList.add('active');
+    _avSenseKey = 'structure';
+  }
+  setTimeout(() => { try { avDrawWires(); } catch (e) {} }, 80);
+  // Immediate GP AI brief when panel opens
+  _avLast5mKey = avGet5mBarKey();
+  setTimeout(() => { try { avRunGpBrief(false); } catch (e) {} }, 350);
+}
+function closeAiVisual() {
+  const el = document.getElementById('aiVisualOverlay');
+  if (el) el.classList.remove('show');
+  _avOpen = false;
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+}
+
+// Refresh AI Visual while open + 5m candle-close GP AI auto brief
+setInterval(() => {
+  if (_avOpen) {
+    try { avPaint(); } catch (e) {}
+    try { avCheck5mCloseAndBrief(); } catch (e) {}
+  }
+}, 2000);
+window.addEventListener('resize', () => {
+  if (_avOpen) try { avDrawWires(); } catch (e) {}
+});
+
 /* ===== SIDE DRAWER ===== */
 function toggleSideDrawer() {
   const drawer = document.getElementById('sideDrawer');
@@ -6764,6 +8425,7 @@ function closeFootprintModal() {
 }
 
 function initApp() {
+  try { updateMarketClosedBanner(); } catch (e) {}
   load24hHistory();
   backfillReal24HHistory();
   initLiveSocket();
