@@ -1,0 +1,8 @@
+{
+  "name": "GP Live App",
+  "short_name": "GP Live",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}
