@@ -1546,9 +1546,62 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 }
 .av-core-score {
   position: relative; z-index: 3;
-  font-size: 26px; font-weight: 800; color: #00f2fe;
+  font-size: 28px; font-weight: 800; color: #00f2fe;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
   text-shadow: 0 0 12px rgba(0,242,254,1), 0 0 24px rgba(0,242,254,0.5);
   animation: avScoreGlow 1.6s ease-in-out infinite;
+}
+.av-core-score.buy { color: #00e676; text-shadow: 0 0 14px rgba(0,230,118,0.85); }
+.av-core-score.sell { color: #ff5252; text-shadow: 0 0 14px rgba(255,82,82,0.85); }
+.av-core-score.flat { color: #fbbf24; text-shadow: 0 0 12px rgba(251,191,36,0.7); }
+.av-core-scale {
+  position: relative; z-index: 3;
+  width: 100%;
+  max-width: 140px;
+  margin: 2px auto 0;
+  flex-shrink: 0;
+}
+.av-core-scale-bar {
+  position: relative;
+  height: 5px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #ff5252 0%, #1a2030 45%, #1a2030 55%, #00e676 100%);
+  border: 1px solid rgba(0,210,255,0.25);
+  overflow: visible;
+}
+.av-core-scale-needle {
+  position: absolute;
+  top: -3px;
+  width: 3px;
+  height: 11px;
+  border-radius: 2px;
+  background: #e2e8f0;
+  box-shadow: 0 0 6px rgba(255,255,255,0.7);
+  transform: translateX(-50%);
+  left: 50%;
+  transition: left 0.35s ease;
+}
+.av-core-scale-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  font-variant-numeric: tabular-nums;
+}
+.av-core-scale-labels .sell-end { color: #ff5252; }
+.av-core-scale-labels .zero-mid { color: #94a3b8; }
+.av-core-scale-labels .buy-end { color: #00e676; }
+.av-core-rule {
+  margin-top: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.2px;
+  line-height: 1.25;
+  max-width: 160px;
 }
 .av-core-signal {
   position: relative; z-index: 3;
@@ -2406,6 +2459,15 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
             </svg>
             <div class="av-core-score" id="avCoreScore">0.00</div>
           </div>
+          <div class="av-core-scale" id="avCoreScale" title="Live core bias · limits −1…+1">
+            <div class="av-core-scale-bar"><div class="av-core-scale-needle" id="avCoreNeedle"></div></div>
+            <div class="av-core-scale-labels">
+              <span class="sell-end">−1 SELL</span>
+              <span class="zero-mid">0</span>
+              <span class="buy-end">+1 BUY</span>
+            </div>
+          </div>
+          <div class="av-core-rule" id="avCoreRule">live score · ±1 = max limit only</div>
           <div class="av-core-signal" id="avCoreSignal">NEUTRAL</div>
           <div class="av-core-gates" id="avCoreGates">— gates</div>
           <div class="av-council" id="avCouncil"><span>● GOLD DESK</span> ○ STRUCTURE ○ DRIVERS</div>
@@ -7907,13 +7969,22 @@ function avComputeSenses() {
   const quiet     = avIsRangeQuiet();
 
   // ---------- Sense scores (0-1) ----------
-  const structScore = avClamp01(
+  // Alignment quality (how many TFs agree) — used for GATES only, not directional core
+  const structAlign = avClamp01(
     0.30 +
     (mtf.aligned / Math.max(1, mtf.n)) * 0.55 +
     (Math.abs(score) > 18 ? 0.15 : 0)
   );
 
-  // momScore stays centered (0.5 = neutral) for the core ring
+  // Directional structure for core ring: bull → high, bear → low, mixed → ~0.5
+  const structScore = (function () {
+    const a = mtf.aligned / Math.max(1, mtf.n); // 0..1 agreement ratio
+    if (mtf.direction === 'BULL') return avClamp01(0.50 + a * 0.45 + (score > 10 ? 0.05 : 0));
+    if (mtf.direction === 'BEAR') return avClamp01(0.50 - a * 0.45 - (score < -10 ? 0.05 : 0));
+    return 0.50;
+  })();
+
+  // momScore centered (0.5 = neutral) — follows composite score direction
   const momScore = avClamp01(0.5 + (score / 100) * 0.5);
 
   // DXY sense score: weak dollar helps gold (high), strong dollar hurts (low)
@@ -7970,7 +8041,7 @@ function avComputeSenses() {
   } catch (e) {}
 
   // ---------- Gates ----------
-  const gStruct = structScore > 0.58;
+  const gStruct = structAlign > 0.58;  // gate = alignment present (bull OR bear)
 
   // FIXED: Momentum gate now passes on STRONG moves in EITHER direction
   // (absolute score strength), not only on the bullish side of the 0-1 scale.
@@ -8032,15 +8103,32 @@ function avComputeSenses() {
 
   const edge = bullPts - bearPts;
 
-  // Core ring value (still uses centered momScore)
-  const core = avClamp01(
-    structScore * 0.27 +
-    momScore    * 0.27 +
-    dxyHelp     * 0.16 +
-    yieldScore  * 0.10 +
-    fxScore     * 0.10 +
-    newsScore   * 0.10
+  // Core ring = LIVE directional gold bias on [-1, +1]
+  //   -1 / +1 are MAX LIMITS only — value is continuous from live drivers, not snapped to ±1.
+  // Map each 0..1 sense (0.5 = neutral) → signed, then weight by live importance.
+  // News is gate-only (not mixed into the number).
+  const toSigned = (v01) => Math.max(-1, Math.min(1, (v01 - 0.5) * 2));
+
+  // Primary live anchor: composite score already runs ~-100..+100
+  const scoreSigned = Math.max(-1, Math.min(1, (score || 0) / 100));
+
+  // Secondary live blend from senses (structure / DXY / yields / FX / mom)
+  const senseSigned = (
+    toSigned(momScore)    * 0.28 +
+    toSigned(structScore) * 0.26 +
+    toSigned(dxyHelp)     * 0.20 +
+    toSigned(yieldScore)  * 0.14 +
+    toSigned(fxScore)     * 0.12
   );
+
+  // Point-edge as a mild tilt only (not a jump to ±1)
+  const edgeTilt = Math.max(-0.25, Math.min(0.25, (edge || 0) * 0.04));
+
+  // Blend: live composite dominates, senses refine, edge gently tilts
+  let core = scoreSigned * 0.55 + senseSigned * 0.35 + edgeTilt * 0.10;
+
+  // Clamp to legal range — ±1 is ceiling/floor only
+  core = Math.max(-1, Math.min(1, core));
 
   // ---------- Final decision ----------
   let finalSignal   = 'NEUTRAL';
@@ -8086,7 +8174,7 @@ function avComputeSenses() {
     structure: {
       score: structScore,
       meta: mtf.aligned + '/' + mtf.n + ' TF ' + mtf.direction.toLowerCase() + ' · score ' + score.toFixed(1),
-      thesis: 'Structure: ' + mtf.direction + ' across ' + mtf.aligned + ' of ' + mtf.n + ' timeframes. Composite ' + score.toFixed(1) + '.',
+      thesis: 'Structure: ' + mtf.direction + ' across ' + mtf.aligned + ' of ' + mtf.n + ' timeframes. Composite ' + score.toFixed(1) + ' · lean ' + (structScore >= 0.58 ? 'BUY (+)' : (structScore <= 0.42 ? 'SELL (−)' : 'flat (0)')) + '.',
       dot: mtf.direction === 'BULL' ? 'green' : (mtf.direction === 'BEAR' ? 'red' : 'amber')
     },
     momentum: {
@@ -8205,7 +8293,7 @@ function avPaint() {
   };
   setTxt('avGoldBias', (d.goldPct >= 0 ? '+' : '') + d.goldPct.toFixed(2) + '% · ' + d.sig, d.goldPct >= 0 ? 'av-up' : 'av-down');
   setTxt('avDxyBias', (d.dxyPct >= 0 ? '+' : '') + d.dxyPct.toFixed(2) + '%', d.dxyPct >= 0 ? 'av-up' : 'av-down');
-  setTxt('avScoreTick', (d.core * 100).toFixed(0) + ' / 100 core', d.core >= 0.55 ? 'av-up' : (d.core <= 0.4 ? 'av-down' : ''));
+  setTxt('avScoreTick', (d.core >= 0 ? '+' : '') + d.core.toFixed(2), d.core >= 0.15 ? 'av-up' : (d.core <= -0.15 ? 'av-down' : ''));
   setTxt('avSignalTick', d.sig, d.sig.indexOf('BUY') >= 0 ? 'av-up' : (d.sig.indexOf('SELL') >= 0 ? 'av-down' : ''));
 
   // Senses
@@ -8231,7 +8319,32 @@ function avPaint() {
   const sigEl = document.getElementById('avCoreSignal');
   const ring = document.getElementById('avRingMeter');
   const glow = document.getElementById('avRingGlow');
-  if (coreEl) coreEl.textContent = d.core.toFixed(2);
+  if (coreEl) {
+    const c = d.core || 0;
+    coreEl.textContent = (c > 0 ? '+' : '') + c.toFixed(2);
+    coreEl.className = 'av-core-score' + (c >= 0.15 ? ' buy' : (c <= -0.15 ? ' sell' : ' flat'));
+    coreEl.style.color = '';
+  }
+  // Scale needle: map core [-1,+1] → left 0%…100%
+  const needle = document.getElementById('avCoreNeedle');
+  if (needle) {
+    const c = Math.max(-1, Math.min(1, d.core || 0));
+    needle.style.left = ((c + 1) / 2 * 100).toFixed(1) + '%';
+    needle.style.background = c >= 0.15 ? '#00e676' : (c <= -0.15 ? '#ff5252' : '#fbbf24');
+  }
+  const ruleEl = document.getElementById('avCoreRule');
+  if (ruleEl) {
+    const c = d.core || 0;
+    const mag = Math.abs(c);
+    let band = 'FLAT';
+    if (c >= 0.55) band = 'STRONG BUY zone';
+    else if (c >= 0.25) band = 'BUY lean';
+    else if (c >= 0.10) band = 'mild BUY';
+    else if (c <= -0.55) band = 'STRONG SELL zone';
+    else if (c <= -0.25) band = 'SELL lean';
+    else if (c <= -0.10) band = 'mild SELL';
+    ruleEl.textContent = band + ' · live · max ±1';
+  }
   if (gatesEl) {
     gatesEl.textContent = d.gatesCleared + '/6 gates · edge ' + (d.edge >= 0 ? '+' : '') + d.edge;
   }
@@ -8245,16 +8358,17 @@ function avPaint() {
     else if (fs.indexOf('CLOSED') >= 0) sigEl.classList.add('closed');
     else sigEl.classList.add('neutral');
   }
-  // Ring color follows final gold signal
+  // Ring: fill = |core| strength; color = direction (−1 sell red · 0 cyan · +1 buy green)
   if (ring) {
     const circ = 565;
-    const filled = Math.max(8, d.core * circ);
+    const mag = Math.abs(d.core || 0); // 0..1
+    const filled = Math.max(8, mag * circ);
     const off = circ - filled;
     ring.style.strokeDashoffset = String(off);
     let col = '#00f2fe';
-    if ((d.finalSignal || '').indexOf('BUY') >= 0) col = '#00e676';
-    else if ((d.finalSignal || '').indexOf('SELL') >= 0) col = '#ff5252';
-    else if ((d.finalSignal || '').indexOf('CLOSED') >= 0) col = '#f87171';
+    if ((d.finalSignal || '').indexOf('CLOSED') >= 0) col = '#f87171';
+    else if (d.core >= 0.15 || (d.finalSignal || '').indexOf('BUY') >= 0) col = '#00e676';
+    else if (d.core <= -0.15 || (d.finalSignal || '').indexOf('SELL') >= 0) col = '#ff5252';
     ring.style.stroke = col;
     if (glow) {
       glow.style.strokeDashoffset = String(off);
@@ -8686,7 +8800,7 @@ initApp();
 /* PWA service worker — force update on every load so deploys show immediately */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261019c', { scope: './' })
+    navigator.serviceWorker.register('./sw.js?v=20261019g', { scope: './' })
       .then(function (reg) {
         console.log('[PWA] SW registered:', reg.scope);
         // Always check for a newer sw.js after deploy
