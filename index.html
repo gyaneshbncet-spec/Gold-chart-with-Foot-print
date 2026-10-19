@@ -1106,7 +1106,40 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
 
 @keyframes pulseFootprintBtn { 0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); } 50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } }
 .front-bias-hub { background: #131722; border: 1px solid #1f2430; border-radius: 14px; padding: 12px; margin-bottom: 14px; }
-.front-bias-header { font-size: 12px; font-weight: 700; color: #9aa0a6; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
+.front-bias-header { font-size: 12px; font-weight: 700; color: #9aa0a6; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; gap: 8px; flex-wrap: wrap; }
+.front-bias-slide {
+  display: inline-flex;
+  align-items: center;
+  background: #0c0e14;
+  border: 1px solid #2a3142;
+  border-radius: 999px;
+  padding: 2px;
+  gap: 0;
+  flex-shrink: 0;
+}
+.front-bias-slide button {
+  border: none;
+  background: transparent;
+  color: #787b86;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.15s, color 0.15s;
+}
+.front-bias-slide button.active-gold {
+  background: linear-gradient(135deg, #b48312, #966b0a);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(180,131,18,0.35);
+}
+.front-bias-slide button.active-dxy {
+  background: linear-gradient(135deg, #2563eb, #1e3a5f);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.35);
+}
 .front-bias-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
 .front-bias-col { background: #0c0e14; border: 1px solid #1f2430; border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .front-bias-tf { font-size: 10.5px; font-weight: 700; color: #8e95a5; }
@@ -2157,8 +2190,11 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
       </div>
       <div class="front-bias-hub">
         <div class="front-bias-header">
-          <span>Structure Bias Matrix</span>
-          <span style="font-size:9.5px; color:#5f6368;">Live Sync</span>
+          <span id="frontBiasTitle">Gold Structure Bias</span>
+          <div class="front-bias-slide" role="tablist" aria-label="Bias matrix asset">
+            <button type="button" id="frontBiasBtnGold" class="active-gold" onclick="setFrontBiasView('gold')">Gold</button>
+            <button type="button" id="frontBiasBtnDxy" onclick="setFrontBiasView('dxy')">DXY</button>
+          </div>
         </div>
         <div class="front-bias-grid">
           <div class="front-bias-col">
@@ -2801,7 +2837,23 @@ const state = {
   timer: 0,
   lastBarSlot: 0,
   chartAsset: 'gold',
+  /* Front matrix view — ONLY changed by Gold/DXY slide, never by opening a chart */
+  frontBiasView: 'gold',
   tf_biases: {
+    '3m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
+    '5m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
+    '15m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
+    '1h': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
+    '1d': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 }
+  },
+  tf_biases_gold: {
+    '3m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
+    '5m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
+    '15m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
+    '1h': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
+    '1d': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 }
+  },
+  tf_biases_dxy: {
     '3m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
     '5m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
     '15m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
@@ -2964,60 +3016,279 @@ function loadActiveStore() {
   multiHorizonTrendlines = (s.rays || []).slice();
 }
 
-function updateChartBiasesLive() {
-  if (candleHistory.length >= 20) {
-    const last = candleHistory[candleHistory.length - 1].c;
-    const calcBias = (lookback, mult) => {
-      const past = candleHistory[Math.max(0, candleHistory.length - lookback)].c;
-      const pct = parseFloat((((last - past) / past) * 100 * mult).toFixed(2));
-      let sentiment = 'NEUTRAL';
-      let cls = 'chip-neut';
-      if (pct >= 0.05) { sentiment = 'BULLISH'; cls = 'chip-bull'; }
-      else if (pct <= -0.05) { sentiment = 'BEARISH'; cls = 'chip-bear'; }
-      return { text: sentiment, class: cls, delta: pct };
-    };
-    state.tf_biases['3m'] = calcBias(3, 0.6);
-    state.tf_biases['5m'] = calcBias(5, 0.8);
-    state.tf_biases['15m'] = calcBias(15, 1.0);
-    state.tf_biases['1h'] = calcBias(40, 1.3);
-    state.tf_biases['1d'] = {
-      text: state.gold_pct >= 0 ? 'BULLISH' : 'BEARISH',
-      class: state.gold_pct >= 0 ? 'chip-bull' : 'chip-bear',
-      delta: state.gold_pct
-    };
+function biasNeutralMap() {
+  return {
+    '3m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0 },
+    '5m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0 },
+    '15m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0 },
+    '1h': { text: 'NEUTRAL', class: 'chip-neut', delta: 0 },
+    '1d': { text: 'NEUTRAL', class: 'chip-neut', delta: 0 }
+  };
+}
+
+/** Dedicated live OHLC for bias matrix (not tied to open chart TF). */
+const biasOhlc = { gold: [], dxy: [] };
+let _biasOhlcLastFetch = 0;
+
+function normalizeBiasBars(bars) {
+  if (!Array.isArray(bars)) return [];
+  return bars.map(b => {
+    let t = b.openTime ?? b.t ?? b.time ?? b[0];
+    if (typeof t === 'string' && /^\d+$/.test(t)) t = parseInt(t, 10);
+    if (typeof t === 'number' && t < 1e12) t = t * 1000;
+    const ms = new Date(t).getTime();
+    if (isNaN(ms)) return null;
+    const o = parseFloat(b.open ?? b.o ?? b[1]);
+    const h = parseFloat(b.high ?? b.h ?? b[2]);
+    const l = parseFloat(b.low ?? b.l ?? b[3]);
+    const c = parseFloat(b.close ?? b.c ?? b[4]);
+    if ([o, h, l, c].some(x => isNaN(x) || x <= 0)) return null;
+    return { t: ms, o, h, l, c };
+  }).filter(Boolean).sort((a, b) => a.t - b.t);
+}
+
+async function refreshBiasOhlc(force) {
+  const now = Date.now();
+  if (!force && (now - _biasOhlcLastFetch) < 25000) return;
+  _biasOhlcLastFetch = now;
+  try {
+    const [g, d] = await Promise.all([
+      fetchJson('https://biquote.io/api/XAUUSD/ohlc?interval=5m&limit=200').catch(() => null),
+      fetchJson('https://biquote.io/api/DXY/ohlc?interval=5m&limit=200').catch(() => null)
+    ]);
+    const gBars = normalizeBiasBars((g && (g.bars || g.data || g)) || []);
+    const dBars = normalizeBiasBars((d && (d.bars || d.data || d)) || []);
+    if (gBars.length >= 6) biasOhlc.gold = gBars;
+    if (dBars.length >= 6) biasOhlc.dxy = dBars;
+  } catch (e) {}
+}
+
+/** Close at or just before target time (ms). */
+function closeNearTime(candles, targetMs) {
+  if (!candles || !candles.length) return null;
+  let best = null;
+  for (let i = 0; i < candles.length; i++) {
+    const c = candles[i];
+    if (c.t <= targetMs) best = c;
+    else break;
   }
-  const updateUI = (tf) => {
-    const badge = document.getElementById(`cb-${tf}`);
-    const val = document.getElementById(`cv-${tf}`);
-    const fBadge = document.getElementById(`fb-${tf}`);
-    const fVal = document.getElementById(`fv-${tf}`);
-    const info = state.tf_biases[tf];
-    if (badge && info) { badge.textContent = info.text; badge.className = `chip-badge ${info.class}`; }
-    if (val && info) {
-      const sign = info.delta >= 0 ? '+' : '';
-      val.textContent = `${sign}${info.delta.toFixed(2)}%`;
-      val.className = info.delta >= 0 ? 'pos' : 'neg';
+  if (best) return best.c;
+  // if all bars are after target, use earliest
+  return candles[0].c;
+}
+
+/**
+ * STRUCTURE bias (matches chart trend), not micro last-N-minute bounce.
+ * For each TF: net % over a structure window + candle vote (up vs down bars).
+ * Live price anchors the end of the window. 1D = session % from feed.
+ *
+ * Windows (chosen so 15m/1H match the downtrend you see on those charts):
+ *   3m  → last 20 minutes
+ *   5m  → last 60 minutes
+ *   15m → last 3 hours
+ *   1h  → last 8 hours (or session if shorter)
+ *   1d  → session %
+ */
+function computeBiasFromCandles(candles, sessionPct, livePrice, isDxy) {
+  const out = biasNeutralMap();
+  const live = (livePrice > 0) ? livePrice : (candles && candles.length ? candles[candles.length - 1].c : 0);
+  const now = Date.now();
+  // DXY moves are smaller → tighter thresholds
+  const bullThr = isDxy ? 0.03 : 0.06;
+  const bearThr = isDxy ? -0.03 : -0.06;
+
+  const make = (pct) => {
+    const p = parseFloat((pct || 0).toFixed(2));
+    let text = 'NEUTRAL';
+    let cls = 'chip-neut';
+    if (p >= bullThr) { text = 'BULLISH'; cls = 'chip-bull'; }
+    else if (p <= bearThr) { text = 'BEARISH'; cls = 'chip-bear'; }
+    return { text, class: cls, delta: p };
+  };
+
+  if (!(live > 0) || !candles || candles.length < 4) {
+    const d = sessionPct || 0;
+    out['1d'] = make(d);
+    out['3m'] = make(d * 0.1);
+    out['5m'] = make(d * 0.2);
+    out['15m'] = make(d * 0.45);
+    out['1h'] = make(d * 0.75);
+    return out;
+  }
+
+  function structurePct(lookbackMs) {
+    const t0 = now - lookbackMs;
+    const past = closeNearTime(candles, t0);
+    if (!(past > 0)) return 0;
+    const net = ((live - past) / past) * 100;
+
+    // Candle vote inside window (structure, not only endpoints)
+    let up = 0, down = 0;
+    for (let i = 0; i < candles.length; i++) {
+      const c = candles[i];
+      if (c.t < t0) continue;
+      if (c.c >= c.o) up++;
+      else down++;
     }
-    if (fBadge && info) { fBadge.textContent = info.text; fBadge.className = `front-badge ${info.class}`; }
-    if (fVal && info) {
+    const total = up + down;
+    let vote = 0;
+    if (total >= 3) {
+      const diff = (up - down) / total; // -1..+1
+      // scale vote to a small % tilt so it can confirm structure
+      vote = diff * (isDxy ? 0.08 : 0.12);
+    }
+
+    // Swing structure: lower-high / higher-low tilt
+    let swing = 0;
+    const win = candles.filter(c => c.t >= t0);
+    if (win.length >= 6) {
+      const mid = Math.floor(win.length / 2);
+      const first = win.slice(0, mid);
+      const second = win.slice(mid);
+      const hi1 = Math.max(...first.map(c => c.h));
+      const hi2 = Math.max(...second.map(c => c.h));
+      const lo1 = Math.min(...first.map(c => c.l));
+      const lo2 = Math.min(...second.map(c => c.l));
+      if (hi2 < hi1 && lo2 < lo1) swing = isDxy ? -0.05 : -0.08; // lower highs + lower lows
+      else if (hi2 > hi1 && lo2 > lo1) swing = isDxy ? 0.05 : 0.08; // HH + HL
+    }
+
+    // Blend: net move dominates, vote + swing confirm (no micro-bounce flip)
+    return net * 0.70 + vote * 0.15 + swing * 0.15;
+  }
+
+  out['3m']  = make(structurePct(20 * 60 * 1000));
+  out['5m']  = make(structurePct(60 * 60 * 1000));
+  out['15m'] = make(structurePct(3 * 60 * 60 * 1000));
+  out['1h']  = make(structurePct(8 * 60 * 60 * 1000));
+  out['1d']  = make(sessionPct || 0);
+  return out;
+}
+
+function getStoreCandles(asset) {
+  try {
+    const a = asset === 'dxy' ? 'dxy' : 'gold';
+    // 1) Dedicated bias OHLC (real 5m series, independent of chart)
+    if (biasOhlc[a] && biasOhlc[a].length >= 6) return biasOhlc[a];
+    // 2) Active chart buffer if same asset
+    if ((state.chartAsset || 'gold') === a && typeof candleHistory !== 'undefined' && candleHistory.length >= 8) {
+      return candleHistory.map(c => ({
+        t: c.barSlot || c.closeTime || c.t || 0,
+        o: c.o, h: c.h, l: c.l, c: c.c
+      })).filter(x => x.t > 0 && x.c > 0);
+    }
+    // 3) chartStore fallback
+    const store = (typeof chartStore !== 'undefined' && chartStore[a]) ? chartStore[a] : null;
+    if (!store) return [];
+    const prefer = ['5m', '15m', '3m', '1h', '1d'];
+    for (let i = 0; i < prefer.length; i++) {
+      const arr = store[prefer[i]] && store[prefer[i]].candles;
+      if (arr && arr.length >= 6) {
+        return arr.map(c => ({
+          t: c.barSlot || c.closeTime || c.t || 0,
+          o: c.o, h: c.h, l: c.l, c: c.c
+        })).filter(x => x.t > 0 && x.c > 0);
+      }
+    }
+    return [];
+  } catch (e) { return []; }
+}
+
+/** Front matrix slide — does NOT follow open chart. */
+function setFrontBiasView(view) {
+  state.frontBiasView = (view === 'dxy') ? 'dxy' : 'gold';
+  try { localStorage.setItem('front_bias_view_v1', state.frontBiasView); } catch (e) {}
+  const btnG = document.getElementById('frontBiasBtnGold');
+  const btnD = document.getElementById('frontBiasBtnDxy');
+  const title = document.getElementById('frontBiasTitle');
+  if (btnG) {
+    btnG.className = state.frontBiasView === 'gold' ? 'active-gold' : '';
+  }
+  if (btnD) {
+    btnD.className = state.frontBiasView === 'dxy' ? 'active-dxy' : '';
+  }
+  if (title) {
+    title.textContent = state.frontBiasView === 'dxy' ? 'DXY Structure Bias' : 'Gold Structure Bias';
+  }
+  paintFrontBiasMatrix();
+}
+
+function paintFrontBiasMatrix() {
+  const view = state.frontBiasView === 'dxy' ? 'dxy' : 'gold';
+  const map = view === 'dxy' ? (state.tf_biases_dxy || {}) : (state.tf_biases_gold || {});
+  ['3m', '5m', '15m', '1h', '1d'].forEach(tf => {
+    const info = map[tf] || { text: 'NEUTRAL', class: 'chip-neut', delta: 0 };
+    const fBadge = document.getElementById('fb-' + tf);
+    const fVal = document.getElementById('fv-' + tf);
+    const bar = document.getElementById('bb-' + tf);
+    if (fBadge) { fBadge.textContent = info.text; fBadge.className = 'front-badge ' + info.class; }
+    if (fVal) {
       const sign = info.delta >= 0 ? '+' : '';
-      fVal.textContent = `${sign}${info.delta.toFixed(2)}%`;
+      fVal.textContent = sign + Number(info.delta).toFixed(2) + '%';
       fVal.className = info.delta >= 0 ? 'pos' : 'neg';
     }
-    const bar = document.getElementById('bb-' + tf);
-    if (bar && info) {
+    if (bar) {
       const mag = Math.min(100, Math.abs(info.delta) * 80);
       bar.style.width = Math.max(6, mag) + '%';
       bar.className = 'bias-bar-fill ' + (info.delta > 0.02 ? 'bull' : (info.delta < -0.02 ? 'bear' : 'neut'));
     }
-  };
-  ['3m', '5m', '15m', '1h', '1d'].forEach(updateUI);
-  const sig = document.getElementById("cb-signal");
+  });
+}
+
+function updateChartBiasesLive() {
+  // Always maintain BOTH matrices from real time-windows + live price (not open-chart TF)
+  const goldCandles = getStoreCandles('gold');
+  const dxyCandles = getStoreCandles('dxy');
+  state.tf_biases_gold = computeBiasFromCandles(goldCandles, state.gold_pct || 0, state.gold_price || 0, false);
+  state.tf_biases_dxy = computeBiasFromCandles(dxyCandles, state.dxy_pct || 0, state.dxy_price || 0, true);
+
+  // AI Visual / system still use GOLD structure as primary desk bias
+  state.tf_biases = state.tf_biases_gold;
+
+  // Chart modal chips follow the OPEN chart only (inside chart UI)
+  const chartMap = (state.chartAsset === 'dxy') ? state.tf_biases_dxy : state.tf_biases_gold;
+  ['3m', '5m', '15m', '1h', '1d'].forEach(tf => {
+    const info = chartMap[tf] || { text: 'NEUTRAL', class: 'chip-neut', delta: 0 };
+    const badge = document.getElementById('cb-' + tf);
+    const val = document.getElementById('cv-' + tf);
+    if (badge) { badge.textContent = info.text; badge.className = 'chip-badge ' + info.class; }
+    if (val) {
+      const sign = info.delta >= 0 ? '+' : '';
+      val.textContent = sign + Number(info.delta).toFixed(2) + '%';
+      val.className = info.delta >= 0 ? 'pos' : 'neg';
+    }
+  });
+
+  // Front page matrix: ONLY from frontBiasView slide
+  paintFrontBiasMatrix();
+
+  const sig = document.getElementById('cb-signal');
   if (sig) {
     sig.textContent = state.signal_text;
     sig.style.color = state.smoothed_score <= -25 ? '#ff2a44' : (state.smoothed_score <= -8 ? '#ff4b5f' : (state.smoothed_score >= 25 ? '#00f59b' : (state.smoothed_score >= 8 ? '#4efcc2' : '#f59e0b')));
   }
 }
+
+function bootFrontBiasSlide() {
+  try {
+    const saved = localStorage.getItem('front_bias_view_v1');
+    if (saved === 'dxy' || saved === 'gold') state.frontBiasView = saved;
+  } catch (e) {}
+  setFrontBiasView(state.frontBiasView || 'gold');
+  // Load real 5m OHLC for both assets so matrix is live without opening charts
+  refreshBiasOhlc(true).then(() => {
+    try { updateChartBiasesLive(); } catch (e) {}
+  });
+}
+document.addEventListener('DOMContentLoaded', bootFrontBiasSlide);
+setTimeout(bootFrontBiasSlide, 400);
+// Keep bias OHLC + structure matrix live
+setInterval(() => {
+  refreshBiasOhlc(false).then(() => {
+    try { updateChartBiasesLive(); } catch (e) {}
+  });
+}, 30000);
+
 
 function drawCompScoreChart() {
   // Isolation: skip while Footprint modal is open
@@ -8800,7 +9071,7 @@ initApp();
 /* PWA service worker — force update on every load so deploys show immediately */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261019g', { scope: './' })
+    navigator.serviceWorker.register('./sw.js?v=20261019j', { scope: './' })
       .then(function (reg) {
         console.log('[PWA] SW registered:', reg.scope);
         // Always check for a newer sw.js after deploy
