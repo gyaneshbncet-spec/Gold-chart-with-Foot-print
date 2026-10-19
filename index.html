@@ -1895,6 +1895,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
     <div class="row"><span>Floating toolbar</span><input type="checkbox" id="setToolbar" onchange="deskUiSet('toolbarVisible', this.checked)" /></div>
     <div class="row"><span>Hot-keys</span><input type="checkbox" id="setHot" onchange="deskUiSet('hotKeysEnabled', this.checked)" /></div>
     <div class="row"><span>Score banner</span><input type="checkbox" id="setScore" onchange="deskUiSet('showScoreBanner', this.checked)" /></div>
+    <div class="row"><span>Notifications</span><input type="checkbox" id="setNotifications" onchange="deskUiSet('notificationsEnabled', this.checked)" /></div>
     <div class="row">
       <span>Footprint mode</span>
       <select id="setFpMode" onchange="deskUiSet('footprintMode', this.value)">
@@ -2027,6 +2028,14 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   <button class="side-drawer-item" onclick="forceLiveSync(); closeSideDrawer();">
     <span class="sd-ico"><span style="font-size:16px;">📡</span></span>
     <span class="sd-text">Force Live Sync<span class="sd-sub">Refresh all feeds</span></span>
+  </button>
+  <button class="side-drawer-item" onclick="openDeskSettings(); closeSideDrawer();">
+    <span class="sd-ico"><span style="font-size:14px;">⚙</span></span>
+    <span class="sd-text">Desk Settings<span class="sd-sub">Overlay · notifications · footprint</span></span>
+  </button>
+  <button class="side-drawer-item" id="sideNotifyToggle" onclick="toggleNotificationsFromDrawer();">
+    <span class="sd-ico"><span style="font-size:14px;">🔔</span></span>
+    <span class="sd-text">Notifications<span class="sd-sub" id="sideNotifySub">On · toast alerts</span></span>
   </button>
 
 </aside>
@@ -5372,6 +5381,7 @@ function deskPairHeat() {
 }
 
 function deskShowAlert(title, body, tone) {
+  if (deskUi && deskUi.notificationsEnabled === false) return;
   const stack = document.getElementById('alertStack');
   if (!stack) return;
   const el = document.createElement('div');
@@ -6504,6 +6514,7 @@ const defaultDeskUi = {
   toolbarVisible: false,
   hotKeysEnabled: true,
   showScoreBanner: true,
+  notificationsEnabled: true,
   footprintMode: 'both', // front | slide | both | off
   ticket: { side: 'buy', size: 1, entry: 0, sl: 0, tp: 0 }
 };
@@ -6871,6 +6882,14 @@ function deskUiLoad() {
 function deskUiSave() {
   try { localStorage.setItem(DESK_UI_KEY, JSON.stringify(deskUi)); } catch (e) {}
 }
+function toggleNotificationsFromDrawer() {
+  const next = !(deskUi && deskUi.notificationsEnabled !== false);
+  deskUiSet('notificationsEnabled', next);
+  // Confirmation only when turning ON (deskShowAlert respects the flag)
+  if (next && typeof deskShowAlert === 'function') {
+    deskShowAlert('Notifications', 'Toast alerts are ON', 'bull');
+  }
+}
 function deskUiSet(key, val) {
   deskUi[key] = val;
   deskUiSave();
@@ -6890,7 +6909,8 @@ function deskApplyUi() {
     ['setPin', 'pinMode'],
     ['setToolbar', 'toolbarVisible'],
     ['setHot', 'hotKeysEnabled'],
-    ['setScore', 'showScoreBanner']
+    ['setScore', 'showScoreBanner'],
+    ['setNotifications', 'notificationsEnabled']
   ];
   map.forEach(([id, key]) => {
     const el = document.getElementById(id);
@@ -6916,6 +6936,14 @@ function deskApplyUi() {
   // Sync ticket inputs if empty
   const ent = document.getElementById('ftbEntry');
   if (ent && !ent.value && state.gold_price > 500) ent.value = state.gold_price.toFixed(2);
+  // Side drawer notification label
+  try {
+    const sub = document.getElementById('sideNotifySub');
+    if (sub) {
+      const on = deskUi.notificationsEnabled !== false;
+      sub.textContent = on ? 'On · toast alerts' : 'Off · silent';
+    }
+  } catch (e) {}
 }
 
 function openDeskSettings() {
@@ -7820,7 +7848,7 @@ Keep it tight and practical.`;
   gpAgentRun(prompt);
 }
 
-/* ===== AI VISUAL — LIVE NODE ENGINE ===== */
+/* ===== AI VISUAL — FINAL TUNED LIVE NODE ENGINE ===== */
 let _avOpen = false;
 let _avSenseKey = 'structure';
 let _avSenseData = {};
@@ -7839,126 +7867,221 @@ function avBiasFromTf() {
     if (t.indexOf('BULL') >= 0) bull++;
     else if (t.indexOf('BEAR') >= 0) bear++;
   });
-  return { bull, bear, n, aligned: Math.max(bull, bear), direction: bull >= bear ? 'BULL' : (bear > bull ? 'BEAR' : 'MIXED') };
+  return {
+    bull,
+    bear,
+    n,
+    aligned: Math.max(bull, bear),
+    direction: bull > bear ? 'BULL' : (bear > bull ? 'BEAR' : 'MIXED')
+  };
+}
+
+/* Quiet-range detector using existing candleHistory */
+function avIsRangeQuiet() {
+  try {
+    if (typeof candleHistory === 'undefined' || !Array.isArray(candleHistory) || candleHistory.length < 12) {
+      return false;
+    }
+    const bars = candleHistory.slice(-16);
+    const ranges = bars.map(c => (c.h - c.l));
+    const avg = ranges.reduce((a, b) => a + b, 0) / ranges.length;
+    const recent = ranges.slice(-4).reduce((a, b) => a + b, 0) / 4;
+    return recent < avg * 0.65;
+  } catch (e) {
+    return false;
+  }
 }
 
 function avComputeSenses() {
-  const score = state.smoothed_score || 0;
-  const gold = state.gold_price || 0;
-  const goldPct = state.gold_pct || 0;
-  const dxy = state.dxy_price || 0;
-  const dxyPct = state.dxy_pct || 0;
-  const yieldPct = state.tip_yield_pct || 0;
-  const yieldPx = state.tip_price || state.tip_yield_pts || 0;
-  const eurPct = state.eur_pct || 0;
-  const audPct = state.aud_pct || 0;
-  const sig = String(state.signal_text || 'NEUTRAL').toUpperCase();
-  const mtf = avBiasFromTf();
+  const score     = state.smoothed_score || 0;
+  const gold      = state.gold_price || 0;
+  const goldPct   = state.gold_pct || 0;
+  const dxy       = state.dxy_price || 0;
+  const dxyPct    = state.dxy_pct || 0;
+  const yieldPct  = state.tip_yield_pct || 0;
+  const yieldPx   = state.tip_price || state.tip_yield_pts || 0;
+  const eurPct    = state.eur_pct || 0;
+  const audPct    = state.aud_pct || 0;
+  const sig       = String(state.signal_text || 'NEUTRAL').toUpperCase();
+  const mtf       = avBiasFromTf();
+  const quiet     = avIsRangeQuiet();
 
-  // Structure score: MTF alignment 0–1
-  const structScore = avClamp01(0.35 + (mtf.aligned / Math.max(1, mtf.n)) * 0.55 + (Math.abs(score) > 15 ? 0.1 : 0));
-  // Momentum from composite score (-100..100 → 0..1)
+  // ---------- Sense scores (0-1) ----------
+  const structScore = avClamp01(
+    0.30 +
+    (mtf.aligned / Math.max(1, mtf.n)) * 0.55 +
+    (Math.abs(score) > 18 ? 0.15 : 0)
+  );
+
+  // momScore stays centered (0.5 = neutral) for the core ring
   const momScore = avClamp01(0.5 + (score / 100) * 0.5);
-  // DXY: inverse for gold — weak DXY helps gold
-  const dxyHelp = dxyPct < -0.05 ? 0.85 : (dxyPct > 0.05 ? 0.35 : 0.55);
-  // Yield: rising yields headwind for gold
-  const yieldScore = yieldPct > 0.05 ? 0.35 : (yieldPct < -0.05 ? 0.8 : 0.55);
-  // FX basket: EUR+AUD positive correlates with gold
-  const fxScore = avClamp01(0.5 + ((eurPct + audPct) / 2) / 100 * 8);
-  // News: if next event within 30m → elevated risk
-  let newsScore = 0.7;
+
+  // DXY sense score: weak dollar helps gold (high), strong dollar hurts (low)
+  // Used for sense node / core ring — directional for gold bias
+  const dxyHelp = dxyPct < -0.08 ? 0.88 :
+                  dxyPct < -0.03 ? 0.72 :
+                  dxyPct >  0.08 ? 0.28 :
+                  dxyPct >  0.03 ? 0.40 : 0.55;
+
+  // DXY DRIVER strength (0-1): absolute move — gate must pass for BOTH buy and sell markets
+  // when dollar is actively driving (either direction), not only when it helps gold
+  const dxyDriverStrength = Math.abs(dxyPct) >= 0.08 ? 0.92 :
+                            Math.abs(dxyPct) >= 0.04 ? 0.72 :
+                            Math.abs(dxyPct) >= 0.02 ? 0.55 : 0.35;
+
+  // Yields: rising yields hurt gold
+  const yieldScore = yieldPct > 0.08 ? 0.30 :
+                     yieldPct > 0.03 ? 0.42 :
+                     yieldPct < -0.08 ? 0.85 :
+                     yieldPct < -0.03 ? 0.72 : 0.55;
+
+  // Yield DRIVER strength — active move either way counts for the gate
+  const yieldDriverStrength = Math.abs(yieldPct) >= 0.08 ? 0.90 :
+                              Math.abs(yieldPct) >= 0.04 ? 0.70 :
+                              Math.abs(yieldPct) >= 0.02 ? 0.52 : 0.35;
+
+  // FX basket (EUR weighted higher)
+  const fxBasket = (eurPct * 0.6 + audPct * 0.4);
+  const fxScore  = avClamp01(0.5 + (fxBasket / 100) * 7);
+  // FX DRIVER strength — meaningful basket move either way
+  const fxDriverStrength = Math.abs(fxBasket) >= 0.12 ? 0.90 :
+                           Math.abs(fxBasket) >= 0.06 ? 0.70 :
+                           Math.abs(fxBasket) >= 0.03 ? 0.52 : 0.35;
+
+  // News risk
+  let newsScore = 0.72;
   let newsLabel = 'no red event near';
   try {
     if (typeof nextRedEvent !== 'undefined' && nextRedEvent && nextRedEvent.timestamp) {
       const mins = (nextRedEvent.timestamp - Date.now()) / 60000;
-      if (mins > 0 && mins < 30) {
-        newsScore = 0.25;
+      if (mins > 0 && mins < 25) {
+        newsScore = 0.18;
         newsLabel = 'HIGH RISK · ' + Math.round(mins) + 'm to ' + (nextRedEvent.title || 'event');
-      } else if (mins > 0 && mins < 120) {
-        newsScore = 0.45;
+      } else if (mins > 0 && mins < 90) {
+        newsScore = 0.42;
         newsLabel = Math.round(mins) + 'm to ' + (nextRedEvent.title || 'event');
-      } else if (mins <= 0 && mins > -5) {
-        newsScore = 0.15;
-        newsLabel = 'LIVE RELEASE WINDOW';
+      } else if (mins <= 0 && mins > -8) {
+        newsScore = 0.12;
+        newsLabel = 'LIVE / JUST RELEASED';
       } else {
         newsLabel = (document.getElementById('drawerNewsTitle') || {}).textContent || 'calendar synced';
       }
     }
   } catch (e) {}
 
-  // ——— GOLD-ONLY decision engine ———
-  // Gate 1 Structure aligned  2 Momentum ok  3 DXY not against  4 Yield not against  5 FX not against  6 News clear
-  const gStruct = structScore > 0.55;
-  const gMom = momScore > 0.45;
-  const gDxy = dxyHelp > 0.5;
-  const gYield = yieldScore > 0.45;
-  const gFx = fxScore > 0.45;
-  const gNews = newsScore > 0.4;
+  // ---------- Gates ----------
+  const gStruct = structScore > 0.58;
+
+  // FIXED: Momentum gate now passes on STRONG moves in EITHER direction
+  // (absolute score strength), not only on the bullish side of the 0-1 scale.
+  const gMom = Math.abs(score) >= 8;   // strong directional momentum = PASS
+
+  // DXY / Yield / FX gates: PASS when the driver is ACTIVE in either direction
+  // (both-side market rule). Sense scores stay directional for bias; gates measure presence of drive.
+  const gDxy    = dxyDriverStrength > 0.48;   // |dxyPct| >= ~0.03–0.04
+  const gYield  = yieldDriverStrength > 0.48;
+  const gFx     = fxDriverStrength > 0.48;
+  const gNews   = newsScore > 0.38;
+
   const gatesCleared = [gStruct, gMom, gDxy, gYield, gFx, gNews].filter(Boolean).length;
 
-  // Bull pressure vs bear pressure from gold drivers only
+  // Hard environment (structure + news + market)
+  const mktOpen = (typeof getGoldMarketSession === 'function')
+    ? getGoldMarketSession().open
+    : true;
+
+  const envOk = gStruct && gNews && mktOpen;
+
+  // ---------- Point system (edge) ----------
   let bullPts = 0, bearPts = 0;
-  // Structure
-  if (mtf.direction === 'BULL') bullPts += 2;
-  else if (mtf.direction === 'BEAR') bearPts += 2;
+
+  // Structure – scaled by quality
+  if (mtf.direction === 'BULL') {
+    bullPts += (mtf.aligned >= 4 ? 2 : (mtf.aligned === 3 ? 1 : 0));
+  } else if (mtf.direction === 'BEAR') {
+    bearPts += (mtf.aligned >= 4 ? 2 : (mtf.aligned === 3 ? 1 : 0));
+  }
+
   // Composite score
-  if (score >= 12) bullPts += 2;
-  else if (score >= 5) bullPts += 1;
-  else if (score <= -12) bearPts += 2;
-  else if (score <= -5) bearPts += 1;
+  if (score >= 15)       bullPts += 2;
+  else if (score >= 7)   bullPts += 1;
+  else if (score <= -15) bearPts += 2;
+  else if (score <= -7)  bearPts += 1;
+
   // Session gold %
-  if (goldPct >= 0.15) bullPts += 1;
-  else if (goldPct <= -0.15) bearPts += 1;
-  // DXY inverse
-  if (dxyPct < -0.05) bullPts += 1;
-  else if (dxyPct > 0.05) bearPts += 1;
+  if (goldPct >= 0.18)       bullPts += 1;
+  else if (goldPct <= -0.18) bearPts += 1;
+
+  // DXY (magnitude aware)
+  if (dxyPct < -0.10)       bullPts += 2;
+  else if (dxyPct < -0.04)  bullPts += 1;
+  else if (dxyPct >  0.10)  bearPts += 2;
+  else if (dxyPct >  0.04)  bearPts += 1;
+
   // Yields
-  if (yieldPct < -0.05) bullPts += 1;
-  else if (yieldPct > 0.05) bearPts += 1;
+  if (yieldPct < -0.08)       bullPts += 1;
+  else if (yieldPct >  0.08)  bearPts += 1;
+
   // FX basket
-  if ((eurPct + audPct) > 0.1) bullPts += 1;
-  else if ((eurPct + audPct) < -0.1) bearPts += 1;
+  if (fxBasket > 0.12)        bullPts += 1;
+  else if (fxBasket < -0.12)  bearPts += 1;
+
   // Terminal signal text
-  if (sig.indexOf('BUY') >= 0) bullPts += 1;
+  if (sig.indexOf('BUY')  >= 0) bullPts += 1;
   if (sig.indexOf('SELL') >= 0) bearPts += 1;
 
-  // Core 0–1 still used for ring
-  const core = avClamp01((structScore * 0.28 + momScore * 0.28 + dxyHelp * 0.16 + yieldScore * 0.1 + fxScore * 0.1 + newsScore * 0.08));
-
-  // Final GOLD signal — needs enough gates + directional edge
-  let finalSignal = 'NEUTRAL';
-  let finalStrength = 'WAIT';
   const edge = bullPts - bearPts;
-  const mktOpen = (typeof getGoldMarketSession === 'function') ? getGoldMarketSession().open : true;
+
+  // Core ring value (still uses centered momScore)
+  const core = avClamp01(
+    structScore * 0.27 +
+    momScore    * 0.27 +
+    dxyHelp     * 0.16 +
+    yieldScore  * 0.10 +
+    fxScore     * 0.10 +
+    newsScore   * 0.10
+  );
+
+  // ---------- Final decision ----------
+  let finalSignal   = 'NEUTRAL';
+  let finalStrength = 'WAIT';
 
   if (!mktOpen) {
-    finalSignal = 'CLOSED';
+    finalSignal   = 'CLOSED';
     finalStrength = 'NO TRADE';
   } else if (newsScore < 0.35) {
-    finalSignal = 'NEUTRAL';
+    finalSignal   = 'NEUTRAL';
     finalStrength = 'NEWS RISK';
+  } else if (!envOk) {
+    finalSignal   = 'NEUTRAL';
+    finalStrength = 'ENV BLOCK';
+  } else if (quiet && Math.abs(edge) < 4) {
+    finalSignal   = 'NEUTRAL';
+    finalStrength = 'QUIET RANGE';
   } else if (gatesCleared >= 4 && edge >= 3) {
-    finalSignal = 'BUY GOLD';
-    finalStrength = gatesCleared >= 5 && edge >= 4 ? 'STRONG' : 'MODERATE';
+    finalSignal   = 'BUY GOLD';
+    finalStrength = (gatesCleared >= 5 && edge >= 4) ? 'STRONG' : 'MODERATE';
   } else if (gatesCleared >= 4 && edge <= -3) {
-    finalSignal = 'SELL GOLD';
-    finalStrength = gatesCleared >= 5 && edge <= -4 ? 'STRONG' : 'MODERATE';
-  } else if (edge >= 2 && score >= 8) {
-    finalSignal = 'BUY GOLD';
+    finalSignal   = 'SELL GOLD';
+    finalStrength = (gatesCleared >= 5 && edge <= -4) ? 'STRONG' : 'MODERATE';
+  } else if (envOk && edge >= 2 && score >= 9) {
+    finalSignal   = 'BUY GOLD';
     finalStrength = 'WEAK';
-  } else if (edge <= -2 && score <= -8) {
-    finalSignal = 'SELL GOLD';
+  } else if (envOk && edge <= -2 && score <= -9) {
+    finalSignal   = 'SELL GOLD';
     finalStrength = 'WEAK';
   } else {
-    finalSignal = 'NEUTRAL';
+    finalSignal   = 'NEUTRAL';
     finalStrength = gatesCleared >= 4 ? 'WAIT SETUP' : 'GATES LOW';
   }
 
-  let thesis = 'XAU/USD ONLY · ';
-  thesis += finalSignal + ' (' + finalStrength + ') · ';
+  // Thesis line
+  let thesis = 'XAU/USD ONLY · ' + finalSignal + ' (' + finalStrength + ') · ';
   thesis += mtf.direction + ' structure ' + mtf.aligned + '/' + mtf.n + ' · ';
   thesis += 'score ' + score.toFixed(1) + ' · gates ' + gatesCleared + '/6 · edge ' + edge;
+  if (quiet) thesis += ' · quiet range';
 
+  // ---------- Output object ----------
   _avSenseData = {
     structure: {
       score: structScore,
@@ -7969,26 +8092,27 @@ function avComputeSenses() {
     momentum: {
       score: momScore,
       meta: 'composite ' + score.toFixed(1) + ' · ' + sig,
-      thesis: 'Momentum: smoothed score ' + score.toFixed(1) + ' / signal ' + sig + '. Session gold change ' + (goldPct >= 0 ? '+' : '') + goldPct.toFixed(2) + '%.',
+      thesis: 'Momentum: smoothed score ' + score.toFixed(1) + ' / signal ' + sig + '. Session gold ' + (goldPct >= 0 ? '+' : '') + goldPct.toFixed(2) + '%.',
+      // Dot now reflects direction + strength
       dot: score >= 8 ? 'green' : (score <= -8 ? 'red' : 'amber')
     },
     dxy: {
       score: dxyHelp,
-      meta: (dxy > 50 ? dxy.toFixed(3) : '—') + ' · ' + (dxyPct >= 0 ? '+' : '') + dxyPct.toFixed(2) + '%',
-      thesis: 'DXY driver: ' + (dxyPct < -0.05 ? 'weak dollar supports gold' : (dxyPct > 0.05 ? 'strong dollar headwind for gold' : 'neutral dollar tape')) + '.',
-      dot: dxyPct < -0.05 ? 'green' : (dxyPct > 0.05 ? 'red' : 'amber')
+      meta: (dxy > 50 ? dxy.toFixed(3) : '—') + ' · ' + (dxyPct >= 0 ? '+' : '') + dxyPct.toFixed(2) + '%' + (Math.abs(dxyPct) >= 0.04 ? ' · ACTIVE' : ''),
+      thesis: 'DXY driver: ' + (dxyPct < -0.04 ? 'weak dollar supports gold (BUY side)' : (dxyPct > 0.04 ? 'strong dollar headwind (SELL side)' : 'neutral / quiet dollar')) + ' · gate uses |move| so both sides can PASS',
+      dot: dxyPct < -0.04 ? 'green' : (dxyPct > 0.04 ? 'red' : 'amber')
     },
     yield: {
       score: yieldScore,
       meta: (yieldPx > 0 ? yieldPx.toFixed(3) : '—') + ' · ' + (yieldPct >= 0 ? '+' : '') + yieldPct.toFixed(2) + '%',
-      thesis: 'US10Y: ' + (yieldPct > 0.05 ? 'yields rising — gold headwind' : (yieldPct < -0.05 ? 'yields easing — gold tailwind' : 'yields mixed / quiet')),
+      thesis: 'US10Y: ' + (yieldPct > 0.05 ? 'yields rising — headwind' : (yieldPct < -0.05 ? 'yields easing — tailwind' : 'yields quiet')),
       dot: yieldPct < -0.05 ? 'green' : (yieldPct > 0.05 ? 'red' : 'amber')
     },
     fx: {
       score: fxScore,
       meta: 'EUR ' + (eurPct >= 0 ? '+' : '') + eurPct.toFixed(2) + '% · AUD ' + (audPct >= 0 ? '+' : '') + audPct.toFixed(2) + '%',
-      thesis: 'FX basket: EUR/AUD co-move vs USD. Combined session ' + ((eurPct + audPct) / 2).toFixed(2) + '% avg.',
-      dot: (eurPct + audPct) > 0.1 ? 'green' : ((eurPct + audPct) < -0.1 ? 'red' : 'amber')
+      thesis: 'FX basket (EUR-heavy): ' + fxBasket.toFixed(2) + '% combined.',
+      dot: fxBasket > 0.1 ? 'green' : (fxBasket < -0.1 ? 'red' : 'amber')
     },
     news: {
       score: newsScore,
@@ -8006,6 +8130,8 @@ function avComputeSenses() {
     bearPts: bearPts,
     edge: edge,
     gateFlags: { gStruct, gMom, gDxy, gYield, gFx, gNews },
+    envOk: envOk,
+    quiet: quiet,
     gold: gold,
     goldPct: goldPct,
     dxy: dxy,
@@ -8014,6 +8140,7 @@ function avComputeSenses() {
     yieldPct: yieldPct,
     eurPct: eurPct
   };
+
   return _avSenseData;
 }
 
@@ -8168,7 +8295,7 @@ function avPaint() {
     gf.gMom ? 'PASS' : 'FAIL',
     gf.gMom ? 'sync' : 'idle');
   setGate('avGateYield', 'avBadgeYield',
-    'DXY ' + (d.dxyPct >= 0 ? '+' : '') + d.dxyPct.toFixed(2) + '%',
+    'DXY ' + (d.dxyPct >= 0 ? '+' : '') + d.dxyPct.toFixed(2) + '%' + (Math.abs(d.dxyPct || 0) >= 0.04 ? ' · drive' : ' · quiet'),
     gf.gDxy ? 'PASS' : 'FAIL',
     gf.gDxy ? 'sync' : 'idle');
   const macroOk = !!(gf.gYield && gf.gFx && gf.gNews);
