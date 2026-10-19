@@ -19,6 +19,8 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
+<!-- Puter.js — free frontend AI (User-Pays). No API key required for developer. -->
+<script src="https://js.puter.com/v2/"></script>
 
 <style>
 * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
@@ -7900,7 +7902,7 @@ function openGpAi() {
   const cfg = gpAiLoadSettings();
   if (!_gpAiHistory.length) {
     if (!cfg.key) {
-      gpAiPushSystem('Add an API key (⚙ API). Recommended free: Groq → openai/gpt-oss-120b. Then tap Live brief.');
+      gpAiPushSystem('Puter AI ready (no key needed — sign in once if prompted). Optional: ⚙ API for Groq fallback. Tap Live brief.');
     } else {
       gpAiPushSystem('GP AI ready. Tap Live brief for a full market read, or ask anything.');
     }
@@ -8072,9 +8074,53 @@ function gpCandlesTool(which) {
 }
 
 async function gpCallLLM(messages) {
+  // --- 1) Puter.js first (no API key; User-Pays model) ---
+  // Docs: https://developer.puter.com/tutorials/free-unlimited-ai-api/
+  if (typeof puter !== 'undefined' && puter.ai && typeof puter.ai.chat === 'function') {
+    try {
+      // Prefer multi-message form if supported; else flatten to one prompt
+      let reply;
+      try {
+        reply = await puter.ai.chat(messages, {
+          model: 'gpt-4o-mini',
+          max_tokens: 1200
+        });
+      } catch (e1) {
+        // Fallback: single string prompt
+        let prompt = '';
+        messages.forEach(m => {
+          const role = (m.role || 'user').toUpperCase();
+          prompt += role + ':\n' + (m.content || '') + '\n\n';
+        });
+        reply = await puter.ai.chat(prompt, {
+          model: 'gpt-4o-mini',
+          max_tokens: 1200
+        });
+      }
+      let text = '';
+      if (typeof reply === 'string') text = reply;
+      else if (reply && typeof reply === 'object') {
+        text = reply.message?.content
+          || reply.content
+          || reply.text
+          || (Array.isArray(reply) ? reply.map(x => x?.text || x?.content || '').join('') : '')
+          || String(reply);
+      }
+      text = String(text || '').trim();
+      if (text) {
+        try { gpAiSetMeta('GP AI · Puter · ' + new Date().toLocaleTimeString()); } catch (e) {}
+        return text;
+      }
+    } catch (e) {
+      console.warn('[GP AI] Puter failed, trying Groq fallback:', e);
+      try { gpAiSetMeta('Puter failed — trying API key…'); } catch (e2) {}
+    }
+  }
+
+  // --- 2) Groq / OpenAI-compatible key fallback ---
   const cfg = gpAiLoadSettings();
   if (!cfg.key) {
-    throw new Error('No API key. Open ⚙ API and save a Groq/OpenRouter/OpenAI-compatible key.');
+    throw new Error('Puter unavailable and no API key. Sign in to Puter once, or open ⚙ API and save a Groq key.');
   }
   const base = (cfg.base || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
   const model = cfg.model || 'openai/gpt-oss-120b';
@@ -8101,6 +8147,7 @@ async function gpCallLLM(messages) {
   }
   const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
   if (!content) throw new Error('Empty model response');
+  try { gpAiSetMeta('GP AI · Groq · ' + new Date().toLocaleTimeString()); } catch (e) {}
   return content.trim();
 }
 
@@ -9092,7 +9139,7 @@ initApp();
 /* PWA service worker — force update on every load so deploys show immediately */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261019k', { scope: './' })
+    navigator.serviceWorker.register('./sw.js?v=20261020a', { scope: './' })
       .then(function (reg) {
         console.log('[PWA] SW registered:', reg.scope);
         // Always check for a newer sw.js after deploy
