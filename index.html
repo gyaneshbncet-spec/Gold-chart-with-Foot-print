@@ -8192,20 +8192,35 @@ function avClamp01(v) {
 
 function avBiasFromTf() {
   const keys = ['3m', '5m', '15m', '1h', '1d'];
+  // Prefer gold structure matrix (independent of front slide / open chart)
+  const src = (state.tf_biases_gold && state.tf_biases_gold['1d'])
+    ? state.tf_biases_gold
+    : (state.tf_biases || {});
   let bull = 0, bear = 0, n = 0;
+  let sumDelta = 0, deltaN = 0;
+  const parts = [];
   keys.forEach(k => {
-    const b = (state.tf_biases && state.tf_biases[k]) || {};
+    const b = src[k] || {};
     const t = String(b.text || '').toUpperCase();
     n++;
     if (t.indexOf('BULL') >= 0) bull++;
     else if (t.indexOf('BEAR') >= 0) bear++;
+    const d = parseFloat(b.delta);
+    if (isFinite(d)) {
+      sumDelta += d;
+      deltaN++;
+      parts.push(k + ':' + (d >= 0 ? '+' : '') + d.toFixed(2));
+    }
   });
+  const avgDelta = deltaN ? (sumDelta / deltaN) : 0;
   return {
     bull,
     bear,
     n,
     aligned: Math.max(bull, bear),
-    direction: bull > bear ? 'BULL' : (bear > bull ? 'BEAR' : 'MIXED')
+    direction: bull > bear ? 'BULL' : (bear > bull ? 'BEAR' : 'MIXED'),
+    avgDelta: avgDelta,
+    detail: parts.slice(0, 3).join(' ')
   };
 }
 
@@ -8444,15 +8459,21 @@ function avComputeSenses() {
   _avSenseData = {
     structure: {
       score: structScore,
-      meta: mtf.aligned + '/' + mtf.n + ' TF ' + mtf.direction.toLowerCase() + ' · score ' + score.toFixed(1),
-      thesis: 'Structure: ' + mtf.direction + ' across ' + mtf.aligned + ' of ' + mtf.n + ' timeframes. Composite ' + score.toFixed(1) + ' · lean ' + (structScore >= 0.58 ? 'BUY (+)' : (structScore <= 0.42 ? 'SELL (−)' : 'flat (0)')) + '.',
+      // Structure shows MTF count + avg structure Δ — NOT composite score
+      meta: mtf.aligned + '/' + mtf.n + ' TF ' + mtf.direction.toLowerCase() +
+        ' · Δ ' + (mtf.avgDelta >= 0 ? '+' : '') + (mtf.avgDelta || 0).toFixed(2) + '%',
+      thesis: 'Structure (MTF): ' + mtf.direction + ' ' + mtf.aligned + '/' + mtf.n +
+        ' · avg structure move ' + (mtf.avgDelta >= 0 ? '+' : '') + (mtf.avgDelta || 0).toFixed(2) +
+        '% · lean ' + (structScore >= 0.58 ? 'BUY (+)' : (structScore <= 0.42 ? 'SELL (−)' : 'flat (0)')) +
+        (mtf.detail ? ' · ' + mtf.detail : '') + '.',
       dot: mtf.direction === 'BULL' ? 'green' : (mtf.direction === 'BEAR' ? 'red' : 'amber')
     },
     momentum: {
       score: momScore,
+      // Momentum alone owns the composite score display
       meta: 'composite ' + score.toFixed(1) + ' · ' + sig,
-      thesis: 'Momentum: smoothed score ' + score.toFixed(1) + ' / signal ' + sig + '. Session gold ' + (goldPct >= 0 ? '+' : '') + goldPct.toFixed(2) + '%.',
-      // Dot now reflects direction + strength
+      thesis: 'Momentum: smoothed composite ' + score.toFixed(1) + ' / signal ' + sig +
+        '. Session gold ' + (goldPct >= 0 ? '+' : '') + goldPct.toFixed(2) + '%.',
       dot: score >= 8 ? 'green' : (score <= -8 ? 'red' : 'amber')
     },
     dxy: {
@@ -9071,7 +9092,7 @@ initApp();
 /* PWA service worker — force update on every load so deploys show immediately */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261019j', { scope: './' })
+    navigator.serviceWorker.register('./sw.js?v=20261019k', { scope: './' })
       .then(function (reg) {
         console.log('[PWA] SW registered:', reg.scope);
         // Always check for a newer sw.js after deploy
