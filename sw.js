@@ -1,6 +1,6 @@
 /* Gold Terminal PWA — network-first for HTML so new deploys show immediately.
    Bump CACHE_VERSION on every release. */
-const CACHE_VERSION = 'gold-terminal-v20261019c';
+const CACHE_VERSION = 'gold-terminal-v20261019g';
 const SHELL = [
   './',
   './index.html',
