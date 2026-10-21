@@ -1281,6 +1281,154 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
 .canvas-container:active { cursor: grabbing; }
 canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 
+/* ===== MULTI VIEW SPLIT ===== */
+.mv-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 99990;
+  background: rgba(0,0,0,0.94);
+  backdrop-filter: blur(8px);
+  flex-direction: column;
+}
+.mv-overlay.show { display: flex; }
+.mv-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; background: #0c0e14; border-bottom: 1px solid #1a1e29;
+  flex-shrink: 0; gap: 8px;
+}
+.mv-top h2 {
+  margin: 0; font-size: 14px; font-weight: 800; color: #f3f4f6;
+  letter-spacing: 0.3px;
+}
+.mv-top h2 span { color: #60a5fa; }
+.mv-top .mv-close {
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  background: #151822; color: #9ca3af; cursor: pointer; font-size: 18px;
+}
+.mv-body {
+  flex: 1; min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  gap: 2px;
+  background: #1a1e29;
+}
+@media (max-width: 700px) {
+  .mv-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+}
+.mv-pane {
+  display: flex; flex-direction: column;
+  background: #080a0f; min-height: 0; position: relative;
+}
+.mv-pane-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 8px; background: #0c0e14; border-bottom: 1px solid #1a1e29;
+  flex-shrink: 0; gap: 6px; flex-wrap: wrap;
+}
+.mv-asset-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid #2a3142; background: #151822; color: #e5e7eb;
+  font-size: 12px; font-weight: 800; padding: 5px 10px; border-radius: 8px;
+  cursor: pointer; position: relative;
+}
+.mv-asset-btn .mv-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.mv-asset-btn.gold .mv-dot { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+.mv-asset-btn.dxy .mv-dot { background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+.mv-asset-menu {
+  display: none; position: absolute; top: 100%; left: 0; margin-top: 4px;
+  background: #12161f; border: 1px solid #2a3142; border-radius: 10px;
+  min-width: 140px; z-index: 20; box-shadow: 0 12px 30px rgba(0,0,0,0.55);
+  overflow: hidden;
+}
+.mv-asset-menu.show { display: block; }
+.mv-asset-menu button {
+  display: block; width: 100%; text-align: left; border: none;
+  background: transparent; color: #e5e7eb; font-size: 12.5px; font-weight: 700;
+  padding: 10px 12px; cursor: pointer;
+}
+.mv-asset-menu button:active, .mv-asset-menu button:hover {
+  background: #1c2230;
+}
+.mv-price {
+  font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: #9ca3af; white-space: nowrap;
+}
+.mv-price.up { color: #00f59b; }
+.mv-price.down { color: #ff2a44; }
+.mv-tf-row {
+  display: flex; gap: 3px; flex-wrap: wrap; align-items: center;
+}
+.mv-tf {
+  padding: 3px 7px; font-size: 10.5px; font-weight: 600; color: #787b86;
+  border-radius: 4px; cursor: pointer; border: none; background: none;
+}
+.mv-tf.active {
+  color: #3b82f6; background: #131722; font-weight: 700; border: 1px solid #3b82f6;
+}
+.mv-canvas-wrap {
+  flex: 1; min-height: 0; position: relative; overflow: hidden;
+  touch-action: none; cursor: grab;
+}
+.mv-canvas-wrap:active { cursor: grabbing; }
+.mv-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+.mv-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: #6b7280; font-size: 12px; font-weight: 600; pointer-events: none;
+}
+.mv-countdown {
+  position: absolute; top: 8px; right: 56px; z-index: 5;
+  pointer-events: none;
+  font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums;
+  letter-spacing: 0.4px;
+  color: #e2e8f0;
+  background: rgba(12,14,20,0.82);
+  border: 1px solid rgba(59,130,246,0.45);
+  border-radius: 8px;
+  padding: 4px 9px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+}
+.mv-countdown.urgent {
+  color: #fecaca;
+  border-color: rgba(239,68,68,0.55);
+  background: rgba(40,10,14,0.88);
+}
+.mv-body { position: relative; }
+.mv-splitter {
+  position: absolute; z-index: 30;
+  background: #1f2937; touch-action: none;
+}
+.mv-splitter:hover, .mv-splitter.active { background: #3b82f6; }
+.mv-splitter-v {
+  top: 0; bottom: 0; width: 8px; left: 50%; transform: translateX(-50%);
+  cursor: col-resize;
+}
+.mv-splitter-h {
+  left: 0; right: 0; height: 8px; top: 50%; transform: translateY(-50%);
+  cursor: row-resize; display: none;
+}
+@media (max-width: 700px) {
+  .mv-splitter-v { display: none; }
+  .mv-splitter-h { display: block; }
+}
+.mv-full-btn {
+  border: 1px solid #2a3142; background: #151822; color: #94a3b8;
+  font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 6px;
+  cursor: pointer; white-space: nowrap;
+}
+.mv-full-btn:active { background: #1e2433; color: #e2e8f0; }
+.mv-bias-mini {
+  display: flex; gap: 4px; flex-wrap: wrap; font-size: 9px; font-weight: 700;
+  color: #64748b; max-width: 100%;
+}
+.mv-bias-mini span.bull { color: #00f59b; }
+.mv-bias-mini span.bear { color: #ff2a44; }
+.mv-bias-mini span.neut { color: #94a3b8; }
+
+
 /* FOOTPRINT MODAL UI */
 .fp-header { height: 48px; min-height: 48px; background: #111318; border-bottom: 1px solid #212530; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; flex-shrink: 0; gap: 6px; overflow: hidden; }
 .fp-header-left { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto; overflow: hidden; }
@@ -2105,6 +2253,12 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
     </span>
     <span class="sd-text">DXY Chart<span class="sd-sub">US Dollar Index</span></span>
   </button>
+  <button class="side-drawer-item" onclick="openMultiView(); closeSideDrawer();" style="background:linear-gradient(135deg,rgba(59,130,246,0.18),rgba(180,131,18,0.12));border:1px solid rgba(59,130,246,0.4);">
+    <span class="sd-ico" style="background:linear-gradient(135deg,#2563eb,#b48312);color:#fff;">
+      <span style="font-size:11px;font-weight:900;">MV</span>
+    </span>
+    <span class="sd-text">Multi View<span class="sd-sub">Split · Gold + DXY · dual TF</span></span>
+  </button>
 
   <div class="side-drawer-section">Trade desk</div>
   <button class="side-drawer-item" onclick="deskExportSnapshot(); closeSideDrawer();">
@@ -2631,6 +2785,82 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 
     <div class="canvas-container" id="canvasContainer">
       <canvas id="tvCanvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MULTI VIEW (split charts) ===== -->
+<div class="mv-overlay" id="multiViewOverlay">
+  <div class="mv-top">
+    <h2>MULTI <span>VIEW</span> · dual charts</h2>
+    <button type="button" class="mv-close" onclick="closeMultiView()" aria-label="Close">✕</button>
+  </div>
+  <div class="mv-body" id="mvBody">
+    <div class="mv-splitter mv-splitter-v" id="mvSplitV" title="Drag to resize"></div>
+    <div class="mv-splitter mv-splitter-h" id="mvSplitH" title="Drag to resize"></div>
+    <!-- LEFT PANE -->
+    <div class="mv-pane" id="mvPaneL" data-pane="L">
+      <div class="mv-pane-bar">
+        <div style="position:relative;">
+          <button type="button" class="mv-asset-btn gold" id="mvAssetBtnL" onclick="mvToggleAssetMenu('L')">
+            <span class="mv-dot"></span>
+            <span id="mvAssetLabelL">GOLD</span> ▾
+          </button>
+          <div class="mv-asset-menu" id="mvAssetMenuL">
+            <button type="button" onclick="mvSetAsset('L','gold')">🥇 Gold (XAU/USD)</button>
+            <button type="button" onclick="mvSetAsset('L','dxy')">💵 DXY (Dollar)</button>
+          </div>
+        </div>
+        <span class="mv-price" id="mvPriceL">—</span>
+        <button type="button" class="mv-full-btn" onclick="mvOpenFull('L')" title="Open full original chart">FULL</button>
+        <div class="mv-tf-row" id="mvTfL">
+          <button type="button" class="mv-tf" data-tf="1m" data-sec="60" onclick="mvSetTf('L','1m',60,this)">1m</button>
+          <button type="button" class="mv-tf" data-tf="3m" data-sec="180" onclick="mvSetTf('L','3m',180,this)">3m</button>
+          <button type="button" class="mv-tf" data-tf="5m" data-sec="300" onclick="mvSetTf('L','5m',300,this)">5m</button>
+          <button type="button" class="mv-tf active" data-tf="15m" data-sec="900" onclick="mvSetTf('L','15m',900,this)">15m</button>
+          <button type="button" class="mv-tf" data-tf="1h" data-sec="3600" onclick="mvSetTf('L','1h',3600,this)">1H</button>
+          <button type="button" class="mv-tf" data-tf="4h" data-sec="14400" onclick="mvSetTf('L','4h',14400,this)">4H</button>
+          <button type="button" class="mv-tf" data-tf="1d" data-sec="86400" onclick="mvSetTf('L','1d',86400,this)">1D</button>
+        </div>
+      </div>
+      <div class="mv-canvas-wrap" id="mvWrapL">
+        <canvas id="mvCanvasL"></canvas>
+        <div class="mv-countdown" id="mvCdL">--:--</div>
+        <div class="mv-empty" id="mvEmptyL">Loading…</div>
+      </div>
+      <div class="mv-bias-mini" id="mvBiasL" style="padding:4px 8px;background:#0c0e14;border-top:1px solid #1a1e29;"></div>
+    </div>
+    <!-- RIGHT PANE -->
+    <div class="mv-pane" id="mvPaneR" data-pane="R">
+      <div class="mv-pane-bar">
+        <div style="position:relative;">
+          <button type="button" class="mv-asset-btn dxy" id="mvAssetBtnR" onclick="mvToggleAssetMenu('R')">
+            <span class="mv-dot"></span>
+            <span id="mvAssetLabelR">DXY</span> ▾
+          </button>
+          <div class="mv-asset-menu" id="mvAssetMenuR">
+            <button type="button" onclick="mvSetAsset('R','gold')">🥇 Gold (XAU/USD)</button>
+            <button type="button" onclick="mvSetAsset('R','dxy')">💵 DXY (Dollar)</button>
+          </div>
+        </div>
+        <span class="mv-price" id="mvPriceR">—</span>
+        <button type="button" class="mv-full-btn" onclick="mvOpenFull('R')" title="Open full original chart">FULL</button>
+        <div class="mv-tf-row" id="mvTfR">
+          <button type="button" class="mv-tf" data-tf="1m" data-sec="60" onclick="mvSetTf('R','1m',60,this)">1m</button>
+          <button type="button" class="mv-tf" data-tf="3m" data-sec="180" onclick="mvSetTf('R','3m',180,this)">3m</button>
+          <button type="button" class="mv-tf" data-tf="5m" data-sec="300" onclick="mvSetTf('R','5m',300,this)">5m</button>
+          <button type="button" class="mv-tf active" data-tf="15m" data-sec="900" onclick="mvSetTf('R','15m',900,this)">15m</button>
+          <button type="button" class="mv-tf" data-tf="1h" data-sec="3600" onclick="mvSetTf('R','1h',3600,this)">1H</button>
+          <button type="button" class="mv-tf" data-tf="4h" data-sec="14400" onclick="mvSetTf('R','4h',14400,this)">4H</button>
+          <button type="button" class="mv-tf" data-tf="1d" data-sec="86400" onclick="mvSetTf('R','1d',86400,this)">1D</button>
+        </div>
+      </div>
+      <div class="mv-canvas-wrap" id="mvWrapR">
+        <canvas id="mvCanvasR"></canvas>
+        <div class="mv-countdown" id="mvCdR">--:--</div>
+        <div class="mv-empty" id="mvEmptyR">Loading…</div>
+      </div>
+      <div class="mv-bias-mini" id="mvBiasR" style="padding:4px 8px;background:#0c0e14;border-top:1px solid #1a1e29;"></div>
     </div>
   </div>
 </div>
@@ -9079,7 +9309,1010 @@ function closeFootprintModal() {
   // Keep tick feed + rfStore running so volume keeps building while modal is closed
 }
 
+
+/* ===== MULTI VIEW — independent dual charts ===== */
+const mvPanes = {
+  L: {
+    asset: 'gold', tf: '15m', sec: 900,
+    candles: [], zoom: 1, offsetX: 0,
+    candleW: 6,           // pixel width target for each candle
+    priceScale: 1,        // vertical zoom: 1 = fit, >1 tighter, <1 wider range
+    priceMid: null,       // locked mid when user drags scale
+    dragging: false, scaleDrag: false,
+    startX: 0, startY: 0, startOff: 0, startScale: 1,
+    loading: false,
+    demand: [], supply: [], rays: []
+  },
+  R: {
+    asset: 'dxy', tf: '15m', sec: 900,
+    candles: [], zoom: 1, offsetX: 0,
+    candleW: 6,
+    priceScale: 1,
+    priceMid: null,
+    dragging: false, scaleDrag: false,
+    startX: 0, startY: 0, startOff: 0, startScale: 1,
+    loading: false,
+    demand: [], supply: [], rays: []
+  }
+};
+let _mvOpen = false;
+let _mvSplit = 0.5; // left fraction 0.2..0.8
+
+
+function openMultiView() {
+  const el = document.getElementById('multiViewOverlay');
+  if (!el) return;
+  el.classList.add('show');
+  _mvOpen = true;
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+  const sr = document.getElementById('sideFab');
+  if (sr) sr.style.display = 'none';
+  closeAllSidePanels();
+  try { closeChartModal(); } catch (e) {}
+  mvSyncAssetUI('L');
+  mvSyncAssetUI('R');
+  ['L','R'].forEach(pane => {
+    const lab = document.getElementById('mvWLabel' + pane);
+    if (lab) lab.textContent = 'W' + (mvPanes[pane].candleW || 6);
+    mvPanes[pane].priceScale = 1;
+    mvPanes[pane].priceMid = null;
+  });
+  mvInitSplitter();
+  mvApplySplit();
+  mvFetch('L');
+  mvFetch('R');
+  setTimeout(() => { mvApplySplit(); mvTickLive('L'); mvTickLive('R'); mvUpdateCountdown('L'); mvUpdateCountdown('R'); mvDraw('L'); mvDraw('R'); }, 100);
+  mvBindGestures();
+}
+
+function closeMultiView() {
+  const el = document.getElementById('multiViewOverlay');
+  if (el) el.classList.remove('show');
+  _mvOpen = false;
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+  const sr = document.getElementById('sideFab');
+  if (sr) sr.style.display = '';
+  document.querySelectorAll('.mv-asset-menu').forEach(m => m.classList.remove('show'));
+}
+
+function mvToggleAssetMenu(pane) {
+  const menu = document.getElementById('mvAssetMenu' + pane);
+  if (!menu) return;
+  const open = menu.classList.contains('show');
+  document.querySelectorAll('.mv-asset-menu').forEach(m => m.classList.remove('show'));
+  if (!open) menu.classList.add('show');
+}
+
+function mvSetAsset(pane, asset) {
+  const p = mvPanes[pane];
+  if (!p) return;
+  p.asset = (asset === 'dxy') ? 'dxy' : 'gold';
+  p.candles = [];
+  p.offsetX = 0;
+  p.zoom = 1;
+  document.querySelectorAll('.mv-asset-menu').forEach(m => m.classList.remove('show'));
+  mvSyncAssetUI(pane);
+  mvFetch(pane);
+}
+
+function mvSyncAssetUI(pane) {
+  const p = mvPanes[pane];
+  if (!p) return;
+  const btn = document.getElementById('mvAssetBtn' + pane);
+  const label = document.getElementById('mvAssetLabel' + pane);
+  if (btn) {
+    btn.classList.toggle('gold', p.asset === 'gold');
+    btn.classList.toggle('dxy', p.asset === 'dxy');
+  }
+  if (label) label.textContent = p.asset === 'dxy' ? 'DXY' : 'GOLD';
+  mvUpdatePriceLabel(pane);
+}
+
+function mvUpdatePriceLabel(pane) {
+  const p = mvPanes[pane];
+  const el = document.getElementById('mvPrice' + pane);
+  if (!p || !el) return;
+  const isDxy = p.asset === 'dxy';
+  const px = isDxy ? (state.dxy_price || 0) : (state.gold_price || 0);
+  const pct = isDxy ? (state.dxy_pct || 0) : (state.gold_pct || 0);
+  if (!(px > 0)) { el.textContent = '—'; el.className = 'mv-price'; return; }
+  const dig = isDxy ? 3 : 2;
+  const sign = pct >= 0 ? '+' : '';
+  el.textContent = px.toFixed(dig) + '  ' + sign + pct.toFixed(2) + '%';
+  el.className = 'mv-price ' + (pct >= 0 ? 'up' : 'down');
+}
+
+function mvSetTf(pane, tf, sec, btn) {
+  const p = mvPanes[pane];
+  if (!p) return;
+  p.tf = tf;
+  p.sec = sec;
+  p.candles = [];
+  p.offsetX = 0;
+  p.zoom = 1;
+  const row = document.getElementById('mvTf' + pane);
+  if (row) {
+    row.querySelectorAll('.mv-tf').forEach(b => b.classList.remove('active'));
+  }
+  if (btn) btn.classList.add('active');
+  mvFetch(pane);
+}
+
+/** Normalize OHLC bars for a pane TF — same rules as main chart, independent of state.tf_seconds */
+function mvNormalizeBars(bars, interval, stepSec) {
+  if (!Array.isArray(bars) || !bars.length) return [];
+  const stepMs = Math.max(1, stepSec || 60) * 1000;
+  return bars.map(b => {
+    let t = b.openTime ?? b.t ?? b.time ?? b[0] ?? b.barSlot;
+    if (typeof t === 'string' && /^\d+$/.test(t)) t = parseInt(t, 10);
+    if (typeof t === 'number' && t < 1e12) t = t * 1000;
+    const d = new Date(t);
+    if (isNaN(d.getTime())) return null;
+    const time = (interval === '1d')
+      ? ((d.getMonth() + 1) + '/' + d.getDate())
+      : (String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'));
+    const o = parseFloat(b.open ?? b.o ?? b[1]);
+    const h = parseFloat(b.high ?? b.h ?? b[2]);
+    const l = parseFloat(b.low ?? b.l ?? b[3]);
+    const c = parseFloat(b.close ?? b.c ?? b[4]);
+    const v = parseFloat(b.volume ?? b.v ?? b.tickVolume ?? b[5] ?? 0);
+    if ([o, h, l, c].some(x => isNaN(x) || x <= 0)) return null;
+    const barSlot = Math.floor(d.getTime() / stepMs) * stepMs;
+    return { o, h, l, c, v, quoteVol: v, time, barSlot, closeTime: barSlot + stepMs };
+  }).filter(Boolean);
+}
+
+/** Prefer main chart candles when same asset+TF is already loaded (true sync) */
+function mvTrySyncFromMain(pane) {
+  const p = mvPanes[pane];
+  if (!p) return false;
+  // Live main candleHistory
+  if ((state.chartAsset || 'gold') === p.asset &&
+      (state.tf_interval || '15m') === p.tf &&
+      typeof candleHistory !== 'undefined' &&
+      candleHistory.length >= 20 &&
+      typeof candlesMatchAsset === 'function' &&
+      candlesMatchAsset(candleHistory, p.asset)) {
+    p.candles = candleHistory.map(c => ({ ...c }));
+    // copy indicators from globals if present
+    try {
+      p.demand = (storedDemandOBs || []).slice();
+      p.supply = (storedSupplyOBs || []).slice();
+      p.rays = (multiHorizonTrendlines || []).slice();
+    } catch (e) {}
+    return true;
+  }
+  // chartStore fallback
+  try {
+    const s = chartStore[p.asset] && chartStore[p.asset][p.tf];
+    if (s && s.candles && s.candles.length >= 20 &&
+        candlesMatchAsset(s.candles, p.asset)) {
+      p.candles = s.candles.map(c => ({ ...c }));
+      p.demand = (s.demand || []).slice();
+      p.supply = (s.supply || []).slice();
+      p.rays = (s.rays || []).slice();
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+async function mvFetch(pane) {
+  const p = mvPanes[pane];
+  if (!p || p.loading) return;
+  p.loading = true;
+  const empty = document.getElementById('mvEmpty' + pane);
+  if (empty) {
+    empty.style.display = 'flex';
+    empty.textContent = 'Loading ' + p.asset.toUpperCase() + ' ' + p.tf + '…';
+  }
+
+  // Fast path: same data as front chart
+  if (mvTrySyncFromMain(pane)) {
+    mvTickLive(pane);
+    mvComputeIndicators(pane);
+    mvPaintBias(pane);
+    mvUpdateCountdown(pane);
+    if (empty) empty.style.display = p.candles.length ? 'none' : 'flex';
+    mvDraw(pane);
+    p.loading = false;
+    // still soft-refresh from network in background for authenticity
+  }
+
+  try {
+    const symbol = p.asset === 'dxy' ? 'DXY' : 'XAUUSD';
+    const is3m = p.tf === '3m';
+    const bqInterval = is3m ? '1m'
+      : (p.tf === '1h' ? '1h' : (p.tf === '4h' ? '4h' : (p.tf === '1d' ? '1d' : p.tf)));
+    // Match main chart depth (≥300 bars)
+    const CHART_HISTORY_BARS = 300;
+    const limit = is3m ? 1500 : Math.max(400, CHART_HISTORY_BARS + 50);
+
+    let normalized = [];
+
+    // 3m: try native 3m first (same as main chart)
+    if (is3m) {
+      try {
+        const data3 = await fetchJson('https://biquote.io/api/' + symbol + '/ohlc?interval=3m&limit=' + (CHART_HISTORY_BARS + 50));
+        let bars3 = (data3 && data3.bars) ? data3.bars.slice() : [];
+        if (bars3.length > 1) {
+          const t0 = new Date(bars3[0].openTime || bars3[0].t || 0).getTime();
+          const t1 = new Date(bars3[bars3.length - 1].openTime || bars3[bars3.length - 1].t || 0).getTime();
+          if (t0 > t1) bars3.reverse();
+        }
+        if (bars3.length >= 150) {
+          normalized = mvNormalizeBars(bars3, '3m', 180);
+        }
+      } catch (e) {}
+    }
+
+    if (normalized.length < 50) {
+      const data = await fetchJson('https://biquote.io/api/' + symbol + '/ohlc?interval=' + bqInterval + '&limit=' + limit);
+      let bars = (data && data.bars) ? data.bars.slice() : [];
+      if (bars.length > 1) {
+        const t0 = new Date(bars[0].openTime || bars[0].t || 0).getTime();
+        const t1 = new Date(bars[bars.length - 1].openTime || bars[bars.length - 1].t || 0).getTime();
+        if (t0 > t1) bars.reverse();
+      }
+      if (is3m && typeof aggregate1mBarsToTarget === 'function') {
+        normalized = aggregate1mBarsToTarget(bars, 180);
+      } else {
+        normalized = mvNormalizeBars(bars, p.tf, p.sec);
+      }
+    }
+
+    if (typeof candlesMatchAsset === 'function' && normalized.length && !candlesMatchAsset(normalized, p.asset)) {
+      normalized = [];
+    }
+
+    // Sort ascending by barSlot
+    if (normalized.length > 1 && normalized[0].barSlot > normalized[normalized.length - 1].barSlot) {
+      normalized.reverse();
+    }
+
+    // Keep only last 300 (same as main)
+    if (normalized.length > CHART_HISTORY_BARS) {
+      normalized = normalized.slice(-CHART_HISTORY_BARS);
+    }
+
+    // Merge live forming candle (same logic as applyCandleSeries)
+    const stepMs = (p.sec || 60) * 1000;
+    const currentSlot = Math.floor(Date.now() / stepMs) * stepMs;
+    const live = p.asset === 'dxy' ? (state.dxy_price || 0) : (state.gold_price || 0);
+    if (normalized.length && live > 0) {
+      const last = normalized[normalized.length - 1];
+      if (last.barSlot === currentSlot) {
+        last.c = live;
+        if (live > last.h) last.h = live;
+        if (live < last.l) last.l = live;
+      } else if (last.barSlot < currentSlot) {
+        const d = new Date(currentSlot);
+        const timeStr = p.tf === '1d'
+          ? ((d.getMonth() + 1) + '/' + d.getDate())
+          : (String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'));
+        normalized.push({
+          o: live, h: live, l: live, c: live, v: 0, quoteVol: 0,
+          time: timeStr, barSlot: currentSlot, closeTime: currentSlot + stepMs
+        });
+      }
+    }
+
+    // still same pane/tf after await?
+    if (mvPanes[pane].tf === p.tf && mvPanes[pane].asset === p.asset && normalized.length) {
+      p.candles = normalized;
+      if (empty) empty.style.display = 'none';
+      mvComputeIndicators(pane);
+      mvPaintBias(pane);
+      mvUpdateCountdown(pane);
+      mvDraw(pane);
+      // persist into chartStore for FULL chart sync
+      try {
+        if (!chartStore[p.asset]) chartStore[p.asset] = {};
+        chartStore[p.asset][p.tf] = {
+          candles: p.candles.slice(),
+          demand: (p.demand || []).slice(),
+          supply: (p.supply || []).slice(),
+          allDemand: [],
+          allSupply: [],
+          rays: (p.rays || []).slice()
+        };
+      } catch (e) {}
+    } else if (!p.candles || !p.candles.length) {
+      if (empty) { empty.style.display = 'flex'; empty.textContent = 'No data'; }
+    }
+  } catch (e) {
+    if (!p.candles || !p.candles.length) {
+      if (empty) { empty.style.display = 'flex'; empty.textContent = 'Load failed'; }
+    }
+  } finally {
+    p.loading = false;
+  }
+}
+
+function mvComputeIndicators(pane) {
+  const p = mvPanes[pane];
+  if (!p || !p.candles || p.candles.length < 20) {
+    p.demand = []; p.supply = []; p.rays = [];
+    return;
+  }
+  // Isolate globals used by OB / ray engine
+  const bak = {
+    asset: state.chartAsset,
+    tf: state.tf_interval,
+    dem: (typeof storedDemandOBs !== 'undefined') ? storedDemandOBs.slice() : [],
+    sup: (typeof storedSupplyOBs !== 'undefined') ? storedSupplyOBs.slice() : [],
+    allD: (typeof allCandidateDemandOBs !== 'undefined') ? allCandidateDemandOBs.slice() : [],
+    allS: (typeof allCandidateSupplyOBs !== 'undefined') ? allCandidateSupplyOBs.slice() : [],
+    rays: (typeof multiHorizonTrendlines !== 'undefined') ? multiHorizonTrendlines.slice() : []
+  };
+  try {
+    state.chartAsset = p.asset;
+    state.tf_interval = p.tf;
+    if (typeof scanAndStoreOrderBlocks === 'function') scanAndStoreOrderBlocks(p.candles);
+    if (typeof executeTradingViewRayArchitecture === 'function') executeTradingViewRayArchitecture(p.candles);
+    p.demand = (storedDemandOBs || []).slice();
+    p.supply = (storedSupplyOBs || []).slice();
+    p.rays = (multiHorizonTrendlines || []).slice();
+    // Also persist into chartStore so FULL chart can reuse
+    try {
+      const a = p.asset;
+      const tf = p.tf;
+      if (!chartStore[a]) chartStore[a] = {};
+      chartStore[a][tf] = {
+        candles: p.candles.slice(),
+        demand: p.demand.slice(),
+        supply: p.supply.slice(),
+        allDemand: (allCandidateDemandOBs || []).slice(),
+        allSupply: (allCandidateSupplyOBs || []).slice(),
+        rays: p.rays.slice()
+      };
+    } catch (e) {}
+  } catch (e) {
+    p.demand = []; p.supply = []; p.rays = [];
+  } finally {
+    state.chartAsset = bak.asset;
+    state.tf_interval = bak.tf;
+    storedDemandOBs = bak.dem;
+    storedSupplyOBs = bak.sup;
+    allCandidateDemandOBs = bak.allD;
+    allCandidateSupplyOBs = bak.allS;
+    multiHorizonTrendlines = bak.rays;
+  }
+}
+
+function mvPaintBias(pane) {
+  const el = document.getElementById('mvBias' + pane);
+  const p = mvPanes[pane];
+  if (!el || !p) return;
+  const map = p.asset === 'dxy' ? (state.tf_biases_dxy || {}) : (state.tf_biases_gold || {});
+  const keys = ['3m', '5m', '15m', '1h', '1d'];
+  el.innerHTML = keys.map(k => {
+    const info = map[k] || { text: '—', delta: 0 };
+    const t = String(info.text || '').toUpperCase();
+    const cls = t.indexOf('BULL') >= 0 ? 'bull' : (t.indexOf('BEAR') >= 0 ? 'bear' : 'neut');
+    const d = Number(info.delta) || 0;
+    const sign = d >= 0 ? '+' : '';
+    return '<span class="' + cls + '">' + k + ' ' + sign + d.toFixed(2) + '%</span>';
+  }).join(' · ');
+}
+
+function mvOpenFull(pane) {
+  const p = mvPanes[pane];
+  if (!p) return;
+  // Apply pane TF to main chart state then open original modal with all indicators
+  try {
+    state.tf_interval = p.tf;
+    state.tf_seconds = p.sec;
+    // sync TF buttons in main modal if present
+    document.querySelectorAll('#chartModal .tv-tf').forEach(b => {
+      b.classList.toggle('active', (b.textContent || '').toLowerCase().replace(/\s/g, '') === p.tf.toLowerCase()
+        || (p.tf === '1h' && b.textContent === '1H')
+        || (p.tf === '4h' && b.textContent === '4H')
+        || (p.tf === '1d' && b.textContent === '1D'));
+    });
+  } catch (e) {}
+  closeMultiView();
+  openChartModal(p.asset);
+}
+
+function mvApplySplit() {
+  const body = document.getElementById('mvBody');
+  const paneL = document.getElementById('mvPaneL');
+  const paneR = document.getElementById('mvPaneR');
+  const splitV = document.getElementById('mvSplitV');
+  const splitH = document.getElementById('mvSplitH');
+  if (!body || !paneL || !paneR) return;
+  const mobile = window.matchMedia('(max-width: 700px)').matches;
+  const f = Math.max(0.22, Math.min(0.78, _mvSplit));
+  if (mobile) {
+    body.style.gridTemplateColumns = '1fr';
+    body.style.gridTemplateRows = (f * 100).toFixed(1) + '% ' + ((1 - f) * 100).toFixed(1) + '%';
+    if (splitH) splitH.style.top = (f * 100).toFixed(1) + '%';
+  } else {
+    body.style.gridTemplateRows = '1fr';
+    body.style.gridTemplateColumns = (f * 100).toFixed(1) + '% ' + ((1 - f) * 100).toFixed(1) + '%';
+    if (splitV) splitV.style.left = (f * 100).toFixed(1) + '%';
+  }
+  mvDraw('L');
+  mvDraw('R');
+}
+
+function mvInitSplitter() {
+  const splitV = document.getElementById('mvSplitV');
+  const splitH = document.getElementById('mvSplitH');
+  const body = document.getElementById('mvBody');
+  if (!body) return;
+  function bind(el, vertical) {
+    if (!el || el._mvSplitBound) return;
+    el._mvSplitBound = true;
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      el.classList.add('active');
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      const move = (ev) => {
+        const rect = body.getBoundingClientRect();
+        if (vertical) {
+          _mvSplit = (ev.clientX - rect.left) / rect.width;
+        } else {
+          _mvSplit = (ev.clientY - rect.top) / rect.height;
+        }
+        _mvSplit = Math.max(0.22, Math.min(0.78, _mvSplit));
+        mvApplySplit();
+      };
+      const up = () => {
+        el.classList.remove('active');
+        el.removeEventListener('pointermove', move);
+        el.removeEventListener('pointerup', up);
+      };
+      el.addEventListener('pointermove', move);
+      el.addEventListener('pointerup', up);
+    });
+  }
+  bind(splitV, true);
+  bind(splitH, false);
+}
+
+
+/** Real-time last-candle update + new-bar roll — mirrors main chart rollLocalCandle */
+function mvTickLive(pane) {
+  const p = mvPanes[pane];
+  if (!p || !p.candles || !p.candles.length) return false;
+  const live = p.asset === 'dxy' ? (state.dxy_price || 0) : (state.gold_price || 0);
+  if (!(live > 0)) return false;
+  if (p.asset === 'dxy' && (live < 50 || live > 200)) return false;
+  if (p.asset === 'gold' && live < 500) return false;
+
+  // If main chart is the same asset+TF, mirror its last candle (true sync)
+  if ((state.chartAsset || 'gold') === p.asset &&
+      (state.tf_interval || '15m') === p.tf &&
+      typeof candleHistory !== 'undefined' &&
+      candleHistory.length >= 2 &&
+      typeof candlesMatchAsset === 'function' &&
+      candlesMatchAsset(candleHistory, p.asset)) {
+    // keep history length, replace tail with main's tail so OHLC matches exactly
+    const n = Math.min(p.candles.length, candleHistory.length);
+    const mainTail = candleHistory.slice(-n);
+    // map by barSlot where possible
+    const bySlot = new Map(p.candles.map(c => [c.barSlot, c]));
+    mainTail.forEach(mc => {
+      const existing = bySlot.get(mc.barSlot);
+      if (existing) {
+        existing.o = mc.o; existing.h = mc.h; existing.l = mc.l; existing.c = mc.c;
+      }
+    });
+    const mainLast = candleHistory[candleHistory.length - 1];
+    const myLast = p.candles[p.candles.length - 1];
+    if (mainLast && myLast && mainLast.barSlot === myLast.barSlot) {
+      myLast.o = mainLast.o; myLast.h = mainLast.h; myLast.l = mainLast.l; myLast.c = mainLast.c;
+      return true;
+    }
+    if (mainLast && myLast && mainLast.barSlot > myLast.barSlot) {
+      p.candles.push({ ...mainLast });
+      if (p.candles.length > 300) p.candles = p.candles.slice(-300);
+      try { mvComputeIndicators(pane); } catch (e) {}
+      return true;
+    }
+  }
+
+  const stepMs = (p.sec || 60) * 1000;
+  const currentSlot = Math.floor(Date.now() / stepMs) * stepMs;
+  let last = p.candles[p.candles.length - 1];
+  if (!last.barSlot) last.barSlot = currentSlot;
+
+  if (last.barSlot < currentSlot) {
+    const d = new Date(currentSlot);
+    const timeStr = p.tf === '1d'
+      ? ((d.getMonth() + 1) + '/' + d.getDate())
+      : (String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'));
+    p.candles.push({
+      o: live, h: live, l: live, c: live, v: 0, quoteVol: 0,
+      time: timeStr, barSlot: currentSlot, closeTime: currentSlot + stepMs
+    });
+    if (p.candles.length > 300) p.candles = p.candles.slice(-300);
+    try { mvComputeIndicators(pane); } catch (e) {}
+    return true;
+  }
+
+  last.c = live;
+  if (live > last.h) last.h = live;
+  if (live < last.l) last.l = live;
+  return true;
+}
+
+function mvUpdateCountdown(pane) {
+  const p = mvPanes[pane];
+  const el = document.getElementById('mvCd' + pane);
+  if (!p || !el) return;
+  const stepSec = Math.max(1, p.sec || 60);
+  const nowSec = Math.floor(Date.now() / 1000);
+  const remaining = stepSec - (nowSec % stepSec);
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  const tf = (p.tf || '').toUpperCase();
+  el.textContent = tf + '  ' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  el.classList.toggle('urgent', remaining <= 10);
+}
+
+function mvCandleWidth(pane, delta) {
+  const p = mvPanes[pane];
+  if (!p) return;
+  p.candleW = Math.max(2, Math.min(24, (p.candleW || 6) + delta));
+  const lab = document.getElementById('mvWLabel' + pane);
+  if (lab) lab.textContent = 'W' + p.candleW;
+  mvDraw(pane);
+}
+
+function mvResetView(pane) {
+  const p = mvPanes[pane];
+  if (!p) return;
+  p.candleW = 6;
+  p.priceScale = 1;
+  p.priceMid = null;
+  p.offsetX = 0;
+  p.zoom = 1;
+  const lab = document.getElementById('mvWLabel' + pane);
+  if (lab) lab.textContent = 'W6';
+  mvDraw(pane);
+}
+
+function mvDraw(pane) {
+
+  const p = mvPanes[pane];
+  const canvas = document.getElementById('mvCanvas' + pane);
+  const wrap = document.getElementById('mvWrap' + pane);
+  if (!p || !canvas || !wrap) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = wrap.clientWidth || 300;
+  const h = wrap.clientHeight || 200;
+  if (w < 10 || h < 10) return;
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#080a0f';
+  ctx.fillRect(0, 0, w, h);
+
+  const data = p.candles || [];
+  if (data.length < 2) return;
+
+  const padR = 64, padT = 8, padB = 18, padL = 4;
+  const chartW = w - padL - padR;
+  const chartH = h - padT - padB;
+  const isDxy = p.asset === 'dxy';
+  const live = p.asset === 'dxy' ? (state.dxy_price || 0) : (state.gold_price || 0);
+
+  // Candle width drives how many bars fit
+  const candleW = Math.max(2, p.candleW || 6);
+  const bodyW = Math.max(1.5, Math.min(candleW * 0.74, candleW - 0.5));
+  const visible = Math.max(8, Math.floor(chartW / candleW));
+  const maxOff = Math.max(0, data.length - visible);
+  let off = Math.max(0, Math.min(maxOff, Math.round(p.offsetX || 0)));
+  p.offsetX = off;
+  const start = Math.max(0, data.length - visible - off);
+  const end = Math.min(data.length, start + visible);
+  const slice = data.slice(start, end);
+  if (!slice.length) return;
+
+  let minP = Infinity, maxP = -Infinity;
+  slice.forEach(c => {
+    if (c.l < minP) minP = c.l;
+    if (c.h > maxP) maxP = c.h;
+  });
+  if (live > 0) { minP = Math.min(minP, live); maxP = Math.max(maxP, live); }
+  let pad = Math.max((maxP - minP) * 0.08, isDxy ? 0.02 : 0.8);
+  minP -= pad; maxP += pad;
+
+  // Price-scale: user drag expands/compresses vertical range around mid
+  const sc = Math.max(0.25, Math.min(6, p.priceScale || 1));
+  const mid = (p.priceMid != null) ? p.priceMid : ((minP + maxP) / 2);
+  const half = ((maxP - minP) / 2) / sc;
+  minP = mid - half;
+  maxP = mid + half;
+  const range = Math.max(maxP - minP, isDxy ? 0.05 : 1);
+  const getY = (price) => padT + ((maxP - price) / range) * chartH;
+  const getX = (globalIdx) => padL + (globalIdx - start) * candleW + candleW / 2;
+
+  // grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (chartH * i / 4);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + chartW, y); ctx.stroke();
+  }
+
+  // Order blocks (same rules as main chart)
+  const drawOB = (ob, isDemand) => {
+    const xStart = Math.max(padL, getX(ob.startIndex) - candleW / 2);
+    const yTop = getY(ob.top);
+    const yBot = getY(ob.bottom);
+    const top = Math.min(yTop, yBot);
+    const bot = Math.max(yTop, yBot);
+    const obH = Math.max(6, bot - top);
+    const obW = (padL + chartW) - xStart;
+    if (obW <= 0 || top > padT + chartH || bot < padT) return;
+    ctx.fillStyle = isDemand ? 'rgba(40,195,170,0.22)' : 'rgba(255,75,95,0.20)';
+    ctx.fillRect(xStart, top, obW, obH);
+    ctx.strokeStyle = isDemand ? 'rgba(40,195,170,0.75)' : 'rgba(255,75,95,0.75)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(xStart, top, obW, obH);
+    ctx.fillStyle = isDemand ? '#5ef0d2' : '#ff8a99';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center';
+    const label = (ob.volume != null ? Number(ob.volume).toFixed(1) + 'k ' : '') +
+      (ob.pct != null ? '(' + ob.pct + '%) ' : '') + (ob.tfName || p.tf.toUpperCase()) + ' OB';
+    ctx.fillText(label, xStart + obW / 2, top + obH / 2 + 3);
+  };
+  (p.supply || []).forEach(ob => drawOB(ob, false));
+  (p.demand || []).forEach(ob => drawOB(ob, true));
+
+  // Trend rays (same engine)
+  (p.rays || []).forEach(l => {
+    const x1 = getX(l.x1), y1 = getY(l.y1);
+    const x2 = getX(l.x2), y2 = getY(l.y2);
+    if (x2 === x1) return;
+    let lineColor = '#f87171';
+    if (l.type === 'sup') lineColor = '#2dd4bf';
+    if (l.type === 'base') lineColor = '#3b82f6';
+    // extend across visible
+    const slope = (y2 - y1) / (x2 - x1);
+    const xA = padL, yA = y1 + slope * (xA - x1);
+    const xB = padL + chartW, yB = y1 + slope * (xB - x1);
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 1.6;
+    ctx.setLineDash(l.type === 'base' ? [6, 4] : []);
+    ctx.beginPath();
+    ctx.moveTo(xA, yA);
+    ctx.lineTo(xB, yB);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    if (Array.isArray(l.touches)) {
+      l.touches.forEach(tp => {
+        const tx = getX(tp.i), ty = getY(tp.p);
+        if (tx < padL || tx > padL + chartW) return;
+        ctx.fillStyle = lineColor;
+        ctx.beginPath();
+        ctx.arc(tx, ty, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+  });
+
+  // candles
+  slice.forEach((c, i) => {
+    const x = padL + i * candleW + candleW / 2;
+    const yO = getY(c.o), yC = getY(c.c), yH = getY(c.h), yL = getY(c.l);
+    const up = c.c >= c.o;
+    const col = up ? '#00f59b' : '#ff2a44';
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, yH);
+    ctx.lineTo(x, yL);
+    ctx.stroke();
+    const top = Math.min(yO, yC);
+    const bot = Math.max(yO, yC);
+    ctx.fillStyle = col;
+    ctx.fillRect(x - bodyW / 2, top, bodyW, Math.max(1, bot - top));
+  });
+
+  // price scale labels (skip near live so badge stays readable)
+  {
+    const digS = isDxy ? 3 : 2;
+    const liveY = (live > 0) ? getY(live) : -9999;
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'left';
+    for (let i = 0; i <= 4; i++) {
+      const price = maxP - (range * i / 4);
+      const y = padT + (chartH * i / 4);
+      if (Math.abs(y - liveY) < 22) continue; // leave space for live badge
+      ctx.fillText(price.toFixed(digS), padL + chartW + 4, y + 3);
+    }
+  }
+
+  // live line + TradingView-style price/timer badge on right scale
+  if (live > 0) {
+    const y = getY(live);
+    const dig = isDxy ? 3 : 2;
+    const stepSec = Math.max(1, p.sec || 60);
+    const rem = stepSec - (Math.floor(Date.now() / 1000) % stepSec);
+    const mm = String(Math.floor(rem / 60)).padStart(2, '0');
+    const ss = String(rem % 60).padStart(2, '0');
+    const up = (() => {
+      const last = slice[slice.length - 1];
+      return last ? (live >= last.o) : true;
+    })();
+    // dashed live line across chart
+    ctx.strokeStyle = up ? 'rgba(0,245,155,0.85)' : 'rgba(255,42,68,0.85)';
+    ctx.setLineDash([5, 4]);
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(padL + chartW, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Solid clear on right strip so background prices never show through
+    const ph = 34;
+    const bw = padR - 2;
+    const bx = padL + chartW + 1;
+    const by = Math.max(padT, Math.min(padT + chartH - ph, y - ph / 2));
+    ctx.fillStyle = '#080a0f';
+    ctx.fillRect(bx - 1, by - 2, bw + 2, ph + 4);
+
+    const priceStr = live.toFixed(dig);
+    const timerStr = mm + ':' + ss;
+    const urgent = rem <= 10;
+    // solid opaque badge (no transparency)
+    ctx.fillStyle = urgent ? '#fecaca' : '#ffffff';
+    ctx.strokeStyle = urgent ? '#dc2626' : (up ? '#059669' : '#e11d48');
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(bx, by, bw, ph, 3);
+    else ctx.rect(bx, by, bw, ph);
+    ctx.fill();
+    ctx.stroke();
+    // pointer
+    ctx.fillStyle = urgent ? '#fecaca' : '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(bx + 1, y - 6);
+    ctx.lineTo(bx - 6, y);
+    ctx.lineTo(bx + 1, y + 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = urgent ? '#dc2626' : (up ? '#059669' : '#e11d48');
+    ctx.beginPath();
+    ctx.moveTo(bx + 1, y - 6);
+    ctx.lineTo(bx - 6, y);
+    ctx.lineTo(bx + 1, y + 6);
+    ctx.stroke();
+    // price
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 12px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const cx = bx + bw / 2;
+    ctx.fillText(priceStr, cx, by + 12);
+    // timer
+    ctx.fillStyle = urgent ? '#991b1b' : '#334155';
+    ctx.font = 'bold 11px system-ui,sans-serif';
+    ctx.fillText(timerStr, cx, by + 25);
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  ctx.fillStyle = 'rgba(15,18,26,0.8)';
+  ctx.fillRect(padL + 4, padT + 4, 88, 16);
+  ctx.fillStyle = '#8e95a5';
+  ctx.font = 'bold 10px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText((p.asset === 'dxy' ? 'DXY' : 'XAU') + ' · ' + p.tf.toUpperCase(), padL + 8, padT + 15);
+}
+
+function mvBindGestures() {
+  ['L', 'R'].forEach(pane => {
+    const wrap = document.getElementById('mvWrap' + pane);
+    if (!wrap || wrap._mvBound) return;
+    wrap._mvBound = true;
+    const p = mvPanes[pane];
+
+    // ── Same model as front chart: relative touch pinch ──────────────
+    let touchStartDist = 0;
+    let panTouchId = null;
+
+    wrap.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        const rect = wrap.getBoundingClientRect();
+        const localX = t.clientX - rect.left;
+        if (localX > rect.width - 56) {
+          p.scaleDrag = true;
+          p.dragging = false;
+          p.startY = t.clientY;
+          p.startScale = p.priceScale || 1;
+          const live = p.asset === 'dxy' ? state.dxy_price : state.gold_price;
+          p.priceMid = (live > 0) ? live : null;
+        } else {
+          p.dragging = true;
+          p.scaleDrag = false;
+          p.startX = t.clientX;
+          p.startOff = p.offsetX || 0;
+        }
+        touchStartDist = 0;
+        p._pinching = false;
+      } else if (e.touches.length === 2) {
+        p.dragging = false;
+        p.scaleDrag = false;
+        p._pinching = true;
+        touchStartDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+      }
+    }, { passive: true });
+
+    wrap.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && touchStartDist > 0) {
+        // Front-page style: relative factor each frame, continuous zoom
+        e.preventDefault();
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        if (dist < 8) return;
+        const factor = dist / touchStartDist;
+        // Same step feel as front chart (1.04 / 0.96) but continuous ratio blend
+        const step = (factor > 1) ? (1 + Math.min(0.08, (factor - 1) * 0.5))
+                                  : (1 - Math.min(0.08, (1 - factor) * 0.5));
+        p.candleW = Math.max(2, Math.min(28, (p.candleW || 6) * step));
+        // mild vertical scale with pinch (optional, soft)
+        if (Math.abs(factor - 1) > 0.02) {
+          p.priceScale = Math.max(0.25, Math.min(5, (p.priceScale || 1) * Math.pow(step, 0.35)));
+        }
+        touchStartDist = dist; // relative — key to smooth front-page feel
+        mvDraw(pane);
+      } else if (e.touches.length === 1 && p.scaleDrag) {
+        e.preventDefault();
+        const dy = e.touches[0].clientY - p.startY;
+        p.priceScale = Math.max(0.25, Math.min(6, p.startScale * Math.exp(-dy / 140)));
+        mvDraw(pane);
+      } else if (e.touches.length === 1 && p.dragging) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - p.startX;
+        const cw = Math.max(2, p.candleW || 6);
+        p.offsetX = Math.max(0, p.startOff + Math.round(dx / cw));
+        mvDraw(pane);
+      }
+    }, { passive: false });
+
+    wrap.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) {
+        touchStartDist = 0;
+        p._pinching = false;
+      }
+      if (e.touches.length === 0) {
+        p.dragging = false;
+        p.scaleDrag = false;
+      }
+    });
+    wrap.addEventListener('touchcancel', () => {
+      touchStartDist = 0;
+      p._pinching = false;
+      p.dragging = false;
+      p.scaleDrag = false;
+    });
+
+    // Desktop mouse pan + wheel (same as front chart wheel zoom)
+    wrap.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch') return; // touches handled above
+      const rect = wrap.getBoundingClientRect();
+      const localX = e.clientX - rect.left;
+      if (localX > rect.width - 56) {
+        p.scaleDrag = true;
+        p.dragging = false;
+        p.startY = e.clientY;
+        p.startScale = p.priceScale || 1;
+        const live = p.asset === 'dxy' ? state.dxy_price : state.gold_price;
+        p.priceMid = (live > 0) ? live : null;
+      } else {
+        p.dragging = true;
+        p.scaleDrag = false;
+        p.startX = e.clientX;
+        p.startOff = p.offsetX || 0;
+      }
+      try { wrap.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    wrap.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'touch') return;
+      if (p.scaleDrag) {
+        const dy = e.clientY - p.startY;
+        p.priceScale = Math.max(0.25, Math.min(6, p.startScale * Math.exp(-dy / 140)));
+        mvDraw(pane);
+        return;
+      }
+      if (!p.dragging) return;
+      const dx = e.clientX - p.startX;
+      const cw = Math.max(2, p.candleW || 6);
+      p.offsetX = Math.max(0, p.startOff + Math.round(dx / cw));
+      mvDraw(pane);
+    });
+    wrap.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'touch') return;
+      p.dragging = false;
+      p.scaleDrag = false;
+    });
+    wrap.addEventListener('pointercancel', (e) => {
+      if (e.pointerType === 'touch') return;
+      p.dragging = false;
+      p.scaleDrag = false;
+    });
+
+    wrap.addEventListener('dblclick', (e) => {
+      const rect = wrap.getBoundingClientRect();
+      if (e.clientX - rect.left > rect.width - 56) {
+        p.priceScale = 1;
+        p.priceMid = null;
+        p.candleW = 6;
+        p.offsetX = 0;
+        mvDraw(pane);
+      }
+    });
+
+    // Wheel — same factors as front chart (1.12 / 0.88)
+    wrap.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = wrap.getBoundingClientRect();
+      if (e.clientX - rect.left > rect.width - 56) {
+        const f = e.deltaY < 0 ? 1.12 : 0.88;
+        p.priceScale = Math.max(0.25, Math.min(6, (p.priceScale || 1) * f));
+      } else {
+        const f = e.deltaY < 0 ? 1.12 : 0.88;
+        p.candleW = Math.max(2, Math.min(28, (p.candleW || 6) * f));
+      }
+      mvDraw(pane);
+    }, { passive: false });
+  });
+}
+
+
+// Close asset menus on outside tap
+document.addEventListener('click', (e) => {
+  if (!e.target.closest || e.target.closest('.mv-asset-btn') || e.target.closest('.mv-asset-menu')) return;
+  document.querySelectorAll('.mv-asset-menu').forEach(m => m.classList.remove('show'));
+});
+
+window.addEventListener('resize', () => {
+  if (!_mvOpen) return;
+  mvDraw('L');
+  mvDraw('R');
+});
+
+// Live candle + countdown + price while multi-view open (1s)
+let _mvSoftFetchAt = 0;
+setInterval(() => {
+  if (!_mvOpen) return;
+  try {
+    mvTickLive('L');
+    mvTickLive('R');
+    mvUpdateCountdown('L');
+    mvUpdateCountdown('R');
+    mvUpdatePriceLabel('L');
+    mvUpdatePriceLabel('R');
+    if (!mvPanes.L._pinching) mvDraw('L');
+    if (!mvPanes.R._pinching) mvDraw('R');
+    // Soft re-sync from network every 30s (same depth as front chart)
+    const now = Date.now();
+    if (now - _mvSoftFetchAt > 30000) {
+      _mvSoftFetchAt = now;
+      if (!mvPanes.L.loading) mvFetch('L');
+      if (!mvPanes.R.loading) mvFetch('R');
+    }
+  } catch (e) {}
+}, 1000);
+
 function initApp() {
+
   try { updateMarketClosedBanner(); } catch (e) {}
   load24hHistory();
   backfillReal24HHistory();
@@ -9139,7 +10372,7 @@ initApp();
 /* PWA service worker — force update on every load so deploys show immediately */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261020a', { scope: './' })
+    navigator.serviceWorker.register('./sw.js?v=20261021j', { scope: './' })
       .then(function (reg) {
         console.log('[PWA] SW registered:', reg.scope);
         // Always check for a newer sw.js after deploy
