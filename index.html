@@ -6834,10 +6834,11 @@ function rfStoreTrade(p, q, buy, ts, id) {
     const hourMs = 3600000;
     const slot = Math.floor((ts || Date.now()) / hourMs) * hourMs;
     if (!_fp1hLive || _fp1hLive.slot !== slot) {
-      // New hour — seed from store if any, else zero
       const sum = rfSumHour(slot);
       _fp1hLive = { slot: slot, buy: sum.buy, sell: sum.sell, lastTs: ts || Date.now() };
       _fp1hReady = false;
+      // Fill new hour from API once
+      try { setTimeout(function () { if (!_fp1hReady) rfBackfill(); }, 50); } catch (e) {}
     }
     if (buy) _fp1hLive.buy += q;
     else _fp1hLive.sell += q;
@@ -7229,61 +7230,61 @@ function rfIngest(p, q, buy, ts, id) {
 }
 
 async function rfBackfill() {
-  // Single-flight clean rebuild of CURRENT 1H from public Binance aggTrades.
-  // Same API for every device → same trades → same totals (no fake / no multi-count).
+  // Deterministic CURRENT HOUR fill from Binance public API.
+  // startTime..endTime window = same trades for every device (no partial random pages).
   if (rfBusy) return;
   rfBusy = true;
   _fp1hReady = false;
   try {
     const hourMs = 3600000;
     const hourStart = Math.floor(Date.now() / hourMs) * hourMs;
+    const hourEnd = Math.min(Date.now(), hourStart + hourMs - 1);
 
-    // Wipe current hour slots so repeated backfill cannot stack volume
+    // Clean slate for this hour only
     rfClearHourSlots(hourStart);
-    // Allow re-insert of hour trades with ids (remove those ids is hard) —
-    // instead track max id and only accept unique via set cleared for rebuild:
-    // Clear seen ids that we cannot time-filter: full clear is safest for hour rebuild
     rfSeenIds.clear();
     _fp1hLive = { slot: hourStart, buy: 0, sell: 0, lastTs: 0 };
-
-    let endTime = Date.now();
     let maxId = 0;
-    let pages = 0;
-    const maxPages = 60; // deep enough for busy 1H gold futures
+    let cursor = hourStart; // forward pagination inside the hour
+    let safety = 0;
 
-    for (let page = 0; page < maxPages; page++) {
-      const url = 'https://fapi.binance.com/fapi/v1/aggTrades?symbol=XAUUSDT&limit=1000&endTime=' + endTime;
+    while (cursor <= hourEnd && safety < 80) {
+      safety++;
+      const url = 'https://fapi.binance.com/fapi/v1/aggTrades?symbol=XAUUSDT&limit=1000'
+        + '&startTime=' + cursor
+        + '&endTime=' + hourEnd;
       const res = await fetch(url);
       if (!res.ok) break;
       const list = await res.json();
       if (!Array.isArray(list) || !list.length) break;
-      let oldest = endTime;
+
+      let lastTs = cursor;
       for (let i = 0; i < list.length; i++) {
         const item = list[i];
         const p = parseFloat(item.p);
         const q = parseFloat(item.q);
-        const buy = item.m === false; // taker buy
+        const buy = item.m === false;
         const ts = item.T || item.t;
-        const id = item.a; // agg trade id
+        const id = item.a;
         if (id && id > maxId) maxId = id;
-        // Only keep trades inside current hour for the 1H total
-        // (still store slightly older for chart TFs if needed — store all, sum filters hour)
-        if (p > 500 && p < 20000 && q > 0 && ts >= hourStart - 60000) {
+        if (ts < hourStart || ts > hourEnd) continue;
+        if (p > 500 && p < 20000 && q > 0) {
           rfStoreTrade(p, q, buy, ts, id);
         }
-        if (ts < oldest) oldest = ts;
+        if (ts > lastTs) lastTs = ts;
       }
-      pages++;
-      // Covered past hour start with a full page → current hour complete
-      if (oldest < hourStart) break;
+
       if (list.length < 1000) break;
-      endTime = oldest - 1;
-      await new Promise(function (r) { setTimeout(r, 20); });
+      // Advance cursor past last trade to avoid infinite loop on same ms
+      const next = lastTs + 1;
+      if (next <= cursor) break;
+      cursor = next;
+      await new Promise(function (r) { setTimeout(r, 15); });
     }
 
     if (maxId > rfLastId) rfLastId = maxId;
 
-    // Canonical hour total from store (single source of truth)
+    // ONLY store sum — never invent or prefer a higher live counter
     const sum = rfSumHour(hourStart);
     _fp1hLive = { slot: hourStart, buy: sum.buy, sell: sum.sell, lastTs: Date.now() };
     _fp1hReady = true;
@@ -7296,17 +7297,10 @@ async function rfBackfill() {
     const item = rfQueue.shift();
     rfIngest(item[0], item[1], item[2], item[3], item[4]);
   }
-  // Re-sync after queue (queue trades are unique by id)
   try {
     const hourStart = Math.floor(Date.now() / 3600000) * 3600000;
     const sum = rfSumHour(hourStart);
-    if (_fp1hLive && _fp1hLive.slot === hourStart) {
-      // live counters already include queue via rfStoreTrade; prefer max
-      _fp1hLive.buy = Math.max(_fp1hLive.buy || 0, sum.buy);
-      _fp1hLive.sell = Math.max(_fp1hLive.sell || 0, sum.sell);
-    } else {
-      _fp1hLive = { slot: hourStart, buy: sum.buy, sell: sum.sell, lastTs: Date.now() };
-    }
+    _fp1hLive = { slot: hourStart, buy: sum.buy, sell: sum.sell, lastTs: Date.now() };
     _fp1hReady = true;
   } catch (e) {}
   try { avRefreshFootprintGauge(true); } catch (e) {}
@@ -8961,43 +8955,27 @@ function avGetFootprint1h() {
   const hourMs = 3600000;
   const now = Date.now();
   const slot = Math.floor(now / hourMs) * hourMs;
-  let buy = 0, sell = 0, ticks = 0;
+  let buy = 0, sell = 0;
   try {
-    // Single source of truth: sum rfStore current hour (unique trades only)
+    // HARD RULE: volume = sum of unique trades in rfStore for this hour only.
+    // Live counter is a mirror, never allowed to exceed/replace with a higher invented total.
     if (typeof rfSumHour === 'function') {
       const sum = rfSumHour(slot);
       buy = sum.buy;
       sell = sum.sell;
-    } else if (rfStore && rfStore.size) {
-      rfStore.forEach(function (bar, minSlot) {
-        if (minSlot < slot || minSlot >= slot + hourMs) return;
-        if (!bar || !bar.lv) return;
-        bar.lv.forEach(function (v) {
-          sell += Number(v[0]) || 0;
-          buy += Number(v[1]) || 0;
-          ticks++;
-        });
-      });
     }
-    // Keep live mirror in sync (display only — do not invent volume)
     if (typeof _fp1hLive !== 'undefined') {
       if (!_fp1hLive || _fp1hLive.slot !== slot) {
         _fp1hLive = { slot: slot, buy: buy, sell: sell, lastTs: now };
       } else {
-        // Prefer store sum; live may briefly lead between rebuilds
-        const lv = (_fp1hLive.buy || 0) + (_fp1hLive.sell || 0);
-        if (lv > buy + sell) {
-          buy = Number(_fp1hLive.buy) || 0;
-          sell = Number(_fp1hLive.sell) || 0;
-        } else {
-          _fp1hLive.buy = buy;
-          _fp1hLive.sell = sell;
-        }
+        // Mirror store — do not keep a higher stale live total
+        _fp1hLive.buy = buy;
+        _fp1hLive.sell = sell;
       }
     }
   } catch (e) {}
-  buy = Math.max(0, buy);
-  sell = Math.max(0, sell);
+  buy = Math.max(0, Number(buy) || 0);
+  sell = Math.max(0, Number(sell) || 0);
   const vol = buy + sell;
   const delta = buy - sell;
   const strength = vol > 0 ? Math.abs(delta) / vol : 0;
@@ -9009,7 +8987,7 @@ function avGetFootprint1h() {
   const ready = (typeof _fp1hReady !== 'undefined') ? !!_fp1hReady : vol > 0;
   return {
     buy: buy, sell: sell, vol: vol, delta: delta, strength: strength,
-    side: side, pass: pass, live: live, ready: ready, tf: 60, slot: slot, ticks: ticks,
+    side: side, pass: pass, live: live, ready: ready, tf: 60, slot: slot,
     source: 'BINANCE XAUUSDT'
   };
 }
@@ -9945,7 +9923,10 @@ function openMultiView() {
   el.classList.add('show');
   _mvOpen = true;
   try { startAllTickFeed(); } catch (e) {}
-  try { if (typeof rfBackfill === 'function') rfBackfill(); } catch (e) {}
+  try {
+    // Only rebuild hour if not already ready (avoids wipe mid-session differences)
+    if (typeof rfBackfill === 'function' && !_fp1hReady) rfBackfill();
+  } catch (e) {}
   document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
   const sr = document.getElementById('sideFab');
@@ -11242,7 +11223,7 @@ initApp();
 /* PWA service worker — force update on every load so deploys show immediately */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261022i', { scope: './' })
+    navigator.serviceWorker.register('./sw.js?v=20261022j', { scope: './' })
       .then(function (reg) {
         console.log('[PWA] SW registered:', reg.scope);
         // Always check for a newer sw.js after deploy
