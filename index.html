@@ -2317,6 +2317,47 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   }
 }
 
+
+.av-fp-press-wrap { margin: 4px 0 10px; }
+.av-fp-press-track {
+  position: relative;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(255,82,82,0.25) 0%, #151822 50%, rgba(0,230,118,0.25) 100%);
+  border: 1px solid #1f2937;
+  overflow: hidden;
+}
+.av-fp-press-mid {
+  position: absolute; left: 50%; top: 0; bottom: 0; width: 2px;
+  background: #475569; transform: translateX(-50%); z-index: 1;
+}
+.av-fp-press-fill {
+  position: absolute; top: 1px; bottom: 1px;
+  width: 4px; left: 50%;
+  border-radius: 3px;
+  background: #94a3b8;
+  transform: translateX(-50%);
+  transition: left 0.3s ease, width 0.3s ease, background 0.25s ease;
+  z-index: 2;
+  box-shadow: 0 0 8px rgba(0,0,0,0.4);
+}
+.av-fp-press-fill.buy {
+  background: linear-gradient(90deg, #10b981, #00e676);
+  box-shadow: 0 0 10px rgba(0,230,118,0.45);
+}
+.av-fp-press-fill.sell {
+  background: linear-gradient(90deg, #ff5252, #ef4444);
+  box-shadow: 0 0 10px rgba(255,82,82,0.45);
+}
+.av-fp-press-labels {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 4px;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.4px;
+}
+.av-fp-press-labels .sell { color: #ff5252; }
+.av-fp-press-labels .buy { color: #00e676; }
+.av-fp-press-labels #avFpPressPct { color: #cbd5e1; font-variant-numeric: tabular-nums; }
+
 </style>
 </head>
 <body>
@@ -2975,6 +3016,18 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
             <div class="av-fp-head">
               <span class="av-fp-title">1H Footprint · Live</span>
               <span class="av-fp-side neutral" id="avFpSide">—</span>
+            </div>
+            <!-- Center pressure meter: left=SELL red, right=BUY green -->
+            <div class="av-fp-press-wrap">
+              <div class="av-fp-press-track">
+                <div class="av-fp-press-mid"></div>
+                <div class="av-fp-press-fill" id="avFpPressFill"></div>
+              </div>
+              <div class="av-fp-press-labels">
+                <span class="sell">SELL</span>
+                <span id="avFpPressPct">0%</span>
+                <span class="buy">BUY</span>
+              </div>
             </div>
             <div class="av-fp-bars">
               <div class="av-fp-row buy">
@@ -8979,10 +9032,11 @@ function avGetFootprint1h() {
   const vol = buy + sell;
   const delta = buy - sell;
   const strength = vol > 0 ? Math.abs(delta) / vol : 0;
-  const pass = vol >= 1 && strength >= 0.05;
+  const pass = vol >= 1 && strength >= 0.04;
+  // 1.5% imbalance is enough to show side (was 3% — looked "flat" too often)
   let side = 'NEUTRAL';
-  if (delta > 0 && strength >= 0.03) side = 'BUY';
-  else if (delta < 0 && strength >= 0.03) side = 'SELL';
+  if (vol > 0 && delta > 0 && strength >= 0.015) side = 'BUY';
+  else if (vol > 0 && delta < 0 && strength >= 0.015) side = 'SELL';
   const live = (typeof rfWs !== 'undefined' && rfWs && rfWs.readyState === 1) || !!rfGot;
   const ready = (typeof _fp1hReady !== 'undefined') ? !!_fp1hReady : vol > 0;
   return {
@@ -8995,7 +9049,7 @@ function avGetFootprint1h() {
 let _avFpLastPaint = 0;
 function avRefreshFootprintGauge(force) {
   const now = Date.now();
-  if (!force && now - _avFpLastPaint < 400) return;
+  if (!force && now - _avFpLastPaint < 250) return;
   _avFpLastPaint = now;
   const overlay = document.getElementById('aiVisualOverlay');
   if (!force && (!overlay || !overlay.classList.contains('show'))) return;
@@ -9009,31 +9063,68 @@ function avRefreshFootprintGauge(force) {
   const totalEl = document.getElementById('avFpTotal');
   const statusEl = document.getElementById('avGateFp');
   const badgeEl = document.getElementById('avBadgeFp');
+  const pressFill = document.getElementById('avFpPressFill');
+  const pressPct = document.getElementById('avFpPressPct');
   if (!sideEl && !buyVolEl) return;
+
   const total = Math.max(fp.vol, 0.0001);
   const buyPct = Math.min(100, Math.round((fp.buy / total) * 100));
   const sellPct = Math.min(100, Math.round((fp.sell / total) * 100));
+  // Signed pressure −100..+100 (negative = sell)
+  const pressure = Math.max(-1, Math.min(1, fp.delta / total)); // −1..+1
+  const pressPctVal = Math.round(Math.abs(pressure) * 100);
+
   if (sideEl) {
-    sideEl.textContent = fp.side === 'BUY' ? 'BUY PRESSURE' : fp.side === 'SELL' ? 'SELL PRESSURE' : (fp.live ? 'LIVE…' : 'BALANCED');
-    sideEl.className = 'av-fp-side ' + (fp.side === 'BUY' ? 'buy' : fp.side === 'SELL' ? 'sell' : 'neutral');
+    if (!fp.ready && fp.vol < 1) {
+      sideEl.textContent = 'SYNC…';
+      sideEl.className = 'av-fp-side neutral';
+    } else if (fp.side === 'BUY') {
+      sideEl.textContent = 'BUY PRESSURE ' + pressPctVal + '%';
+      sideEl.className = 'av-fp-side buy';
+    } else if (fp.side === 'SELL') {
+      sideEl.textContent = 'SELL PRESSURE ' + pressPctVal + '%';
+      sideEl.className = 'av-fp-side sell';
+    } else {
+      sideEl.textContent = fp.vol > 0 ? 'BALANCED' : (fp.live ? 'LIVE…' : 'SYNC…');
+      sideEl.className = 'av-fp-side neutral';
+    }
   }
+
+  // Dual volume bars
   if (buyFill) buyFill.style.width = buyPct + '%';
   if (sellFill) sellFill.style.width = sellPct + '%';
   if (buyVolEl) buyVolEl.textContent = avFmtVol(fp.buy);
   if (sellVolEl) sellVolEl.textContent = avFmtVol(fp.sell);
+
+  // Center pressure needle/bar (left sell, right buy)
+  if (pressFill) {
+    // Map −1..+1 → left 2%..98%
+    const leftPct = 50 + pressure * 48; // 2..98
+    pressFill.style.left = leftPct + '%';
+    pressFill.style.width = Math.max(6, 4 + pressPctVal * 0.15) + 'px';
+    pressFill.className = 'av-fp-press-fill' + (pressure > 0.015 ? ' buy' : (pressure < -0.015 ? ' sell' : ''));
+  }
+  if (pressPct) {
+    if (pressure > 0.015) pressPct.textContent = pressPctVal + '% BUY';
+    else if (pressure < -0.015) pressPct.textContent = pressPctVal + '% SELL';
+    else pressPct.textContent = '0%';
+  }
+
   if (deltaEl) {
     const sign = fp.delta >= 0 ? '+' : '';
     deltaEl.textContent = 'Δ ' + sign + avFmtVol(fp.delta);
-    deltaEl.className = fp.delta > 0 ? 'buy' : fp.delta < 0 ? 'sell' : '';
+    deltaEl.className = fp.delta > 0 ? 'buy' : (fp.delta < 0 ? 'sell' : '');
   }
-  if (totalEl) totalEl.textContent = 'Vol ' + avFmtVol(fp.vol) + (fp.live ? ' · LIVE' : '');
+  if (totalEl) {
+    totalEl.textContent = 'Vol ' + avFmtVol(fp.vol) + (fp.live ? ' · LIVE' : '') + (fp.ready ? '' : ' · sync');
+  }
   if (statusEl) {
     statusEl.textContent = (fp.side === 'BUY' ? 'BUY ' : fp.side === 'SELL' ? 'SELL ' : 'flat ') +
-      avFmtVol(fp.vol) + (fp.live ? ' · live 1H' : ' · 1H');
+      avFmtVol(fp.vol) + (fp.live ? ' · live' : '');
   }
   if (badgeEl) {
     badgeEl.textContent = fp.pass ? 'PASS' : 'FAIL';
-    badgeEl.className = 'av-badge' + (fp.pass ? ' sync' : ' idle');
+    badgeEl.className = 'av-badge' + (fp.pass ? ' pass' : '');
   }
 }
 
@@ -9125,7 +9216,12 @@ function avComputeSenses() {
   } catch (e) {}
 
   // ---------- Gates ----------
-  const gStruct = structAlign > 0.58;  // gate = alignment present (bull OR bear)
+  const gStruct = structAlign > 0.58;  // gate PASS = TFs agree (bull OR bear) — direction checked at final
+  // Structure vs signal fight: majority BEAR cannot support STRONG BUY (and vice versa)
+  const structOpposesBuy  = (mtf.direction === 'BEAR' && mtf.aligned >= 2);
+  const structOpposesSell = (mtf.direction === 'BULL' && mtf.aligned >= 2);
+  const structSupportsBuy  = (mtf.direction === 'BULL' && mtf.aligned >= 2);
+  const structSupportsSell = (mtf.direction === 'BEAR' && mtf.aligned >= 2);
 
   // FIXED: Momentum gate now passes on STRONG moves in EITHER direction
   // (absolute score strength), not only on the bullish side of the 0-1 scale.
@@ -9228,6 +9324,10 @@ function avComputeSenses() {
   // Blend: live composite dominates, senses refine, edge gently tilts
   let core = scoreSigned * 0.55 + senseSigned * 0.35 + edgeTilt * 0.10;
 
+  // Structure fight softens core toward neutral (cannot print full ± lean vs MTF)
+  if (structOpposesBuy && core > 0) core *= 0.55;
+  if (structOpposesSell && core < 0) core *= 0.55;
+
   // Clamp to legal range — ±1 is ceiling/floor only
   core = Math.max(-1, Math.min(1, core));
 
@@ -9249,16 +9349,32 @@ function avComputeSenses() {
     finalStrength = 'QUIET RANGE';
   } else if (gatesCleared >= 4 && edge >= 3) {
     finalSignal   = 'BUY GOLD';
-    // STRONG only if footprint not fighting the long (or is quiet)
-    finalStrength = (gatesCleared >= 5 && edge >= 4 && !(fpPress.side === 'SELL' && fpPress.strength >= 0.12 && fpPress.vol >= 200))
-      ? 'STRONG' : 'MODERATE';
-    // Footprint confirms → upgrade
-    if (fpPress.side === 'BUY' && fpPress.pass && gatesCleared >= 5 && edge >= 4) finalStrength = 'STRONG';
+    // STRONG needs: high gates + edge, footprint not fighting, STRUCTURE not BEAR majority
+    let buyStrong = gatesCleared >= 5 && edge >= 4
+      && !(fpPress.side === 'SELL' && fpPress.strength >= 0.12 && fpPress.vol >= 200)
+      && !structOpposesBuy;
+    if (fpPress.side === 'BUY' && fpPress.pass && gatesCleared >= 5 && edge >= 4 && !structOpposesBuy) {
+      buyStrong = true;
+    }
+    if (structOpposesBuy) {
+      // Momentum may still lean buy, but structure fights → never STRONG
+      finalStrength = (gatesCleared >= 5 && edge >= 5) ? 'MODERATE' : 'STRUCTURE FIGHT';
+    } else {
+      finalStrength = buyStrong ? 'STRONG' : 'MODERATE';
+    }
   } else if (gatesCleared >= 4 && edge <= -3) {
     finalSignal   = 'SELL GOLD';
-    finalStrength = (gatesCleared >= 5 && edge <= -4 && !(fpPress.side === 'BUY' && fpPress.strength >= 0.12 && fpPress.vol >= 200))
-      ? 'STRONG' : 'MODERATE';
-    if (fpPress.side === 'SELL' && fpPress.pass && gatesCleared >= 5 && edge <= -4) finalStrength = 'STRONG';
+    let sellStrong = gatesCleared >= 5 && edge <= -4
+      && !(fpPress.side === 'BUY' && fpPress.strength >= 0.12 && fpPress.vol >= 200)
+      && !structOpposesSell;
+    if (fpPress.side === 'SELL' && fpPress.pass && gatesCleared >= 5 && edge <= -4 && !structOpposesSell) {
+      sellStrong = true;
+    }
+    if (structOpposesSell) {
+      finalStrength = (gatesCleared >= 5 && edge <= -5) ? 'MODERATE' : 'STRUCTURE FIGHT';
+    } else {
+      finalStrength = sellStrong ? 'STRONG' : 'MODERATE';
+    }
   } else if (envOk && edge >= 2 && score >= 9) {
     finalSignal   = 'BUY GOLD';
     finalStrength = (fpPress.side === 'SELL' && fpPress.strength >= 0.15) ? 'CONFLICT' : 'WEAK';
@@ -9275,6 +9391,7 @@ function avComputeSenses() {
   thesis += mtf.direction + ' structure ' + mtf.aligned + '/' + mtf.n + ' · ';
   thesis += 'score ' + score.toFixed(1) + ' · gates ' + gatesCleared + '/7 · edge ' + edge +
     ' · FP ' + (fpPress.side || 'FLAT') + ' ' + (typeof avFmtVol === 'function' ? avFmtVol(fpPress.vol) : Math.round(fpPress.vol));
+  if (structOpposesBuy || structOpposesSell) thesis += ' · STRUCTURE FIGHTS SIGNAL';
   if (quiet) thesis += ' · quiet range';
 
   // ---------- Output object ----------
@@ -9444,6 +9561,8 @@ function avPaint() {
     avSetDot(dotId, s.dot);
   });
 
+  try { avRefreshFootprintGauge(true); } catch (e) {}
+
   // Core ring + GOLD final signal
   const coreEl = document.getElementById('avCoreScore');
   const gatesEl = document.getElementById('avCoreGates');
@@ -9531,10 +9650,24 @@ function avPaint() {
   };
   const gf = d.gateFlags || {};
   const score = state.smoothed_score || 0;
-  setGate('avGateGold', 'avBadgeGold',
-    (d.structure && d.structure.meta) || 'MTF',
-    gf.gStruct ? 'PASS' : 'FAIL',
-    gf.gStruct ? 'sync' : 'idle');
+  {
+    let structMeta = (d.structure && d.structure.meta) || 'MTF';
+    let structBadge = gf.gStruct ? 'PASS' : 'FAIL';
+    let structCls = gf.gStruct ? 'sync' : 'idle';
+    // Highlight when structure majority fights the live signal
+    const sigU = String(d.finalSignal || d.sig || '').toUpperCase();
+    const metaU = String(structMeta).toUpperCase();
+    if (gf.gStruct && sigU.indexOf('BUY') >= 0 && metaU.indexOf('BEAR') >= 0) {
+      structBadge = 'FIGHT';
+      structCls = 'idle';
+      structMeta = structMeta + ' · vs BUY';
+    } else if (gf.gStruct && sigU.indexOf('SELL') >= 0 && metaU.indexOf('BULL') >= 0) {
+      structBadge = 'FIGHT';
+      structCls = 'idle';
+      structMeta = structMeta + ' · vs SELL';
+    }
+    setGate('avGateGold', 'avBadgeGold', structMeta, structBadge, structCls);
+  }
   setGate('avGateDxy', 'avBadgeDxy',
     'score ' + score.toFixed(1) + ' · ' + d.sig,
     gf.gMom ? 'PASS' : 'FAIL',
