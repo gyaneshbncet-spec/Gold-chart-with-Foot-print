@@ -2890,6 +2890,10 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
             <div class="av-sense-title"><span class="av-dot" id="avDotFx"></span> FX correlation</div>
             <div class="av-sense-meta" id="avMetaFx">—</div>
           </div>
+          <div class="av-sense-node" data-key="footprint" onclick="avSelectSense(this)">
+            <div class="av-sense-title"><span class="av-dot" id="avDotFp"></span> 1H footprint</div>
+            <div class="av-sense-meta" id="avMetaFp">—</div>
+          </div>
           <div class="av-sense-node" data-key="news" onclick="avSelectSense(this)">
             <div class="av-sense-title"><span class="av-dot" id="avDotNews"></span> news risk</div>
             <div class="av-sense-meta" id="avMetaNews">—</div>
@@ -6624,6 +6628,10 @@ const RF_TICKS = { 1: 0.1, 5: 0.2, 15: 0.5 };
 const RF_BASE = 10;
 const RF_KEEP_MS = 24 * 3600000;
 const rfStore = new Map();
+const rfSeenIds = new Set();
+let _fp1hLive = { slot: 0, buy: 0, sell: 0, lastTs: 0 };
+let _fp1hReady = false;
+
 let rfWs = null, rfGot = false, rfOpenAt = 0, rfLastId = 0, rfBusy = false, rfQueue = [], rfPing = null;
 // Permanent freeze for CLOSED bars: OHLC + footprint levels + POC.
 // Once closed, volume numbers never change when live price moves.
@@ -6760,9 +6768,50 @@ function rfFinal(c) {
   c.deltaPct = c._v ? Math.round(c._d / c._v * 100) : 0;
 }
 
-function rfStoreTrade(p, q, buy, ts) {
-  // AUTHENTIC: store at the REAL Binance trade price only — never rewrite to gold_price.
+function rfRememberTradeId(id) {
+  if (id == null || id === '') return false;
+  const n = Number(id);
+  if (!(n > 0)) return false;
+  if (rfSeenIds.has(n)) return true; // duplicate
+  rfSeenIds.add(n);
+  // Cap memory — drop oldest-ish by clearing when huge (ids are monotonic)
+  if (rfSeenIds.size > 250000) {
+    rfSeenIds.clear();
+    rfSeenIds.add(n);
+  }
+  return false;
+}
+
+function rfSumHour(slot) {
+  const hourMs = 3600000;
+  let buy = 0, sell = 0;
+  if (!rfStore || !rfStore.size) return { buy: 0, sell: 0 };
+  rfStore.forEach(function (bar, minSlot) {
+    if (minSlot < slot || minSlot >= slot + hourMs) return;
+    if (!bar || !bar.lv) return;
+    bar.lv.forEach(function (v) {
+      sell += Number(v[0]) || 0;
+      buy  += Number(v[1]) || 0;
+    });
+  });
+  return { buy: buy, sell: sell };
+}
+
+function rfClearHourSlots(slot) {
+  const hourMs = 3600000;
+  if (!rfStore) return;
+  for (const t of [...rfStore.keys()]) {
+    if (t >= slot && t < slot + hourMs) rfStore.delete(t);
+  }
+}
+
+function rfStoreTrade(p, q, buy, ts, id) {
+  // AUTHENTIC: real Binance trade only — never rewrite price to interbank gold
+  p = Number(p); q = Number(q);
   if (!(p > 500 && p < 20000) || !(q > 0)) return;
+  // Deduplicate by aggTrade id (stops backfill+WS and multi-backfill double count)
+  if (id != null && rfRememberTradeId(id)) return;
+
   const s = Math.floor(ts / 60000) * 60000;
   let b = rfStore.get(s);
   if (!b) {
@@ -6780,18 +6829,22 @@ function rfStoreTrade(p, q, buy, ts) {
   const v = b.lv.get(k) || b.lv.set(k, [0, 0]).get(k);
   v[buy ? 1 : 0] += q;
 
-  // Real-time 1H pressure (every Binance trade)
+  // Live hour counters — only from accepted unique trades
   try {
     const hourMs = 3600000;
     const slot = Math.floor((ts || Date.now()) / hourMs) * hourMs;
     if (!_fp1hLive || _fp1hLive.slot !== slot) {
-      _fp1hLive = { slot: slot, buy: 0, sell: 0, lastTs: ts || Date.now() };
+      // New hour — seed from store if any, else zero
+      const sum = rfSumHour(slot);
+      _fp1hLive = { slot: slot, buy: sum.buy, sell: sum.sell, lastTs: ts || Date.now() };
+      _fp1hReady = false;
     }
     if (buy) _fp1hLive.buy += q;
     else _fp1hLive.sell += q;
     _fp1hLive.lastTs = ts || Date.now();
   } catch (e) {}
 }
+
 
 function rfBuild(min) {
   const ms = min * 60000;
@@ -7141,8 +7194,8 @@ function rfIngest(p, q, buy, ts, id) {
     if (id <= rfLastId) return;
     rfLastId = id;
   }
-  // Store for historical rebuilds
-  rfStoreTrade(p, q, buy, ts);
+  // Store for historical rebuilds (id = dedupe key)
+  rfStoreTrade(p, q, buy, ts, id);
 
   const displayPrice = (state.gold_price > 500) ? state.gold_price : p;
   fpLivePrice = displayPrice;
@@ -7176,13 +7229,30 @@ function rfIngest(p, q, buy, ts, id) {
 }
 
 async function rfBackfill() {
-  // Binance Futures aggTrades — paginate so M1/M5/M15 history has real volume
+  // Single-flight clean rebuild of CURRENT 1H from public Binance aggTrades.
+  // Same API for every device → same trades → same totals (no fake / no multi-count).
+  if (rfBusy) return;
   rfBusy = true;
+  _fp1hReady = false;
   try {
+    const hourMs = 3600000;
+    const hourStart = Math.floor(Date.now() / hourMs) * hourMs;
+
+    // Wipe current hour slots so repeated backfill cannot stack volume
+    rfClearHourSlots(hourStart);
+    // Allow re-insert of hour trades with ids (remove those ids is hard) —
+    // instead track max id and only accept unique via set cleared for rebuild:
+    // Clear seen ids that we cannot time-filter: full clear is safest for hour rebuild
+    rfSeenIds.clear();
+    _fp1hLive = { slot: hourStart, buy: 0, sell: 0, lastTs: 0 };
+
     let endTime = Date.now();
-    // 15 pages × 1000 real Binance trades — same public data for all users
-    for (let page = 0; page < 15; page++) {
-      const url = `https://fapi.binance.com/fapi/v1/aggTrades?symbol=XAUUSDT&limit=1000&endTime=${endTime}`;
+    let maxId = 0;
+    let pages = 0;
+    const maxPages = 60; // deep enough for busy 1H gold futures
+
+    for (let page = 0; page < maxPages; page++) {
+      const url = 'https://fapi.binance.com/fapi/v1/aggTrades?symbol=XAUUSDT&limit=1000&endTime=' + endTime;
       const res = await fetch(url);
       if (!res.ok) break;
       const list = await res.json();
@@ -7192,37 +7262,57 @@ async function rfBackfill() {
         const item = list[i];
         const p = parseFloat(item.p);
         const q = parseFloat(item.q);
-        const buy = item.m === false;
+        const buy = item.m === false; // taker buy
         const ts = item.T || item.t;
-        if (p > 500 && p < 20000 && q > 0) rfStoreTrade(p, q, buy, ts);
+        const id = item.a; // agg trade id
+        if (id && id > maxId) maxId = id;
+        // Only keep trades inside current hour for the 1H total
+        // (still store slightly older for chart TFs if needed — store all, sum filters hour)
+        if (p > 500 && p < 20000 && q > 0 && ts >= hourStart - 60000) {
+          rfStoreTrade(p, q, buy, ts, id);
+        }
         if (ts < oldest) oldest = ts;
       }
+      pages++;
+      // Covered past hour start with a full page → current hour complete
+      if (oldest < hourStart) break;
       if (list.length < 1000) break;
       endTime = oldest - 1;
+      await new Promise(function (r) { setTimeout(r, 20); });
     }
-  } catch (e) {}
-  rfBusy = false;
-  rfRebuild();
-  // Sync 1H live counters from store after backfill
-  try {
-    const hourMs = 3600000;
-    const slot = Math.floor(Date.now() / hourMs) * hourMs;
-    let b = 0, s = 0;
-    if (rfStore && rfStore.size) {
-      rfStore.forEach(function (bar, minSlot) {
-        if (minSlot < slot || minSlot >= slot + hourMs) return;
-        if (!bar || !bar.lv) return;
-        bar.lv.forEach(function (v) { s += Number(v[0])||0; b += Number(v[1])||0; });
-      });
-    }
-    _fp1hLive = { slot: slot, buy: b, sell: s, lastTs: Date.now() };
-  } catch (e) {}
 
+    if (maxId > rfLastId) rfLastId = maxId;
+
+    // Canonical hour total from store (single source of truth)
+    const sum = rfSumHour(hourStart);
+    _fp1hLive = { slot: hourStart, buy: sum.buy, sell: sum.sell, lastTs: Date.now() };
+    _fp1hReady = true;
+  } catch (e) {
+    console.warn('[FP] backfill error', e);
+  }
+  rfBusy = false;
+  try { rfRebuild(); } catch (e) {}
   while (rfQueue.length > 0) {
     const item = rfQueue.shift();
     rfIngest(item[0], item[1], item[2], item[3], item[4]);
   }
+  // Re-sync after queue (queue trades are unique by id)
+  try {
+    const hourStart = Math.floor(Date.now() / 3600000) * 3600000;
+    const sum = rfSumHour(hourStart);
+    if (_fp1hLive && _fp1hLive.slot === hourStart) {
+      // live counters already include queue via rfStoreTrade; prefer max
+      _fp1hLive.buy = Math.max(_fp1hLive.buy || 0, sum.buy);
+      _fp1hLive.sell = Math.max(_fp1hLive.sell || 0, sum.sell);
+    } else {
+      _fp1hLive = { slot: hourStart, buy: sum.buy, sell: sum.sell, lastTs: Date.now() };
+    }
+    _fp1hReady = true;
+  } catch (e) {}
+  try { avRefreshFootprintGauge(true); } catch (e) {}
+  try { if (typeof _mvOpen !== 'undefined' && _mvOpen) mvUpdateLiveScores(); } catch (e) {}
 }
+
 
 function rfStatus(txt, col, msg) {
   const l = document.getElementById('fpWsLabel');
@@ -8849,49 +8939,60 @@ function avIsRangeQuiet() {
 
 function avFmtVol(v) {
   v = Number(v) || 0;
+  const neg = v < 0 ? '-' : '';
   const a = Math.abs(v);
-  if (a >= 1000000) return (v / 1000000).toFixed(2) + 'M';
-  if (a >= 1000) return (v / 1000).toFixed(1) + 'k';
-  if (a >= 10) return v.toFixed(1);
-  return v.toFixed(2);
+  if (!(a > 0) || !isFinite(a)) return '0';
+  if (a >= 1e6) {
+    const m = a / 1e6;
+    return neg + (m >= 10 ? m.toFixed(1) : m.toFixed(2)) + 'M';
+  }
+  if (a >= 1000) {
+    const k = a / 1000;
+    // Always keep "k" so 500k never shows as 500
+    if (k >= 100) return neg + Math.round(k) + 'k';
+    return neg + (Math.round(k * 10) / 10).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  if (a >= 10) return neg + a.toFixed(1);
+  return neg + a.toFixed(2);
 }
 
 /** LIVE 1H FOOTPRINT — real Binance Futures XAUUSDT aggTrade. Same public feed for every user. */
 function avGetFootprint1h() {
-  let buy = 0, sell = 0, ticks = 0;
   const hourMs = 3600000;
   const now = Date.now();
   const slot = Math.floor(now / hourMs) * hourMs;
+  let buy = 0, sell = 0, ticks = 0;
   try {
-    // Instant counters (updated on every Binance aggTrade)
-    if (typeof _fp1hLive !== 'undefined' && _fp1hLive && _fp1hLive.slot === slot) {
-      buy = Number(_fp1hLive.buy) || 0;
-      sell = Number(_fp1hLive.sell) || 0;
-    }
-    // Full hour from rfStore (top-up after backfill)
-    if (typeof rfStore !== 'undefined' && rfStore && rfStore.size) {
-      let sb = 0, ss = 0;
+    // Single source of truth: sum rfStore current hour (unique trades only)
+    if (typeof rfSumHour === 'function') {
+      const sum = rfSumHour(slot);
+      buy = sum.buy;
+      sell = sum.sell;
+    } else if (rfStore && rfStore.size) {
       rfStore.forEach(function (bar, minSlot) {
         if (minSlot < slot || minSlot >= slot + hourMs) return;
         if (!bar || !bar.lv) return;
         bar.lv.forEach(function (v) {
-          ss += Number(v[0]) || 0;
-          sb += Number(v[1]) || 0;
+          sell += Number(v[0]) || 0;
+          buy += Number(v[1]) || 0;
           ticks++;
         });
       });
-      if (sb + ss > buy + sell) {
-        buy = sb;
-        sell = ss;
-      }
     }
-    if (buy + sell < 0.01 && typeof fpCandles !== 'undefined' && fpCandles.length) {
-      const c = fpCandles[fpCandles.length - 1];
-      if (c && c.levels && c.levels.forEach) {
-        c.levels.forEach(function (lvl) {
-          buy  += Number(lvl._a != null ? lvl._a : (lvl.ask || 0)) || 0;
-          sell += Number(lvl._b != null ? lvl._b : (lvl.bid || 0)) || 0;
-        });
+    // Keep live mirror in sync (display only — do not invent volume)
+    if (typeof _fp1hLive !== 'undefined') {
+      if (!_fp1hLive || _fp1hLive.slot !== slot) {
+        _fp1hLive = { slot: slot, buy: buy, sell: sell, lastTs: now };
+      } else {
+        // Prefer store sum; live may briefly lead between rebuilds
+        const lv = (_fp1hLive.buy || 0) + (_fp1hLive.sell || 0);
+        if (lv > buy + sell) {
+          buy = Number(_fp1hLive.buy) || 0;
+          sell = Number(_fp1hLive.sell) || 0;
+        } else {
+          _fp1hLive.buy = buy;
+          _fp1hLive.sell = sell;
+        }
       }
     }
   } catch (e) {}
@@ -8904,11 +9005,11 @@ function avGetFootprint1h() {
   let side = 'NEUTRAL';
   if (delta > 0 && strength >= 0.03) side = 'BUY';
   else if (delta < 0 && strength >= 0.03) side = 'SELL';
-  const live = (typeof rfWs !== 'undefined' && rfWs && rfWs.readyState === 1) || !!rfGot ||
-    (typeof _fp1hLive !== 'undefined' && _fp1hLive && (now - (_fp1hLive.lastTs || 0) < 20000));
+  const live = (typeof rfWs !== 'undefined' && rfWs && rfWs.readyState === 1) || !!rfGot;
+  const ready = (typeof _fp1hReady !== 'undefined') ? !!_fp1hReady : vol > 0;
   return {
     buy: buy, sell: sell, vol: vol, delta: delta, strength: strength,
-    side: side, pass: pass, live: live, tf: 60, slot: slot, ticks: ticks,
+    side: side, pass: pass, live: live, ready: ready, tf: 60, slot: slot, ticks: ticks,
     source: 'BINANCE XAUUSDT'
   };
 }
@@ -9062,6 +9163,13 @@ function avComputeSenses() {
   const fpPress = avGetFootprint1h();
   const gFp = !!fpPress.pass;
 
+  // 1H Footprint SENSE (0..1) for node engine
+  // Aggressive BUY on XAU futures → gold bull lean; SELL → bear lean
+  // Volume confidence: low vol stays near 0.5; high vol allows full ± lean
+  const fpPressure = (fpPress.vol > 0) ? (fpPress.delta / fpPress.vol) : 0; // -1..+1
+  const fpConf = Math.min(1, Math.log10(Math.max(10, fpPress.vol || 10)) / 5);
+  const fpSense = avClamp01(0.5 + fpPressure * 0.48 * (0.30 + 0.70 * fpConf));
+
   const gatesCleared = [gStruct, gMom, gDxy, gYield, gFx, gNews, gFp].filter(Boolean).length;
 
   // Hard environment (structure + news + market)
@@ -9109,6 +9217,12 @@ function avComputeSenses() {
   if (sig.indexOf('BUY')  >= 0) bullPts += 1;
   if (sig.indexOf('SELL') >= 0) bearPts += 1;
 
+  // 1H Footprint orderflow → edge (same direction as gold)
+  if (fpPress.vol >= 50 && fpPress.strength >= 0.06) {
+    if (fpPress.side === 'BUY')  bullPts += (fpPress.strength >= 0.12 && fpPress.vol >= 500) ? 2 : 1;
+    if (fpPress.side === 'SELL') bearPts += (fpPress.strength >= 0.12 && fpPress.vol >= 500) ? 2 : 1;
+  }
+
   const edge = bullPts - bearPts;
 
   // Core ring = LIVE directional gold bias on [-1, +1]
@@ -9120,13 +9234,14 @@ function avComputeSenses() {
   // Primary live anchor: composite score already runs ~-100..+100
   const scoreSigned = Math.max(-1, Math.min(1, (score || 0) / 100));
 
-  // Secondary live blend from senses (structure / DXY / yields / FX / mom)
+  // Secondary live blend — 1H footprint is live orderflow (18% of senses)
   const senseSigned = (
-    toSigned(momScore)    * 0.28 +
-    toSigned(structScore) * 0.26 +
-    toSigned(dxyHelp)     * 0.20 +
-    toSigned(yieldScore)  * 0.14 +
-    toSigned(fxScore)     * 0.12
+    toSigned(momScore)    * 0.22 +
+    toSigned(structScore) * 0.22 +
+    toSigned(dxyHelp)     * 0.16 +
+    toSigned(yieldScore)  * 0.12 +
+    toSigned(fxScore)     * 0.10 +
+    toSigned(fpSense)     * 0.18
   );
 
   // Point-edge as a mild tilt only (not a jump to ±1)
@@ -9156,16 +9271,22 @@ function avComputeSenses() {
     finalStrength = 'QUIET RANGE';
   } else if (gatesCleared >= 4 && edge >= 3) {
     finalSignal   = 'BUY GOLD';
-    finalStrength = (gatesCleared >= 5 && edge >= 4) ? 'STRONG' : 'MODERATE';
+    // STRONG only if footprint not fighting the long (or is quiet)
+    finalStrength = (gatesCleared >= 5 && edge >= 4 && !(fpPress.side === 'SELL' && fpPress.strength >= 0.12 && fpPress.vol >= 200))
+      ? 'STRONG' : 'MODERATE';
+    // Footprint confirms → upgrade
+    if (fpPress.side === 'BUY' && fpPress.pass && gatesCleared >= 5 && edge >= 4) finalStrength = 'STRONG';
   } else if (gatesCleared >= 4 && edge <= -3) {
     finalSignal   = 'SELL GOLD';
-    finalStrength = (gatesCleared >= 5 && edge <= -4) ? 'STRONG' : 'MODERATE';
+    finalStrength = (gatesCleared >= 5 && edge <= -4 && !(fpPress.side === 'BUY' && fpPress.strength >= 0.12 && fpPress.vol >= 200))
+      ? 'STRONG' : 'MODERATE';
+    if (fpPress.side === 'SELL' && fpPress.pass && gatesCleared >= 5 && edge <= -4) finalStrength = 'STRONG';
   } else if (envOk && edge >= 2 && score >= 9) {
     finalSignal   = 'BUY GOLD';
-    finalStrength = 'WEAK';
+    finalStrength = (fpPress.side === 'SELL' && fpPress.strength >= 0.15) ? 'CONFLICT' : 'WEAK';
   } else if (envOk && edge <= -2 && score <= -9) {
     finalSignal   = 'SELL GOLD';
-    finalStrength = 'WEAK';
+    finalStrength = (fpPress.side === 'BUY' && fpPress.strength >= 0.15) ? 'CONFLICT' : 'WEAK';
   } else {
     finalSignal   = 'NEUTRAL';
     finalStrength = gatesCleared >= 4 ? 'WAIT SETUP' : 'GATES LOW';
@@ -9174,7 +9295,8 @@ function avComputeSenses() {
   // Thesis line
   let thesis = 'XAU/USD ONLY · ' + finalSignal + ' (' + finalStrength + ') · ';
   thesis += mtf.direction + ' structure ' + mtf.aligned + '/' + mtf.n + ' · ';
-  thesis += 'score ' + score.toFixed(1) + ' · gates ' + gatesCleared + '/6 · edge ' + edge;
+  thesis += 'score ' + score.toFixed(1) + ' · gates ' + gatesCleared + '/7 · edge ' + edge +
+    ' · FP ' + (fpPress.side || 'FLAT') + ' ' + (typeof avFmtVol === 'function' ? avFmtVol(fpPress.vol) : Math.round(fpPress.vol));
   if (quiet) thesis += ' · quiet range';
 
   // ---------- Output object ----------
@@ -9221,6 +9343,21 @@ function avComputeSenses() {
       meta: newsLabel,
       thesis: 'News risk: ' + newsLabel,
       dot: newsScore < 0.35 ? 'red' : (newsScore < 0.55 ? 'amber' : 'green')
+    },
+    footprint: {
+      score: fpSense,
+      meta: (fpPress.side || 'FLAT') + ' ' +
+        (typeof avFmtVol === 'function' ? avFmtVol(fpPress.vol) : String(Math.round(fpPress.vol || 0))) +
+        (fpPress.live ? ' · LIVE' : ''),
+      thesis: '1H Footprint (Binance XAUUSDT): ' +
+        (fpPress.side === 'BUY' ? 'BUY pressure supports gold' :
+         fpPress.side === 'SELL' ? 'SELL pressure pressures gold' : 'balanced / thin orderflow') +
+        ' · buy ' + (typeof avFmtVol === 'function' ? avFmtVol(fpPress.buy) : fpPress.buy) +
+        ' / sell ' + (typeof avFmtVol === 'function' ? avFmtVol(fpPress.sell) : fpPress.sell) +
+        ' · Δ ' + (fpPress.delta >= 0 ? '+' : '') +
+        (typeof avFmtVol === 'function' ? avFmtVol(fpPress.delta) : fpPress.delta) +
+        ' · gate ' + (gFp ? 'PASS' : 'FAIL') + '.',
+      dot: fpPress.side === 'BUY' ? 'green' : (fpPress.side === 'SELL' ? 'red' : 'amber')
     },
     core: core,
     gatesCleared: gatesCleared,
@@ -9318,6 +9455,7 @@ function avPaint() {
     ['dxy', 'avMetaDxy', 'avDotDxy'],
     ['yield', 'avMetaYield', 'avDotYield'],
     ['fx', 'avMetaFx', 'avDotFx'],
+    ['footprint', 'avMetaFp', 'avDotFp'],
     ['news', 'avMetaNews', 'avDotNews']
   ];
   map.forEach(([key, metaId, dotId]) => {
@@ -9449,7 +9587,7 @@ function avPaint() {
   const council = document.getElementById('avCouncil');
   if (council) {
     const fs = d.finalSignal || 'NEUTRAL';
-    council.innerHTML = '<span>● ' + fs + '</span> ○ ' + (d.finalStrength || '') + ' ○ gates ' + d.gatesCleared + '/6';
+    council.innerHTML = '<span>● ' + fs + '</span> ○ ' + (d.finalStrength || '') + ' ○ gates ' + d.gatesCleared + '/7';
   }
 
   // Do NOT redraw wires every paint — it resets CSS flow animation
@@ -9601,7 +9739,7 @@ async function avRunGpBrief(manual) {
   try {
     const d = avComputeSenses();
     engineLine = 'ENGINE SIGNAL: ' + (d.finalSignal || 'NEUTRAL') + ' · ' + (d.finalStrength || '') +
-      ' · gates ' + d.gatesCleared + '/6 · edge ' + d.edge + ' · core ' + d.core.toFixed(2) + '\n';
+      ' · gates ' + d.gatesCleared + '/7 · edge ' + d.edge + ' · core ' + d.core.toFixed(2) + '\n';
   } catch (e) {}
   const prompt =
     'AI VISUAL · GOLD ONLY (max 8 lines). Ignore other pairs as trade targets.\n' +
@@ -9807,6 +9945,7 @@ function openMultiView() {
   el.classList.add('show');
   _mvOpen = true;
   try { startAllTickFeed(); } catch (e) {}
+  try { if (typeof rfBackfill === 'function') rfBackfill(); } catch (e) {}
   document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
   const sr = document.getElementById('sideFab');
@@ -10326,7 +10465,9 @@ const _mvGauge = {
   raf: 0,
   lastSigC: '',
   lastSigA: '',
-  lastSigFp: ''
+  lastSigFp: '',
+  structLabel: '0/5',
+  structSide: ''
 };
 
 /** Draw a compact tachometer — clean, stable, no text overlap */
@@ -10395,21 +10536,32 @@ function mvDrawTacho(canvasId, value, minV, maxV, opts) {
   ctx.fill();
   ctx.restore();
 
-  // Value
-  const dig = opts.digits != null ? opts.digits : 1;
-  const txt = (value >= 0 ? '+' : '') + value.toFixed(dig);
-  ctx.fillStyle = t >= 0.58 ? '#00e676' : (t <= 0.42 ? '#ff5252' : '#fbbf24');
-  ctx.font = 'bold ' + Math.max(12, Math.floor(r * 0.42)) + 'px system-ui,sans-serif';
+  // Value / structure pass (center)
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText(txt, cx, cy + 4);
-
-  if (opts.unit) {
-    const vw = ctx.measureText(txt).width;
-    ctx.fillStyle = '#64748b';
-    ctx.font = 'bold 7px system-ui,sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(opts.unit, cx + vw / 2 + 3, cy + 7);
+  if (opts.centerLabel) {
+    // e.g. "2/5" — colour only: green = bullish structure, red = bearish (no B/S letter)
+    const side = String(opts.centerSide || '').toUpperCase();
+    const labCol = (side === 'B' || side === 'BULL') ? '#00e676'
+      : ((side === 'S' || side === 'BEAR') ? '#ff5252' : '#fbbf24');
+    const mainSize = Math.max(14, Math.floor(r * 0.52));
+    ctx.fillStyle = labCol;
+    ctx.font = 'bold ' + mainSize + 'px system-ui,sans-serif';
+    ctx.fillText(String(opts.centerLabel), cx, cy + 4);
+  } else {
+    const dig = opts.digits != null ? opts.digits : 1;
+    const txt = (value >= 0 ? '+' : '') + value.toFixed(dig);
+    ctx.fillStyle = t >= 0.58 ? '#00e676' : (t <= 0.42 ? '#ff5252' : '#fbbf24');
+    ctx.font = 'bold ' + Math.max(12, Math.floor(r * 0.42)) + 'px system-ui,sans-serif';
+    ctx.fillText(txt, cx, cy + 4);
+    if (opts.unit) {
+      const vw = ctx.measureText(txt).width;
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'bold 7px system-ui,sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(opts.unit, cx + vw / 2 + 3, cy + 7);
+      ctx.textAlign = 'center';
+    }
   }
 
   // S / B corners
@@ -10422,21 +10574,21 @@ function mvDrawTacho(canvasId, value, minV, maxV, opts) {
   ctx.textAlign = 'right';
   ctx.fillText('B', cssW - 4, cssH - 3);
 
-  if (opts.signal && cssH >= 68) {
+  if (opts.signal && cssH >= 60) {
     let sig = String(opts.signal).replace(/GOLD/ig, '').trim();
-    // Keep footprint volume text e.g. BUY 5.2k
-    var keepVol = /\d/.test(sig) && /BUY|SELL|LIVE/i.test(sig);
-    if (!keepVol && sig.length > 10) {
+    // Footprint / volume signals: NEVER strip k/M (500k must stay 500k)
+    var isVolSig = /\d\s*[kKmM]?/.test(sig) && /BUY|SELL|FLAT|LIVE|NO DATA/i.test(sig);
+    if (opts.preserveSignal || isVolSig) {
+      if (sig.length > 16) sig = sig.slice(0, 16);
+    } else if (sig.length > 10) {
       if (/STRONG\s*BUY/i.test(sig)) sig = 'STR BUY';
       else if (/STRONG\s*SELL/i.test(sig)) sig = 'STR SELL';
       else if (/BUY/i.test(sig)) sig = 'BUY';
       else if (/SELL/i.test(sig)) sig = 'SELL';
       else sig = sig.slice(0, 9);
-    } else if (sig.length > 14) {
-      sig = sig.slice(0, 14);
     }
     ctx.fillStyle = t >= 0.58 ? '#00e676' : (t <= 0.42 ? '#ff5252' : '#94a3b8');
-    ctx.font = 'bold 7px system-ui,sans-serif';
+    ctx.font = 'bold ' + (isVolSig || opts.preserveSignal ? '8px' : '7px') + ' system-ui,sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(sig, cx, cssH - 3);
   }
@@ -10464,14 +10616,17 @@ function mvGaugeTick() {
   });
   mvDrawTacho('mvGaugeAv', a.show, -1, 1, {
     digits: 2,
-    unit: 'core',
-    signal: _mvGauge.lastSigA
+    unit: '',
+    signal: _mvGauge.lastSigA,
+    centerLabel: _mvGauge.structLabel || '0/5',
+    centerSide: _mvGauge.structSide || ''
   });
   // Needle = pressure −1…+1; signal text shows side + volume e.g. "BUY 5.2k"
   mvDrawTacho('mvGaugeFp', f.show, -1, 1, {
     digits: 2,
     unit: '',
-    signal: _mvGauge.lastSigFp || ''
+    signal: _mvGauge.lastSigFp || '',
+    preserveSignal: true
   });
 
   if (Math.abs(c.target - c.show) > 0.05 || Math.abs(a.target - a.show) > 0.002 || Math.abs(f.target - f.show) > 0.002) {
@@ -10520,6 +10675,24 @@ function mvUpdateLiveScores() {
   }
   _mvGauge.lastSigA = avSig;
 
+  // Structure pass out of 5 TFs (3m 5m 15m 1h 1d) for AI Visual tacho center
+  try {
+    let aligned = 0, n = 5, dir = '';
+    if (typeof avBiasFromTf === 'function') {
+      const mtf = avBiasFromTf();
+      aligned = mtf.aligned || 0;
+      n = mtf.n || 5;
+      dir = mtf.direction || '';
+    }
+    _mvGauge.structLabel = aligned + '/' + n;
+    if (dir === 'BULL') _mvGauge.structSide = 'B';
+    else if (dir === 'BEAR') _mvGauge.structSide = 'S';
+    else _mvGauge.structSide = '';
+  } catch (e) {
+    _mvGauge.structLabel = '0/5';
+    _mvGauge.structSide = '';
+  }
+
   // 1H Footprint live pressure (Binance rfStore — same real data for all users)
   let fp = { buy: 0, sell: 0, vol: 0, delta: 0, side: 'NEUTRAL', live: false };
   try {
@@ -10537,10 +10710,12 @@ function mvUpdateLiveScores() {
   _mvGauge.fp.target = fpQ;
   const volStr = (typeof avFmtVol === 'function') ? avFmtVol(fp.vol) : String(Math.round(fp.vol || 0));
   let fpSig = '';
-  if (fp.side === 'BUY') fpSig = 'BUY ' + volStr;
+  // volStr always includes k/M from avFmtVol (e.g. 500k)
+  if (!fp.ready && fp.vol < 1) fpSig = 'SYNC…';
+  else if (fp.side === 'BUY') fpSig = 'BUY ' + volStr;
   else if (fp.side === 'SELL') fpSig = 'SELL ' + volStr;
   else if (fp.vol > 0) fpSig = 'FLAT ' + volStr;
-  else fpSig = fp.live ? 'WAIT…' : 'NO DATA';
+  else fpSig = fp.live ? 'LIVE…' : 'SYNC…';
   _mvGauge.lastSigFp = fpSig;
 
   // Restart needle animation whenever targets/signal change or raf idle
@@ -11067,7 +11242,7 @@ initApp();
 /* PWA service worker — force update on every load so deploys show immediately */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261022d', { scope: './' })
+    navigator.serviceWorker.register('./sw.js?v=20261022i', { scope: './' })
       .then(function (reg) {
         console.log('[PWA] SW registered:', reg.scope);
         // Always check for a newer sw.js after deploy
