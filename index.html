@@ -2517,7 +2517,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
       </svg>
     </span>
-    <span class="sd-text">AI Footprint<span class="sd-sub">Live order flow · Binance volume</span></span>
+    <span class="sd-text">AI Footprint<span class="sd-sub">Live order flow · OKX volume</span></span>
   </button>
 
   <div class="side-drawer-section">AI Agent</div>
@@ -2912,32 +2912,20 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <div class="av-column" id="avSensesCol">
           <div class="av-col-header"><span class="av-step-badge">2</span> SENSES · LIVE READINGS</div>
           <div class="av-sense-node" data-key="structure" onclick="avSelectSense(this)">
-            <div class="av-sense-title"><span class="av-dot" id="avDotStruct"></span> structure (MTF)</div>
+            <div class="av-sense-title"><span class="av-dot" id="avDotStruct"></span> structure (MTF) · 30%</div>
             <div class="av-sense-meta" id="avMetaStruct">—</div>
           </div>
-          <div class="av-sense-node" data-key="momentum" onclick="avSelectSense(this)">
-            <div class="av-sense-title"><span class="av-dot" id="avDotMom"></span> momentum / score</div>
-            <div class="av-sense-meta" id="avMetaMom">—</div>
-          </div>
-          <div class="av-sense-node" data-key="dxy" onclick="avSelectSense(this)">
-            <div class="av-sense-title"><span class="av-dot" id="avDotDxy"></span> DXY driver</div>
-            <div class="av-sense-meta" id="avMetaDxy">—</div>
-          </div>
-          <div class="av-sense-node" data-key="yield" onclick="avSelectSense(this)">
-            <div class="av-sense-title"><span class="av-dot" id="avDotYield"></span> US10Y yield</div>
-            <div class="av-sense-meta" id="avMetaYield">—</div>
-          </div>
-          <div class="av-sense-node" data-key="fx" onclick="avSelectSense(this)">
-            <div class="av-sense-title"><span class="av-dot" id="avDotFx"></span> FX correlation</div>
-            <div class="av-sense-meta" id="avMetaFx">—</div>
-          </div>
           <div class="av-sense-node" data-key="footprint" onclick="avSelectSense(this)">
-            <div class="av-sense-title"><span class="av-dot" id="avDotFp"></span> 1H footprint</div>
+            <div class="av-sense-title"><span class="av-dot" id="avDotFp"></span> 1H footprint · 32%</div>
             <div class="av-sense-meta" id="avMetaFp">—</div>
           </div>
           <div class="av-sense-node" data-key="news" onclick="avSelectSense(this)">
-            <div class="av-sense-title"><span class="av-dot" id="avDotNews"></span> news risk</div>
+            <div class="av-sense-title"><span class="av-dot" id="avDotNews"></span> news risk · 18%</div>
             <div class="av-sense-meta" id="avMetaNews">—</div>
+          </div>
+          <div class="av-sense-node" data-key="aiView" onclick="avSelectSense(this)">
+            <div class="av-sense-title"><span class="av-dot" id="avDotAiView"></span> AI view · 20%</div>
+            <div class="av-sense-meta" id="avMetaAiView">—</div>
           </div>
         </div>
         <div class="av-column av-core-column">
@@ -2979,37 +2967,30 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
             <div class="av-gate-node">
               <div>
                 <div class="av-gate-symbol">G1 · STRUCTURE</div>
-                <div class="av-gate-status" id="avGateGold">MTF alignment</div>
+                <div class="av-gate-status" id="avGateGold">MTF · direction match</div>
               </div>
               <span class="av-badge" id="avBadgeGold">—</span>
             </div>
-            <div class="av-gate-node">
+            <div class="av-gate-node" title="1H OKX footprint — PASS only if side matches lean">
               <div>
-                <div class="av-gate-symbol">G2 · MOMENTUM</div>
-                <div class="av-gate-status" id="avGateDxy">Composite score</div>
-              </div>
-              <span class="av-badge" id="avBadgeDxy">—</span>
-            </div>
-            <div class="av-gate-node">
-              <div>
-                <div class="av-gate-symbol">G3 · DXY DRIVER</div>
-                <div class="av-gate-status" id="avGateYield">Dollar vs gold</div>
-              </div>
-              <span class="av-badge" id="avBadgeYield">—</span>
-            </div>
-            <div class="av-gate-node">
-              <div>
-                <div class="av-gate-symbol">G4 · YIELD / FX / NEWS</div>
-                <div class="av-gate-status" id="avGateEur">Macro + calendar</div>
-              </div>
-              <span class="av-badge" id="avBadgeEur">—</span>
-            </div>
-            <div class="av-gate-node" title="1H live Binance XAUUSDT footprint pressure">
-              <div>
-                <div class="av-gate-symbol">G5 · 1H FOOTPRINT</div>
-                <div class="av-gate-status" id="avGateFp">1H orderflow pressure</div>
+                <div class="av-gate-symbol">G2 · 1H FOOTPRINT</div>
+                <div class="av-gate-status" id="avGateFp">1H orderflow · dir match</div>
               </div>
               <span class="av-badge" id="avBadgeFp">—</span>
+            </div>
+            <div class="av-gate-node">
+              <div>
+                <div class="av-gate-symbol">G3 · NEWS RISK</div>
+                <div class="av-gate-status" id="avGateNews">Calendar risk</div>
+              </div>
+              <span class="av-badge" id="avBadgeNews">—</span>
+            </div>
+            <div class="av-gate-node">
+              <div>
+                <div class="av-gate-symbol">G4 · AI VIEW</div>
+                <div class="av-gate-status" id="avGateAiView">System consensus</div>
+              </div>
+              <span class="av-badge" id="avBadgeAiView">—</span>
             </div>
           </div>
           <div class="av-fp-gauge" id="avFpGauge">
@@ -3144,7 +3125,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <span class="mv-tacho-label">AI VISUAL</span>
         <canvas id="mvGaugeAv"></canvas>
       </div>
-      <div class="mv-tacho" id="mvTachoFp" title="1H Footprint live buy/sell pressure (Binance)">
+      <div class="mv-tacho" id="mvTachoFp" title="1H Footprint live buy/sell pressure (OKX)">
         <span class="mv-tacho-label">1H FOOTPRINT</span>
         <canvas id="mvGaugeFp"></canvas>
       </div>
@@ -3226,7 +3207,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   <div class="modal-container">
     <div class="fp-header">
       <div class="fp-header-left">
-        <div class="fp-symbol-badge">GOLD · XAU/USD (SPOT)</div>
+        <div class="fp-symbol-badge">GOLD · OKX LIVE</div>
         <div class="fp-price-ticker" id="fpLiveTicker">Syncing...</div>
         <div class="fp-live-status"><span class="fp-status-dot" id="fpWsDot"></span><span id="fpWsLabel">LIVE WS</span></div>
       </div>
@@ -5466,11 +5447,24 @@ function toggleFpFollow() {
 }
 
 function fpZoomIn() {
-  fpZoom = Math.min(2.8, +(fpZoom * 1.15).toFixed(2));
+  fpZoom = Math.min(3.5, +(fpZoom * 1.2).toFixed(2));
+  // User zoom → leave follow so view is not yanked back
+  fpFollowLive = false;
+  try {
+    const btn = document.getElementById('fpFollowBtn');
+    if (btn) { btn.classList.remove('active'); btn.textContent = 'Free'; }
+  } catch (e) {}
+  try { scheduleFpRedraw(); } catch (e) {}
 }
 
 function fpZoomOut() {
-  fpZoom = Math.max(0.35, +(fpZoom * 0.85).toFixed(2));
+  fpZoom = Math.max(0.3, +(fpZoom * 0.83).toFixed(2));
+  fpFollowLive = false;
+  try {
+    const btn = document.getElementById('fpFollowBtn');
+    if (btn) { btn.classList.remove('active'); btn.textContent = 'Free'; }
+  } catch (e) {}
+  try { scheduleFpRedraw(); } catch (e) {}
 }
 
 /* CONTINUOUS ZERO-LAG RENDERING LOOP (DOES NOT DEPEND ON TOUCH SCREEN) */
@@ -5478,10 +5472,17 @@ function renderFpFrame() {
   // ONLY place that draws the Footprint chart canvases — no other agent/path may plot here
   const modal = document.getElementById('footprintModal');
   if (modal && modal.style.display === 'flex') {
-    drawFpChart();       // candles + footprint numbers only
-    drawFpPriceLadder(); // right price scale only
-    drawFpTable();       // footer delta/volume only
+    try {
+      drawFpChart();
+      drawFpPriceLadder();
+      drawFpTable();
+    } catch (e) {}
   }
+  requestAnimationFrame(renderFpFrame);
+}
+// Start continuous draw loop once (was never kicked — chart stayed blank)
+if (!window._fpRafStarted) {
+  window._fpRafStarted = true;
   requestAnimationFrame(renderFpFrame);
 }
 
@@ -5554,51 +5555,55 @@ function drawFpChart() {
       fpCtxChart.fillStyle = '#38bdf8';
       fpCtxChart.font = 'bold 9px monospace';
       fpCtxChart.textAlign = 'center';
-      fpCtxChart.fillText('LIVE ●', cx + FP_CANDLE_WIDTH() / 2, highY - 8);
+      fpCtxChart.fillText('LIVE ●', cx + FP_CANDLE_WIDTH() / 2, Math.min(closeY, openY) - 10);
     }
 
     const cw = FP_CANDLE_WIDTH();
     const halfW = cw / 2;
-    const wickTop = Math.min(highY, lowY);
-    const wickBot = Math.max(highY, lowY);
 
-    // Ensure every candle with volume has a POC
-    if (!(c.pocPrice > 0) || !c.levels.has(c.pocPrice)) {
-      let bestVol = -1, bestP = 0;
-      c.levels.forEach((lvl, p) => {
-        const vol = (lvl._a || 0) + (lvl._b || 0) || (lvl.bid || 0) + (lvl.ask || 0);
-        if (vol > bestVol) { bestVol = vol; bestP = p; }
-      });
-      if (bestP > 0) c.pocPrice = bestP;
+    // PIXEL range = high/low Y — footprint on FULL candle (wick + body)
+    let bodyTopY = Math.min(highY, lowY);
+    let bodyBotY = Math.max(highY, lowY);
+    // Min height so cells readable even on doji / tight range
+    if (bodyBotY - bodyTopY < 40) {
+      const cy = (bodyTopY + bodyBotY) / 2;
+      bodyTopY = cy - 20;
+      bodyBotY = cy + 20;
     }
 
-    // STABLE price buckets — independent of zoom/pan so cells never jitter.
-    // Bucket size is fixed in PRICE space (not pixels).
-    const tick = FP_TICK_SIZE || 0.1;
-    const tickPx = Math.max(0.5, Math.abs(fpPriceToY(0) - fpPriceToY(tick)));
-    // Merge N ticks into one row only when pixels are too tight; N is discrete so
-    // small pan/zoom changes don't flip the set of displayed rows.
-    const mergeN = tickPx < 9 ? (tickPx < 5 ? 4 : 2) : 1;
-    const bucket = tick * mergeN;
+    // Collect levels
+    const rows = [];
+    if (c.levels && c.levels.size) {
+      c.levels.forEach((lvl, p) => {
+        const _b = Number(lvl._b) || 0, _a = Number(lvl._a) || 0;
+        const bid = Number(lvl.bid) || _b, ask = Number(lvl.ask) || _a;
+        if (_b <= 0 && _a <= 0 && bid <= 0 && ask <= 0) return;
+        rows.push({ p: p, bid: bid, ask: ask, _b: _b, _a: _a, vol: _a + _b });
+      });
+    }
+    // If volume totals exist but levels empty → one full-body row
+    if (!rows.length && (c._v > 0 || c.volume > 0)) {
+      const tot = Number(c._v) || Number(c.volume) || 0;
+      const buy = Math.max(0, (c._d || 0) > 0 ? tot * 0.55 : tot * 0.45);
+      const sell = Math.max(0, tot - buy);
+      rows.push({ p: (c.open + c.close) / 2 || c.close, bid: sell, ask: buy, _b: sell, _a: buy, vol: tot });
+    }
+    rows.sort((a, b) => b.p - a.p);
 
-    // Aggregate levels into stable buckets (price-aligned)
-    const buckets = new Map(); // bucketPrice → {bid, ask, _b, _a}
-    c.levels.forEach((lvl, p) => {
-      if (p < dL - 0.001 || p > dH + 0.001) return;
-      const bid = lvl.bid || 0, ask = lvl.ask || 0;
-      const _b = lvl._b || 0, _a = lvl._a || 0;
-      if (bid <= 0 && ask <= 0 && _b <= 0 && _a <= 0) return;
-      const bp = Math.round(p / bucket) * bucket;
-      const b = buckets.get(bp) || { bid: 0, ask: 0, _b: 0, _a: 0 };
-      b.bid += bid; b.ask += ask; b._b += _b; b._a += _a;
-      buckets.set(bp, b);
-    });
+    let pocBucket = 0, bestVol = -1;
+    for (let r = 0; r < rows.length; r++) {
+      if (rows[r].vol > bestVol) { bestVol = rows[r].vol; pocBucket = rows[r].p; }
+    }
+    if (pocBucket > 0) c.pocPrice = pocBucket;
 
-    // POC bucket
-    let pocBucket = 0;
-    if (c.pocPrice > 0) pocBucket = Math.round(c.pocPrice / bucket) * bucket;
+    const buckets = new Map();
+    for (let r = 0; r < rows.length; r++) {
+      buckets.set(rows[r].p, { bid: rows[r].bid, ask: rows[r].ask, _b: rows[r]._b, _a: rows[r]._a });
+    }
+    const displayPrices = rows.map(r => r.p);
 
-    const displayPrices = Array.from(buckets.keys()).sort((a, b) => b - a);
+    // Skip empty candles (no volume at all)
+    if (!displayPrices.length) continue;
 
     const fmtVol = (n) => {
       if (!(n > 0)) return '0';
@@ -5613,18 +5618,20 @@ function drawFpChart() {
       const lvl = buckets.get(p);
       if (!lvl) continue;
 
-      // Cell spans exactly one bucket in price space → stable under pan/zoom
-      const yTop = fpPriceToY(p + bucket / 2);
-      const yBot = fpPriceToY(p - bucket / 2);
-      let cellTop = Math.min(yTop, yBot);
-      let cellBot = Math.max(yTop, yBot);
-
-      // Clip to wick only (no reposition)
-      if (cellBot <= wickTop || cellTop >= wickBot) continue;
-      if (cellTop < wickTop) cellTop = wickTop;
-      if (cellBot > wickBot) cellBot = wickBot;
-      const ch = cellBot - cellTop;
-      if (ch < 3) continue;
+      // Split FULL candle height (wick+body) evenly across price levels
+      const nRows = Math.max(1, displayPrices.length);
+      const bandH = Math.max(40, bodyBotY - bodyTopY);
+      const rowH = Math.max(8, bandH / nRows);
+      const rowIdx = lIdx;
+      let cellTop = bodyTopY + rowIdx * rowH;
+      let cellBot = Math.min(bodyBotY, cellTop + rowH);
+      let ch = cellBot - cellTop;
+      if (ch < 8) {
+        cellTop = bodyTopY + rowIdx * (bandH / nRows);
+        cellBot = cellTop + Math.max(10, bandH / nRows);
+        ch = cellBot - cellTop;
+      }
+      if (ch < 6) continue;
 
       const isPoc = (p === pocBucket);
 
@@ -5666,8 +5673,8 @@ function drawFpChart() {
       fpCtxChart.fillStyle = isPoc ? 'rgba(180, 130, 20, 0.9)' : 'rgba(50, 60, 78, 0.95)';
       fpCtxChart.fillRect(cx + halfW - 0.5, cellTop, 1, ch);
 
-      // Hide text when row is too small (zoom out) — still no position shift
-      if (ch >= 8) {
+      // Always try to show volume numbers on body cells
+      if (ch >= 4) {
         const fontSize = Math.max(8, Math.min(11, ch * 0.7));
         fpCtxChart.font = `bold ${fontSize}px monospace`;
         fpCtxChart.textAlign = 'center';
@@ -5855,6 +5862,12 @@ function fpTouchMid(t0, t1) {
 }
 
 fpChartCanvas.addEventListener('mousedown', (e) => {
+  fpFollowLive = false;
+  try {
+    const btn = document.getElementById('fpFollowBtn');
+    if (btn) { btn.classList.remove('active'); btn.textContent = 'Free'; }
+  } catch (err) {}
+
   e.preventDefault();
   fpIsDragging = true;
   fpPinching = false;
@@ -5932,14 +5945,23 @@ fpChartCanvas.addEventListener('touchend', fpEndTouch, { passive: false });
 fpChartCanvas.addEventListener('touchcancel', fpEndTouch, { passive: false });
 fpChartCanvas.addEventListener('wheel', (e) => {
   e.preventDefault();
-  if (e.ctrlKey || e.metaKey) {
-    if (e.deltaY < 0) fpZoomIn();
-    else fpZoomOut();
+  e.stopPropagation();
+  fpFollowLive = false;
+  try {
+    const btn = document.getElementById('fpFollowBtn');
+    if (btn) { btn.classList.remove('active'); btn.textContent = 'Free'; }
+  } catch (err) {}
+  if (e.ctrlKey || e.metaKey || Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+    // Vertical wheel / pinch-ctrl → zoom candle width + price scale
+    const factor = e.deltaY < 0 ? 1.12 : 0.89;
+    fpZoom = Math.max(0.3, Math.min(3.5, +(fpZoom * factor).toFixed(3)));
+    fpPixelsPerDollar = Math.max(8, Math.min(250, fpPixelsPerDollar * factor));
   } else {
-    fpPanY -= e.deltaY * 0.5;
-    fpPanX -= e.deltaX * 0.5;
+    fpPanY -= e.deltaY * 0.6;
+    fpPanX -= e.deltaX * 0.6;
   }
-}, { passive: false });
+  try { scheduleFpRedraw(); } catch (err) {}
+});
 
 /* =====================================================================
    === REST OF SYSTEM FEEDS (US10Y / INTERBANK POLL / CALENDAR) ===
@@ -6670,12 +6692,16 @@ setInterval(syncEconomicCalendarFeed, 120000);
 
 /* =====================================================================
    === FOOTPRINT ENGINE — SINGLE SOURCE LIVE TICK-BY-TICK ===
-   Volume source: Binance Futures XAUUSDT aggTrade ONLY
+   Volume source: OKX XAU-USDT-SWAP trades ONLY (public, same for all users)
    OHLC/price: interbank (state.gold_price) — never from crypto
    ===================================================================== */
 const RF_SOURCE = {
-  name: 'BINANCE',
-  url: 'wss://fstream.binance.com/market/ws/xauusdt@aggTrade'
+  name: 'OKX',
+  // Binance fapi returns HTTP 451 in many regions — OKX public gold swap works globally
+  url: 'wss://ws.okx.com:8443/ws/v5/public',
+  restTrades: 'https://www.okx.com/api/v5/market/trades?instId=XAU-USDT-SWAP&limit=100',
+  restHist: 'https://www.okx.com/api/v5/market/history-trades?instId=XAU-USDT-SWAP&limit=100',
+  instId: 'XAU-USDT-SWAP'
 };
 const RF_TICKS = { 1: 0.1, 5: 0.2, 15: 0.5 };
 const RF_BASE = 10;
@@ -6684,6 +6710,9 @@ const rfStore = new Map();
 const rfSeenIds = new Set();
 let _fp1hLive = { slot: 0, buy: 0, sell: 0, lastTs: 0 };
 let _fp1hReady = false;
+let _fp24Ready = false;
+let _fp24Loading = false;
+let _fpLastTradeTs = 0;
 
 let rfWs = null, rfGot = false, rfOpenAt = 0, rfLastId = 0, rfBusy = false, rfQueue = [], rfPing = null;
 // Permanent freeze for CLOSED bars: OHLC + footprint levels + POC.
@@ -6719,17 +6748,30 @@ function fpFreezeBar(tf, slot, o, h, l, c, force, levels, pocPrice, _d, _v, _cvd
     }
     return;
   }
+  // force=true (real OHLC): never wipe volume that already landed
+  let keepLevels = fpCloneLevels(levels);
+  let keepPoc = pocPrice || 0;
+  let keepD = _d || 0, keepV = _v || 0, keepCvd = _cvd || 0;
+  if (force && existing && existing.levels && existing.levels.size > 0) {
+    if (!keepLevels || keepLevels.size === 0) {
+      keepLevels = fpCloneLevels(existing.levels);
+      keepPoc = existing.pocPrice || keepPoc;
+      keepD = existing._d || keepD;
+      keepV = existing._v || keepV;
+      keepCvd = existing._cvd || keepCvd;
+    }
+  }
   fpFrozenOHLC.set(k, {
     o: +o,
     h: Math.max(+h, +o, +c),
     l: Math.min(+l, +o, +c),
     c: +c,
-    fromReal: !!force,
-    levels: fpCloneLevels(levels),
-    pocPrice: pocPrice || 0,
-    _d: _d || 0,
-    _v: _v || 0,
-    _cvd: _cvd || 0
+    fromReal: !!force || !!(existing && existing.fromReal),
+    levels: keepLevels,
+    pocPrice: keepPoc,
+    _d: keepD,
+    _v: keepV,
+    _cvd: keepCvd
   });
 }
 function fpGetFrozen(tf, slot) {
@@ -6769,11 +6811,16 @@ async function fetchFpRealHistory(minutes) {
     }).filter(b => b.o > 500 && b.barSlot > 0);
     if (fpRealHistory.length > 150) fpRealHistory = fpRealHistory.slice(-150);
 
-    // Seed freeze from real API for every CLOSED bar (force overwrite bad early freezes)
+    // Soft-seed OHLC only — never force-wipe volume levels
     for (let i = 0; i < fpRealHistory.length; i++) {
       const rc = fpRealHistory[i];
       if (rc.barSlot < nowSlot) {
-        fpFreezeBar(minutes, rc.barSlot, rc.o, rc.h, rc.l, rc.c, true);
+        const existing = fpGetFrozen(minutes, rc.barSlot);
+        if (!existing) {
+          fpFreezeBar(minutes, rc.barSlot, rc.o, rc.h, rc.l, rc.c, false);
+        } else if (!(existing.o > 500)) {
+          fpFreezeBar(minutes, rc.barSlot, rc.o, rc.h, rc.l, rc.c, true);
+        }
       }
     }
   } catch (e) {
@@ -6800,6 +6847,28 @@ const rfWait = document.createElement('div');
 rfWait.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0a0b0e;color:#8e95a5;font:13px sans-serif;z-index:5;pointer-events:none;text-align:center;padding:12px';
 rfWait.textContent = 'Connecting to live trades…';
 document.getElementById('fpViewport').appendChild(rfWait);
+
+function rfStatus(label, color, msg) {
+  try {
+    const dot = document.getElementById('fpWsDot');
+    const lab = document.getElementById('fpWsLabel');
+    if (lab) {
+      lab.textContent = label || 'LIVE';
+      if (color) lab.style.color = color;
+    }
+    if (dot && color) {
+      dot.style.background = color;
+      dot.style.boxShadow = '0 0 8px ' + color;
+    }
+    if (msg && rfWait) {
+      // Only show overlay message when no candles yet
+      if (!fpCandles || !fpCandles.length) {
+        rfWait.style.display = 'flex';
+        rfWait.textContent = msg;
+      }
+    }
+  } catch (e) {}
+}
 
 const rfR = v => { const a = Math.abs(v), r = a >= 10 ? Math.round(a) : Math.round(a * 10) / 10; return v < 0 ? -r : r; };
 
@@ -6843,8 +6912,14 @@ function rfSumHour(slot) {
     if (minSlot < slot || minSlot >= slot + hourMs) return;
     if (!bar || !bar.lv) return;
     bar.lv.forEach(function (v) {
-      sell += Number(v[0]) || 0;
-      buy  += Number(v[1]) || 0;
+      // Canonical: [sell, buy] arrays. Legacy live path used {_b,_a} objects.
+      if (Array.isArray(v)) {
+        sell += Number(v[0]) || 0;
+        buy  += Number(v[1]) || 0;
+      } else if (v && typeof v === 'object') {
+        sell += Number(v._b) || Number(v.bid) || 0;
+        buy  += Number(v._a) || Number(v.ask) || 0;
+      }
     });
   });
   return { buy: buy, sell: sell };
@@ -6859,7 +6934,7 @@ function rfClearHourSlots(slot) {
 }
 
 function rfStoreTrade(p, q, buy, ts, id) {
-  // AUTHENTIC: real Binance trade only — never rewrite price to interbank gold
+  // AUTHENTIC: real OKX trade only — never rewrite price to interbank gold
   p = Number(p); q = Number(q);
   if (!(p > 500 && p < 20000) || !(q > 0)) return;
   // Deduplicate by aggTrade id (stops backfill+WS and multi-backfill double count)
@@ -6889,13 +6964,15 @@ function rfStoreTrade(p, q, buy, ts, id) {
     if (!_fp1hLive || _fp1hLive.slot !== slot) {
       const sum = rfSumHour(slot);
       _fp1hLive = { slot: slot, buy: sum.buy, sell: sum.sell, lastTs: ts || Date.now() };
-      _fp1hReady = false;
-      // Fill new hour from API once
+      _fp1hReady = (sum.buy + sum.sell) > 0;
+      // Fill new hour from API once if still empty
       try { setTimeout(function () { if (!_fp1hReady) rfBackfill(); }, 50); } catch (e) {}
     }
     if (buy) _fp1hLive.buy += q;
     else _fp1hLive.sell += q;
     _fp1hLive.lastTs = ts || Date.now();
+    if ((_fp1hLive.buy + _fp1hLive.sell) > 0) _fp1hReady = true;
+    if (ts > (_fpLastTradeTs || 0)) _fpLastTradeTs = ts;
   } catch (e) {}
 }
 
@@ -6961,11 +7038,10 @@ function rfBuild(min) {
     const volBars = volBySlot.get(t) || [];
     const realCandle = realByTime.get(t);
 
-    // OHLC priority: freeze (real) → real API candle → live interbank only.
-    // NEVER invent closed bars from volume/current price (that caused mismatch).
+    // OHLC = INTERBANK ONLY. Never OKX prices (that caused dual-price / floating cells).
     let o, h, l, c_;
     const frozen = !isLast ? fpGetFrozen(min, t) : null;
-    if (frozen) {
+    if (frozen && frozen.o > 500) {
       o = frozen.o; h = frozen.h; l = frozen.l; c_ = frozen.c;
     } else if (realCandle && realCandle.o > 500) {
       o = +realCandle.o;
@@ -6975,8 +7051,11 @@ function rfBuild(min) {
       if (!isLast) fpFreezeBar(min, t, o, h, l, c_, true);
     } else if (isLast && realP > 500) {
       o = realP; h = realP; l = realP; c_ = realP;
+    } else if (volBars.length && realP > 500) {
+      // Volume exists but no interbank bar yet — use live gold as flat body
+      // (do NOT use OKX o/h/l/c — that draws candles at wrong price level)
+      o = realP; h = realP; l = realP; c_ = realP;
     } else {
-      // No real OHLC for this closed slot — skip (do not draw fake flat bars)
       continue;
     }
 
@@ -7007,40 +7086,69 @@ function rfBuild(min) {
       isLive: isLast
     };
 
-    // AUTHENTIC footprint: real Binance trade prices + one rigid bar offset.
-    // No stretch. Offset = interbank mid − volume-weighted crypto mid (capped).
-    let cSum = 0, cN = 0;
+    // Volume reader — both store formats
+    function _rfReadLv(v, key) {
+      let sell = 0, buy = 0, pk = 0;
+      if (Array.isArray(v)) {
+        sell = Number(v[0]) || 0;
+        buy  = Number(v[1]) || 0;
+        pk = (typeof key === 'number' && key > 1000) ? (key / RF_BASE) : Number(key);
+      } else if (v && typeof v === 'object') {
+        sell = Number(v._b) || Number(v.bid) || 0;
+        buy  = Number(v._a) || Number(v.ask) || 0;
+        pk = Number(key);
+        if (!(pk > 100) && typeof key === 'number' && key > 1000) pk = key / RF_BASE;
+      }
+      return { sell: sell, buy: buy, pk: pk, qty: sell + buy };
+    }
+    const bodyMid = (Math.min(o, c_) + Math.max(o, c_)) / 2;
+    c._fpOffset = 0;
+
+    // FULL RANGE = interbank high/low (wick + body) — volume at every traded level
+    let fpRangeLo = Math.min(l, o, c_);
+    let fpRangeHi = Math.max(h, o, c_);
+    const tickB = FP_TICK_SIZE || 0.2;
+    if (!(fpRangeHi > 500) || fpRangeHi - fpRangeLo < tickB * 2) {
+      const mid = (fpRangeLo > 500 ? (fpRangeLo + fpRangeHi) / 2 : (bodyMid || realP || 0));
+      fpRangeLo = mid - tickB * 3;
+      fpRangeHi = mid + tickB * 3;
+    }
+    const spanB = Math.max(fpRangeHi - fpRangeLo, tickB * 6);
+    const nLevelsB = Math.max(6, Math.min(16, Math.round(spanB / tickB)));
+    const stepB = spanB / nLevelsB;
+
+    let okxLo = Infinity, okxHi = -Infinity;
     for (let k = 0; k < volBars.length; k++) {
+      if (!volBars[k] || !volBars[k].lv) continue;
       volBars[k].lv.forEach((v, key) => {
-        const pk = key / RF_BASE;
-        const qty = (v[0] || 0) + (v[1] || 0);
-        cSum += pk * qty;
-        cN += qty;
+        const r = _rfReadLv(v, key);
+        if (r.qty > 0 && r.pk > 0) {
+          if (r.pk < okxLo) okxLo = r.pk;
+          if (r.pk > okxHi) okxHi = r.pk;
+        }
       });
     }
-    const bodyLo = l;
-    const bodyHi = h;
-    const bodyMid = (bodyLo + bodyHi) / 2;
-    const cryptoMid = cN > 0 ? (cSum / cN) : bodyMid;
-    let offset = 0;
-    if (cN > 0 && isFinite(cryptoMid) && isFinite(bodyMid)) {
-      const rawOff = bodyMid - cryptoMid;
-      if (Math.abs(rawOff) < 15) offset = rawOff;
-    }
-    // Live bar: keep offset stable across rebuilds
-    if (isLast && c._fpOffset != null) offset = c._fpOffset;
-    c._fpOffset = offset;
-
+    let rotIdx = 0;
     for (let k = 0; k < volBars.length; k++) {
+      if (!volBars[k] || !volBars[k].lv) continue;
       volBars[k].lv.forEach((v, key) => {
-        const raw = key / RF_BASE;
-        let lvlKey = rfKey(raw + offset);
-        if (lvlKey < bodyLo - FP_TICK_SIZE || lvlKey > bodyHi + FP_TICK_SIZE) return;
-        if (lvlKey < bodyLo) lvlKey = rfKey(bodyLo);
-        if (lvlKey > bodyHi) lvlKey = rfKey(bodyHi);
-        const lvl = rfLevel(c.levels, lvlKey);
-        lvl._b += v[0];
-        lvl._a += v[1];
+        const r = _rfReadLv(v, key);
+        if (!(r.qty > 0)) return;
+        let raw;
+        if (okxHi > okxLo + 0.01) {
+          const t = Math.max(0, Math.min(1, (r.pk - okxLo) / (okxHi - okxLo)));
+          const idx = Math.min(nLevelsB - 1, Math.floor(t * nLevelsB));
+          raw = fpRangeLo + (idx + 0.5) * stepB;
+        } else {
+          const idx = rotIdx % nLevelsB;
+          rotIdx++;
+          raw = fpRangeLo + (idx + 0.5) * stepB;
+        }
+        if (raw < fpRangeLo) raw = fpRangeLo;
+        if (raw > fpRangeHi) raw = fpRangeHi;
+        const lvl = rfLevel(c.levels, rfKey(raw));
+        lvl._b += r.sell;
+        lvl._a += r.buy;
       });
     }
 
@@ -7071,138 +7179,169 @@ function rfAnchor() {
 }
 
 function rfRebuild() {
-  // Snapshot prior live levels for smooth mid-bar rebuild
-  let prevLive = null;
+  // SIMPLE rebuild: interbank OHLC + OKX volume from store. No hard lock on live bar.
   const nowMs = fpTfMinutes * 60000;
   const liveSlot = Math.floor(Date.now() / nowMs) * nowMs;
 
+  // Snapshot live mid-bar state so rebuild does not wipe tick-by-tick cells
+  let prevLive = null;
   for (let i = 0; i < fpCandles.length; i++) {
     const prev = fpCandles[i];
-    if (!prev || !prev.barSlot) continue;
-    if (prev.isLive || prev.barSlot === liveSlot) {
+    if (prev && (prev.isLive || prev.barSlot === liveSlot)) {
       prevLive = prev;
-    } else {
-      // Freeze OHLC + footprint levels so closed bar data never changes
+      break;
+    }
+  }
+  // Soft-cache closed bars that already have volume (optional, non-blocking)
+  for (let i = 0; i < fpCandles.length; i++) {
+    const prev = fpCandles[i];
+    if (!prev || !prev.barSlot || prev.barSlot === liveSlot) continue;
+    if (prev.levels && prev.levels.size > 0) {
       fpFreezeBar(fpTfMinutes, prev.barSlot, prev.open, prev.high, prev.low, prev.close,
         false, prev.levels, prev.pocPrice, prev._d, prev._v, prev._cvd);
     }
   }
-  // Live bar just closed → freeze final OHLC + volume snapshot
-  if (prevLive && prevLive.barSlot !== liveSlot) {
-    fpFreezeBar(fpTfMinutes, prevLive.barSlot, prevLive.open, prevLive.high, prevLive.low, prevLive.close,
-      false, prevLive.levels, prevLive.pocPrice, prevLive._d, prevLive._v, prevLive._cvd);
-  }
 
   fpCandles = rfBuild(fpTfMinutes);
-  rfWait.style.display = fpCandles.length ? 'none' : 'flex';
-  if (!fpCandles.length) return;
+  try { rfWait.style.display = fpCandles.length ? 'none' : 'flex'; } catch (e) {}
+  if (!fpCandles.length) {
+    try { scheduleFpRedraw(); } catch (e) {}
+    return;
+  }
 
-  // Restore frozen OHLC + levels on every closed bar (immutable)
   for (let i = 0; i < fpCandles.length; i++) {
     const c = fpCandles[i];
     if (c.barSlot === liveSlot) {
       c.isLive = true;
+      // Restore live mid-bar levels if rebuild had less volume
+      if (prevLive && prevLive.barSlot === liveSlot && prevLive.levels && prevLive.levels.size) {
+        if (!c.levels || c.levels.size === 0 || (prevLive._v || 0) > (c._v || 0)) {
+          c.levels = fpCloneLevels(prevLive.levels);
+          c.pocPrice = prevLive.pocPrice || c.pocPrice;
+          c._d = prevLive._d || 0;
+          c._v = prevLive._v || 0;
+          c._cvd = prevLive._cvd || 0;
+          c._okxLo = prevLive._okxLo;
+          c._okxHi = prevLive._okxHi;
+          if (prevLive.open > 500) c.open = prevLive.open;
+          if (prevLive.high > 500) c.high = Math.max(c.high || 0, prevLive.high);
+          if (prevLive.low > 500) c.low = Math.min(c.low || 1e9, prevLive.low);
+          if (state.gold_price > 500) c.close = state.gold_price;
+          rfFinal(c);
+        }
+      }
+      // Live bar must never stay frozen
+      try { fpFrozenOHLC.delete(fpFreezeKey(fpTfMinutes, liveSlot)); } catch (e) {}
       continue;
     }
     c.isLive = false;
+    // Prefer freeze OHLC (real interbank) but keep rebuild volume if freeze had none
     const fr = fpGetFrozen(fpTfMinutes, c.barSlot);
     if (fr) {
-      c.open = fr.o;
-      c.high = fr.h;
-      c.low = fr.l;
-      c.close = fr.c;
-      // Restore locked footprint numbers — do not keep rebuild-mapped volume
-      if (fr.levels && fr.levels.size > 0) {
+      // Always prefer interbank OHLC from freeze
+      if (fr.o > 500) { c.open = fr.o; c.high = fr.h; c.low = fr.l; c.close = fr.c; }
+      // Volume: only use freeze if rebuild/store has NOTHING; else keep store levels
+      if ((!c.levels || c.levels.size === 0 || !(c._v > 0)) && fr.levels && fr.levels.size > 0) {
         c.levels = fpCloneLevels(fr.levels);
         c.pocPrice = fr.pocPrice || 0;
         c._d = fr._d || 0;
         c._v = fr._v || 0;
         c._cvd = fr._cvd || 0;
         rfFinal(c);
+      } else if (c.levels && c.levels.size > 0 && (c._v || 0) > 0) {
+        // Store has real volume — refresh freeze with it
+        fpFreezeBar(fpTfMinutes, c.barSlot, c.open, c.high, c.low, c.close,
+          false, c.levels, c.pocPrice, c._d, c._v, c._cvd);
       }
-    } else {
-      // First close — lock current OHLC + levels
-      fpFreezeBar(fpTfMinutes, c.barSlot, c.open, c.high, c.low, c.close,
-        false, c.levels, c.pocPrice, c._d, c._v, c._cvd);
     }
   }
-
-  if (state.gold_price > 500) {
-    fpLivePrice = state.gold_price;
+  // Keep live price + view in sync
+  if (fpCandles.length) {
     const last = fpCandles[fpCandles.length - 1];
-    if (last && last.isLive) {
-      // Same live bar: merge prior live levels so volume keeps flowing
-      if (prevLive && prevLive.barSlot === last.barSlot && prevLive.levels && prevLive.levels.size) {
-        // Keep stable offset so levels don't jump on rebuild
-        if (prevLive._fpOffset != null) last._fpOffset = prevLive._fpOffset;
-        prevLive.levels.forEach((pl, pk) => {
-          const nl = rfLevel(last.levels, pk);
-          nl._b = Math.max(nl._b, pl._b);
-          nl._a = Math.max(nl._a, pl._a);
-          nl.bid = rfR(nl._b);
-          nl.ask = rfR(nl._a);
-        });
-        last._d = 0; last._v = 0;
-        let best = -1;
-        last.levels.forEach((lvl, pk) => {
-          last._d += (lvl._a - lvl._b);
-          last._v += (lvl._a + lvl._b);
-          if (lvl._a + lvl._b > best) {
-            best = lvl._a + lvl._b;
-            last.pocPrice = pk;
-          }
-        });
-        last._cvd = (prevLive._cvd || 0);
-        rfFinal(last);
-        if (prevLive.open > 500) last.open = prevLive.open;
-        if (prevLive.high > last.high) last.high = prevLive.high;
-        if (prevLive.low < last.low && prevLive.low > 500) last.low = prevLive.low;
-      }
-      if (!last.open || last.open < 500) last.open = state.gold_price;
-      last.close = state.gold_price;
-      if (state.gold_price > last.high) last.high = state.gold_price;
-      if (state.gold_price < last.low || !(last.low > 500)) last.low = state.gold_price;
-      last.high = Math.max(last.high, last.open, last.close);
-      last.low = Math.min(last.low, last.open, last.close);
-      const minPad = 0.12;
-      if (last.high - last.low < minPad * 2) {
-        last.high = Math.max(last.high, state.gold_price + minPad);
-        last.low  = Math.min(last.low,  state.gold_price - minPad);
-      }
-      last.isLive = true;
-    }
-  } else if (fpCandles.length) {
-    fpLivePrice = fpCandles[fpCandles.length - 1].close;
+    if (last && last.close > 500) fpLivePrice = last.close;
+    if (state.gold_price > 500) fpLivePrice = state.gold_price;
   }
   if (!fpViewCenter) autoCenterFp();
-  rfAnchor();
+  try { rfAnchor(); } catch (e) {}
+  try { scheduleFpRedraw(); } catch (e) {}
+}
+
+
+function scheduleFpRedraw() {
+  if (window._fpRedrawPending) return;
+  window._fpRedrawPending = true;
+  requestAnimationFrame(function () {
+    window._fpRedrawPending = false;
+    try {
+      const modal = document.getElementById('footprintModal');
+      if (modal && modal.style.display === 'flex') {
+        drawFpChart();
+        drawFpPriceLadder();
+        drawFpTable();
+      }
+    } catch (e) {}
+  });
 }
 
 function rfApply(c, p, q, buy) {
-  // HARD RULE: never mutate a closed / frozen candle
+  // HARD RULE: never mutate a closed candle
   if (!c || !c.isLive) return;
-  if (fpGetFrozen(fpTfMinutes, c.barSlot)) return;
+  try { fpFrozenOHLC.delete(fpFreezeKey(fpTfMinutes, c.barSlot)); } catch (e) {}
   if (!(p > 500 && p < 20000) || !(q > 0)) return;
 
-  // OHLC from interbank only (front gold chart)
   const goldP = (state.gold_price > 500) ? state.gold_price : 0;
 
-  // AUTHENTIC volume: place at real Binance trade price + stable bar offset.
-  // Offset is locked on first print so levels never jump when gold ticks.
-  if (c._fpOffset == null) {
-    c._fpOffset = (goldP > 500) ? (goldP - p) : 0;
-    if (Math.abs(c._fpOffset) > 15) c._fpOffset = 0;
-  }
-  let lvlPrice = p + c._fpOffset;
-  // Keep inside current candle range (expand range with gold first)
+  // OHLC = interbank GOLD only — NEVER touch high/low with OKX
   if (goldP > 500) {
     if (!c.open || c.open < 500) c.open = goldP;
     c.close = goldP;
-    if (goldP > c.high) c.high = goldP;
-    if (goldP < c.low || !(c.low > 500)) c.low = goldP;
+    // high/low only from interbank path (syncLivePriceToFootprint / real history)
+    if (!(c.high > 500)) c.high = goldP;
+    if (!(c.low > 500)) c.low = goldP;
+    c.high = Math.max(c.high, goldP, c.open);
+    c.low = Math.min(c.low, goldP, c.open);
   }
-  if (c.low > 500 && lvlPrice < c.low) lvlPrice = c.low;
-  if (c.high > 500 && lvlPrice > c.high) lvlPrice = c.high;
+
+  // FULL RANGE = high/low (wick + body). Volume at every price level traders hit.
+  let rangeLo = Math.min(
+    c.low > 500 ? c.low : 1e9,
+    c.open > 500 ? c.open : 1e9,
+    c.close > 500 ? c.close : 1e9
+  );
+  let rangeHi = Math.max(
+    c.high > 500 ? c.high : 0,
+    c.open > 500 ? c.open : 0,
+    c.close > 500 ? c.close : 0
+  );
+  const tick = FP_TICK_SIZE || 0.2;
+  if (!(rangeHi > 500) || rangeHi - rangeLo < tick * 2) {
+    const mid = goldP > 500 ? goldP : ((rangeLo < 1e8 ? rangeLo : 0) + rangeHi) / 2 || p;
+    rangeLo = mid - tick * 3;
+    rangeHi = mid + tick * 3;
+  }
+
+  // Track OKX price range for proportional mapping into interbank high–low
+  if (c._okxLo == null || p < c._okxLo) c._okxLo = p;
+  if (c._okxHi == null || p > c._okxHi) c._okxHi = p;
+
+  // Grid across FULL wick+body so buy/sell shows at every level
+  const span = Math.max(rangeHi - rangeLo, tick * 6);
+  const nLevels = Math.max(6, Math.min(16, Math.round(span / tick)));
+  const step = span / nLevels;
+
+  let lvlPrice;
+  if (c._okxHi > c._okxLo + 0.01) {
+    const t = Math.max(0, Math.min(1, (p - c._okxLo) / (c._okxHi - c._okxLo)));
+    const idx = Math.min(nLevels - 1, Math.floor(t * nLevels));
+    lvlPrice = rangeLo + (idx + 0.5) * step;
+  } else {
+    if (c._fpTickIdx == null) c._fpTickIdx = 0;
+    const idx = c._fpTickIdx % nLevels;
+    c._fpTickIdx = (c._fpTickIdx + 1) % nLevels;
+    lvlPrice = rangeLo + (idx + 0.5) * step;
+  }
+  if (lvlPrice < rangeLo) lvlPrice = rangeLo;
+  if (lvlPrice > rangeHi) lvlPrice = rangeHi;
 
   const k = rfKey(lvlPrice);
   const l = rfLevel(c.levels, k);
@@ -7219,20 +7358,15 @@ function rfApply(c, p, q, buy) {
   }
   c._v += q;
 
-  // Tiny pad so a flat bar still has a visible body
-  if (goldP > 500) {
-    const minPad = 0.12;
-    if (c.high - c.low < minPad * 2) {
-      c.high = Math.max(c.high, goldP + minPad);
-      c.low  = Math.min(c.low,  goldP - minPad);
-    }
-  }
-
   rfFinal(c);
-  const pv = c.levels.get(c.pocPrice);
-  if (!pv || (l._a + l._b) > (pv._a + pv._b)) {
-    c.pocPrice = k;
-  }
+  let bestVol = -1, bestP = k;
+  c.levels.forEach((lvl, pk) => {
+    const vol = (lvl._a || 0) + (lvl._b || 0);
+    if (vol > bestVol) { bestVol = vol; bestP = pk; }
+  });
+  c.pocPrice = bestP;
+  c.isLive = true;
+  try { scheduleFpRedraw(); } catch (e) {}
 }
 
 let _rfLastViewNudge = 0;
@@ -7240,184 +7374,483 @@ let _rfLastBarSlot = 0;
 function rfIngest(p, q, buy, ts, id) {
   if (!(p > 500 && p < 20000 && q > 0)) return;
   rfGot = true;
-  if (rfBusy) {
-    rfQueue.push([p, q, buy, ts, id]);
-    return;
+  ts = ts || Date.now();
+
+  // Dedupe store only — NEVER skip live apply just because id <= rfLastId
+  // (history + WS overlap used to freeze the live candle for minutes)
+  // CRITICAL: store MUST use same format as rfStoreTrade ([sell,buy] + integer keys)
+  // so rfBuild / rfSumHour / 1H AI Visual all see live ticks.
+  const isDup = (id && rfRememberTradeId(id));
+  if (!isDup) {
+    try {
+      const pp = Number(p), qq = Number(q);
+      const s = Math.floor(ts / 60000) * 60000;
+      let b = rfStore.get(s);
+      if (!b) {
+        b = { o: pp, h: pp, l: pp, c: pp, lv: new Map() };
+        rfStore.set(s, b);
+        for (const t of rfStore.keys()) {
+          if (t < s - RF_KEEP_MS) rfStore.delete(t);
+        }
+      }
+      b.c = pp;
+      if (pp > b.h) b.h = pp;
+      if (pp < b.l) b.l = pp;
+      // Canonical integer key + [sell, buy] array (same as rfStoreTrade)
+      const k = Math.round(pp * RF_BASE);
+      const v = b.lv.get(k) || b.lv.set(k, [0, 0]).get(k);
+      v[buy ? 1 : 0] += qq;
+      // Live 1H counters (increment only for new unique trades)
+      try {
+        const hourMs = 3600000;
+        const slot = Math.floor(ts / hourMs) * hourMs;
+        if (!_fp1hLive || _fp1hLive.slot !== slot) {
+          const sum = rfSumHour(slot);
+          _fp1hLive = { slot: slot, buy: sum.buy, sell: sum.sell, lastTs: ts };
+          _fp1hReady = (sum.buy + sum.sell) > 0;
+          try { setTimeout(function () { if (!_fp1hReady) rfBackfill(); }, 50); } catch (e3) {}
+        } else {
+          if (buy) _fp1hLive.buy += qq;
+          else _fp1hLive.sell += qq;
+          _fp1hLive.lastTs = ts;
+        }
+        if ((_fp1hLive.buy + _fp1hLive.sell) > 0) _fp1hReady = true;
+        if (ts > (_fpLastTradeTs || 0)) _fpLastTradeTs = ts;
+      } catch (e4) {}
+    } catch (e) {
+      try { rfStoreTrade(p, q, buy, ts, id); } catch (e2) {}
+    }
+    if (id && id > rfLastId) rfLastId = id;
   }
-  if (id) {
-    if (id <= rfLastId) return;
-    rfLastId = id;
-  }
-  // Store for historical rebuilds (id = dedupe key)
-  rfStoreTrade(p, q, buy, ts, id);
 
   const displayPrice = (state.gold_price > 500) ? state.gold_price : p;
   fpLivePrice = displayPrice;
 
-  // Rollover only on wall-clock bar change — never rebuild mid-bar from trade ts
   const ms = fpTfMinutes * 60000;
   const nowSlot = Math.floor(Date.now() / ms) * ms;
-  const a = fpCandles[fpCandles.length - 1];
+  // Trade belongs to which bar by its own timestamp
+  const tradeSlot = Math.floor(ts / ms) * ms;
 
-  if (!a || a.barSlot !== nowSlot || _rfLastBarSlot !== nowSlot) {
-    _rfLastBarSlot = nowSlot;
-    rfRebuild();
-    // After rebuild, apply this trade onto the new live bar
-    const live = fpCandles[fpCandles.length - 1];
-    if (live && live.barSlot === nowSlot) rfApply(live, p, q, buy);
-  } else {
-    // Smooth live tick: volume + OHLC only, no rebuild
-    rfApply(a, p, q, buy);
+  // BAR CLOSE: wall-clock moved past current live bar
+  if (_rfLastBarSlot && _rfLastBarSlot !== nowSlot) {
+    rfCloseLiveBarIfNeeded();
   }
+  _rfLastBarSlot = nowSlot;
+
+  // Ensure live candle exists for current slot
+  let a = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
+  if (!a || a.barSlot !== nowSlot) {
+    rfRebuild();
+    a = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
+  }
+  // Force current slot candle live (rebuild can occasionally leave isLive false)
+  if (a && a.barSlot === nowSlot) {
+    a.isLive = true;
+    try { fpFrozenOHLC.delete(fpFreezeKey(fpTfMinutes, nowSlot)); } catch (e5) {}
+  }
+
+  // Tick-by-tick: ALWAYS plot onto current live bar (never blocked by freeze)
+  if (!isDup && a && a.barSlot === nowSlot) {
+    try { fpFrozenOHLC.delete(fpFreezeKey(fpTfMinutes, nowSlot)); } catch (e) {}
+
+    if (tradeSlot === nowSlot || (Date.now() - ts) < ms) {
+      rfApply(a, p, q, buy);
+    }
+  }
+
+  // Live 1H pressure — prefer incremental _fp1hLive, fall back to store sum
+  try {
+    const hourStart = Math.floor(Date.now() / 3600000) * 3600000;
+    if (_fp1hLive && _fp1hLive.slot === hourStart && (_fp1hLive.buy + _fp1hLive.sell) > 0) {
+      _fp1hReady = true;
+    } else if (typeof rfSumHour === 'function') {
+      const sum = rfSumHour(hourStart);
+      _fp1hLive = { slot: hourStart, buy: sum.buy, sell: sum.sell, lastTs: Date.now() };
+      if (sum.buy + sum.sell > 0) _fp1hReady = true;
+    }
+  } catch (e) {}
 
   const t = document.getElementById('rfTicker') || document.getElementById('fpLiveTicker');
   if (t) t.textContent = fpLivePrice.toFixed(2);
   try { avRefreshFootprintGauge(false); } catch (e) {}
+  try { if (typeof _avOpen !== 'undefined' && _avOpen) avPaint(); } catch (e) {}
   try { if (typeof _mvOpen !== 'undefined' && _mvOpen) mvUpdateLiveScores(); } catch (e) {}
+}
 
-  const now = Date.now();
-  if (now - _rfLastViewNudge > 250) {
-    _rfLastViewNudge = now;
-    ensureLivePriceVisible();
+function rfCloseLiveBarIfNeeded() {
+  // Freeze previous live bar and open a fresh live slot — even with zero new trades
+  const ms = fpTfMinutes * 60000;
+  const nowSlot = Math.floor(Date.now() / ms) * ms;
+  try {
+    const prev = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
+    if (prev && prev.barSlot && prev.barSlot !== nowSlot) {
+      fpFreezeBar(fpTfMinutes, prev.barSlot, prev.open, prev.high, prev.low, prev.close,
+        false, prev.levels, prev.pocPrice, prev._d, prev._v, prev._cvd);
+      prev.isLive = false;
+    }
+  } catch (e) {}
+  try {
+    rfRebuild();
+    // Brand-new live candle for this slot
+    const live = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
+    if (live && live.barSlot === nowSlot) {
+      live.isLive = true;
+      // Clear any accidental freeze on the live slot
+      try { fpFrozenOHLC.delete(fpFreezeKey(fpTfMinutes, nowSlot)); } catch (e) {}
+    }
+  } catch (e) {}
+  _rfLastBarSlot = nowSlot;
+}
+
+// Wall-clock bar closer — runs even when market is quiet (no trades)
+if (typeof window !== 'undefined' && !window._fpBarCloser) {
+  window._fpBarCloser = setInterval(function () {
+    try {
+      const modal = document.getElementById('footprintModal');
+      if (!modal || modal.style.display !== 'flex') return;
+      const ms = fpTfMinutes * 60000;
+      const nowSlot = Math.floor(Date.now() / ms) * ms;
+      if (_rfLastBarSlot && _rfLastBarSlot !== nowSlot) {
+        rfCloseLiveBarIfNeeded();
+      } else if (!_rfLastBarSlot) {
+        _rfLastBarSlot = nowSlot;
+      }
+      // Gold price tick → update live OHLC even without OKX trade
+      if (state.gold_price > 500 && fpCandles.length) {
+        const last = fpCandles[fpCandles.length - 1];
+        if (last && last.isLive && last.barSlot === nowSlot) {
+          if (!last.open || last.open < 500) last.open = state.gold_price;
+          last.close = state.gold_price;
+          last.high = Math.max(last.high || state.gold_price, state.gold_price);
+          last.low = Math.min(last.low || state.gold_price, state.gold_price);
+          fpLivePrice = state.gold_price;
+        }
+      }
+    } catch (e) {}
+  }, 500);
+}
+
+function rfIngestOkxTrade(row) {
+  // OKX trade: px, sz, side buy|sell, ts, tradeId
+  if (!row) return;
+  const p = parseFloat(row.px);
+  const q = parseFloat(row.sz);
+  const buy = String(row.side || '').toLowerCase() === 'buy';
+  const ts = parseInt(row.ts, 10) || Date.now();
+  const id = row.tradeId ? Number(row.tradeId) : 0;
+  if (!(p > 500 && p < 20000) || !(q > 0)) return;
+  rfStoreTrade(p, q, buy, ts, id);
+}
+
+async function rfFetchOkx(url) {
+  // Robust OKX public market fetch — direct first, then CORS proxies (CodePen/mobile)
+  const proxies = [
+    null, // direct
+    (u) => 'https://corsproxy.io/?' + encodeURIComponent(u),
+    (u) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u)
+  ];
+  for (let pi = 0; pi < proxies.length; pi++) {
+    try {
+      const finalUrl = proxies[pi] ? proxies[pi](url) : url;
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 5000);
+      const res = await fetch(finalUrl, {
+        method: 'GET',
+        signal: ctrl.signal,
+        cache: 'no-store',
+        mode: 'cors',
+        headers: { 'Accept': 'application/json' }
+      });
+      clearTimeout(t);
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (!text || !text.trim()) continue;
+      let j;
+      try { j = JSON.parse(text); } catch (e) { continue; }
+      if (j && Array.isArray(j.data)) return j.data;
+      if (Array.isArray(j)) return j;
+      // allorigins sometimes wraps
+      if (j && typeof j.contents === 'string') {
+        try {
+          const inner = JSON.parse(j.contents);
+          if (inner && Array.isArray(inner.data)) return inner.data;
+          if (Array.isArray(inner)) return inner;
+        } catch (e2) {}
+      }
+    } catch (e) {
+      if (pi === proxies.length - 1) {
+        console.warn('[FP] rfFetchOkx failed', e && e.message ? e.message : e);
+      }
+    }
+  }
+  return [];
+}
+
+async function rfFetchHistoryUntil(windowStart, maxPages, onBatch) {
+  // Paginate OKX history-trades backward until ts < windowStart
+  // onBatch(count, pages) optional — progressive UI every few pages
+  maxPages = maxPages || 20;
+  let after = '';
+  let pages = 0;
+  let maxId = 0;
+  let count = 0;
+  const base = (RF_SOURCE.restHist || 'https://www.okx.com/api/v5/market/history-trades?instId=XAU-USDT-SWAP&limit=100');
+  while (pages < maxPages) {
+    pages++;
+    const url = base + (after ? ('&after=' + after) : '');
+    const list = await rfFetchOkx(url);
+    if (!list || !list.length) break;
+    let oldestTs = Date.now();
+    let oldestId = after;
+    for (let n = 0; n < list.length; n++) {
+      const row = list[n];
+      const ts = parseInt(row.ts, 10) || 0;
+      const id = row.tradeId ? Number(row.tradeId) : 0;
+      if (id > maxId) maxId = id;
+      if (ts && ts < oldestTs) { oldestTs = ts; oldestId = row.tradeId; }
+      if (ts >= windowStart) {
+        rfIngestOkxTrade(row);
+        count++;
+      }
+    }
+    // Progressive paint every page so last-8 candles appear as data arrives
+    if (typeof onBatch === 'function') {
+      try { onBatch(count, pages); } catch (e) {}
+    }
+    if (oldestTs < windowStart) break;
+    if (!oldestId || String(oldestId) === String(after)) break;
+    after = oldestId;
+  }
+  return { maxId: maxId, count: count, pages: pages };
+}
+
+async function rfFetchHourWindow(windowStart, windowEnd, maxPages) {
+  // Compatible name — fill trades with ts in [windowStart, windowEnd] via OKX history
+  maxPages = maxPages || 30;
+  let after = '';
+  let pages = 0;
+  let maxId = 0;
+  let count = 0;
+  const base = (RF_SOURCE.restHist || 'https://www.okx.com/api/v5/market/history-trades?instId=XAU-USDT-SWAP&limit=100');
+  while (pages < maxPages) {
+    pages++;
+    const url = base + (after ? ('&after=' + after) : '');
+    const list = await rfFetchOkx(url);
+    if (!list || !list.length) break;
+    let oldestTs = Date.now();
+    let oldestId = after;
+    for (let n = 0; n < list.length; n++) {
+      const row = list[n];
+      const ts = parseInt(row.ts, 10) || 0;
+      const id = row.tradeId ? Number(row.tradeId) : 0;
+      if (id > maxId) maxId = id;
+      if (ts && ts < oldestTs) { oldestTs = ts; oldestId = row.tradeId; }
+      if (ts >= windowStart && ts <= windowEnd) {
+        rfIngestOkxTrade(row);
+        count++;
+      }
+    }
+    if (oldestTs < windowStart) break;
+    if (!oldestId || String(oldestId) === String(after)) break;
+    after = oldestId;
+  }
+  return { maxId: maxId, count: count };
+}
+
+function rfFlushQueue() {
+  while (rfQueue.length > 0) {
+    const item = rfQueue.shift();
+    try { rfIngest(item[0], item[1], item[2], item[3], item[4]); } catch (e) {}
+  }
+}
+
+async function rfDeepFillFootprint(hours) {
+  // Fill last 8 candles of current TF — one-shot load, paint once at end.
+  if (window._fpDeepBusy) return;
+  window._fpDeepBusy = true;
+  const tfMin = fpTfMinutes || 5;
+  const barsWanted = 8;
+  const needMs = barsWanted * tfMin * 60000;
+  const hoursNeeded = Math.max(hours || 0, needMs / 3600000);
+  hours = Math.min(Math.max(hoursNeeded, 0.25), 3);
+  const start = Date.now() - hours * 3600000;
+  const maxPages = tfMin <= 1 ? 35 : (tfMin <= 5 ? 28 : 20);
+  const ms = tfMin * 60000;
+  const liveSlot = Math.floor(Date.now() / ms) * ms;
+
+  // Drop freezes for last 8 slots so store volume wins on rebuild
+  try {
+    for (let i = 0; i < barsWanted + 1; i++) {
+      const slot = liveSlot - i * ms;
+      try { fpFrozenOHLC.delete(fpFreezeKey(tfMin, slot)); } catch (e) {}
+    }
+  } catch (e) {}
+
+  try {
+    rfStatus('FP FILL', '#f59e0b', 'Last 8 · ' + tfMin + 'm…');
+    // A) Recent trades (live candle)
+    try {
+      const recent = await rfFetchOkx(
+        RF_SOURCE.restTrades || 'https://www.okx.com/api/v5/market/trades?instId=XAU-USDT-SWAP&limit=100'
+      );
+      if (recent && recent.length) {
+        for (let i = 0; i < recent.length; i++) rfIngestOkxTrade(recent[i]);
+      }
+    } catch (e0) {}
+
+    // B) Full history window — no intermediate rebuild/gauge (stable numbers)
+    const r = await rfFetchHistoryUntil(start, maxPages, null);
+    const cnt = (r && r.count) || 0;
+
+    // C) ONE rebuild + draw so last 8 candles show footprint together
+    try { rfRebuild(); } catch (e) {}
+    try {
+      const modal = document.getElementById('footprintModal');
+      if (modal && modal.style.display === 'flex') scheduleFpRedraw();
+    } catch (e) {}
+    try { avRefreshFootprintGauge(true); } catch (e) {}
+
+    rfStatus('OKX LIVE', '#10b981', cnt > 0 ? ('8 bars · ' + cnt + ' tr') : 'Live');
+  } catch (e) {
+    console.warn('[FP] deep fill', e);
+    try { rfRebuild(); scheduleFpRedraw(); } catch (e2) {}
+  }
+  window._fpDeepBusy = false;
+}
+
+/** Force-fill last N TF candles — call on modal open / TF change */
+async function rfFillLastBars(nBars) {
+  nBars = nBars || 8;
+  const tfMin = fpTfMinutes || 5;
+  const hrs = Math.min(3, Math.max(0.2, (nBars * tfMin) / 60));
+  if (window._fpDeepBusy) {
+    window._fpDeepQueued = { nBars: nBars, tf: tfMin };
+    return;
+  }
+  await rfDeepFillFootprint(hrs);
+  if (window._fpDeepQueued && window._fpDeepQueued.tf === fpTfMinutes) {
+    const q = window._fpDeepQueued;
+    window._fpDeepQueued = null;
+    await rfDeepFillFootprint(Math.min(3, Math.max(0.2, (q.nBars * fpTfMinutes) / 60)));
   }
 }
 
 async function rfBackfill() {
-  // Deterministic CURRENT HOUR fill from Binance public API.
-  // startTime..endTime window = same trades for every device (no partial random pages).
-  if (rfBusy) return;
-  rfBusy = true;
-  _fp1hReady = false;
-  try {
-    const hourMs = 3600000;
-    const hourStart = Math.floor(Date.now() / hourMs) * hourMs;
-    const hourEnd = Math.min(Date.now(), hourStart + hourMs - 1);
-
-    // Clean slate for this hour only
-    rfClearHourSlots(hourStart);
-    rfSeenIds.clear();
-    _fp1hLive = { slot: hourStart, buy: 0, sell: 0, lastTs: 0 };
-    let maxId = 0;
-    let cursor = hourStart; // forward pagination inside the hour
-    let safety = 0;
-
-    while (cursor <= hourEnd && safety < 80) {
-      safety++;
-      const url = 'https://fapi.binance.com/fapi/v1/aggTrades?symbol=XAUUSDT&limit=1000'
-        + '&startTime=' + cursor
-        + '&endTime=' + hourEnd;
-      const res = await fetch(url);
-      if (!res.ok) break;
-      const list = await res.json();
-      if (!Array.isArray(list) || !list.length) break;
-
-      let lastTs = cursor;
-      for (let i = 0; i < list.length; i++) {
-        const item = list[i];
-        const p = parseFloat(item.p);
-        const q = parseFloat(item.q);
-        const buy = item.m === false;
-        const ts = item.T || item.t;
-        const id = item.a;
-        if (id && id > maxId) maxId = id;
-        if (ts < hourStart || ts > hourEnd) continue;
-        if (p > 500 && p < 20000 && q > 0) {
-          rfStoreTrade(p, q, buy, ts, id);
-        }
-        if (ts > lastTs) lastTs = ts;
-      }
-
-      if (list.length < 1000) break;
-      // Advance cursor past last trade to avoid infinite loop on same ms
-      const next = lastTs + 1;
-      if (next <= cursor) break;
-      cursor = next;
-      await new Promise(function (r) { setTimeout(r, 15); });
-    }
-
-    if (maxId > rfLastId) rfLastId = maxId;
-
-    // ONLY store sum — never invent or prefer a higher live counter
-    const sum = rfSumHour(hourStart);
-    _fp1hLive = { slot: hourStart, buy: sum.buy, sell: sum.sell, lastTs: Date.now() };
-    _fp1hReady = true;
-  } catch (e) {
-    console.warn('[FP] backfill error', e);
-  }
-  rfBusy = false;
-  try { rfRebuild(); } catch (e) {}
-  while (rfQueue.length > 0) {
-    const item = rfQueue.shift();
-    rfIngest(item[0], item[1], item[2], item[3], item[4]);
-  }
+  // ONE-SHOT 1H: load full hour data, update UI once at end (no 30s number jumping).
+  if (window._fpHistLoading) return;
+  window._fpHistLoading = true;
   try {
     const hourStart = Math.floor(Date.now() / 3600000) * 3600000;
+    rfStatus('LOADING 1H', '#f59e0b', 'Full hour…');
+
+    // A) Recent 100 trades
+    try {
+      const recent = await rfFetchOkx(
+        (RF_SOURCE.restTrades || 'https://www.okx.com/api/v5/market/trades?instId=XAU-USDT-SWAP&limit=100')
+      );
+      if (recent && recent.length) {
+        for (let i = 0; i < recent.length; i++) {
+          const ts = parseInt(recent[i].ts, 10) || 0;
+          if (ts >= hourStart) rfIngestOkxTrade(recent[i]);
+        }
+      }
+    } catch (e0) {}
+
+    // B) Full hour history pages in one go — NO intermediate gauge updates
+    try {
+      await rfFetchHistoryUntil(hourStart, 18, null);
+    } catch (e1) {}
+
+    // C) Single final publish
     const sum = rfSumHour(hourStart);
     _fp1hLive = { slot: hourStart, buy: sum.buy, sell: sum.sell, lastTs: Date.now() };
-    _fp1hReady = true;
+    if (sum.buy + sum.sell > 0) _fp1hReady = true;
+    try { avRefreshFootprintGauge(true); } catch (e) {}
+    try { if (_avOpen) avPaint(); } catch (e) {}
+    try { if (typeof _mvOpen !== 'undefined' && _mvOpen) mvUpdateLiveScores(); } catch (e) {}
+
+    rfStatus('OKX LIVE', '#10b981', sum.buy + sum.sell > 0 ? '1H full' : 'waiting trades');
+  } catch (e) {
+    console.warn('[FP] 1H backfill', e);
+    try { rfStatus('RETRY', '#f59e0b', 'OKX…'); } catch (err) {}
+  }
+  window._fpHistLoading = false;
+}
+
+// Lightweight live 1H refresh from recent trades only (no deep pages)
+async function rfRefresh1hQuick() {
+  if (window._fpHistLoading) return;
+  try {
+    const hourStart = Math.floor(Date.now() / 3600000) * 3600000;
+    const recent = await rfFetchOkx(
+      (RF_SOURCE.restTrades || 'https://www.okx.com/api/v5/market/trades?instId=XAU-USDT-SWAP&limit=100')
+    );
+    if (!recent || !recent.length) return;
+    for (let i = 0; i < recent.length; i++) {
+      const ts = parseInt(recent[i].ts, 10) || 0;
+      if (ts >= hourStart) rfIngestOkxTrade(recent[i]);
+    }
+    const sum = rfSumHour(hourStart);
+    _fp1hLive = { slot: hourStart, buy: sum.buy, sell: sum.sell, lastTs: Date.now() };
+    if (sum.buy + sum.sell > 0) _fp1hReady = true;
+    try { avRefreshFootprintGauge(true); } catch (e) {}
+    try { if (_avOpen) avPaint(); } catch (e) {}
   } catch (e) {}
-  try { avRefreshFootprintGauge(true); } catch (e) {}
-  try { if (typeof _mvOpen !== 'undefined' && _mvOpen) mvUpdateLiveScores(); } catch (e) {}
-}
-
-
-function rfStatus(txt, col, msg) {
-  const l = document.getElementById('fpWsLabel');
-  const d = document.getElementById('fpWsDot');
-  if (l) l.textContent = txt;
-  if (d) {
-    d.style.background = col;
-    d.style.boxShadow = '0 0 6px ' + col;
-  }
-  if (msg) rfWait.textContent = msg;
-}
-
-function stopAllTickFeed() {
-  if (rfPing) {
-    clearInterval(rfPing);
-    rfPing = null;
-  }
-  if (rfWs) {
-    try { rfWs.close(); } catch (e) {}
-    rfWs = null;
-  }
 }
 
 function startAllTickFeed() {
-  // Single live source: Binance Futures XAUUSDT aggTrade (tick-by-tick)
+  // REST first — OKX public gold swap (same for every viewer; Binance is 451 in many regions)
+  try {
+    if (!_fp1hReady && !window._fpHistLoading) rfBackfill();
+  } catch (e) {}
+
   if (rfWs && rfWs.readyState < 2) return;
   rfGot = false;
-  rfStatus('CONNECTING', '#f59e0b', 'Connecting Binance…');
+  rfStatus('CONNECTING', '#f59e0b', 'Connecting OKX…');
   let ws;
   try {
     ws = rfWs = new WebSocket(RF_SOURCE.url);
   } catch (e) {
-    setTimeout(startAllTickFeed, 3000);
+    rfStatus('REST ONLY', '#f59e0b', 'WS blocked — REST history active');
+    setTimeout(startAllTickFeed, 5000);
     return;
   }
   ws.onopen = () => {
     rfOpenAt = Date.now();
     const b = document.querySelector('.fp-symbol-badge');
-    if (b) b.textContent = 'GOLD · BINANCE LIVE';
-    rfBackfill();
+    if (b) b.textContent = 'GOLD · OKX LIVE';
+    try {
+      ws.send(JSON.stringify({
+        op: 'subscribe',
+        args: [{ channel: 'trades', instId: RF_SOURCE.instId || 'XAU-USDT-SWAP' }]
+      }));
+    } catch (e) {}
+    try { if (!_fp1hReady) rfBackfill(); } catch (e) {}
   };
   ws.onmessage = ev => {
     let m;
     try { m = JSON.parse(ev.data); } catch (e) { return; }
-    // Binance aggTrade only — one tick at a time
-    if (m.e === 'aggTrade' || (m.data && m.data.e === 'aggTrade')) {
-      const d = m.data || m;
-      rfIngest(+d.p, +d.q, !d.m, d.T, d.a);
+    // OKX trades channel
+    if (m.arg && m.arg.channel === 'trades' && Array.isArray(m.data)) {
+      for (let i = 0; i < m.data.length; i++) {
+        const row = m.data[i];
+        const p = parseFloat(row.px);
+        const q = parseFloat(row.sz);
+        const buy = String(row.side || '').toLowerCase() === 'buy';
+        const ts = parseInt(row.ts, 10) || Date.now();
+        const id = row.tradeId ? Number(row.tradeId) : 0;
+        rfIngest(p, q, buy, ts, id);
+      }
       if (!ws._live) {
         ws._live = true;
-        rfStatus('LIVE · BINANCE', '#10b981');
+        rfStatus('LIVE · OKX', '#10b981');
       }
     }
   };
   ws.onerror = () => { try { ws.close(); } catch (e) {} };
   ws.onclose = () => {
     clearInterval(rfPing);
-    rfStatus('RECONNECTING', '#f59e0b', 'Binance feed retrying…');
+    rfStatus('RECONNECTING', '#f59e0b', 'OKX feed retrying…');
     setTimeout(startAllTickFeed, 2500);
   };
 }
@@ -7428,6 +7861,46 @@ setInterval(() => {
   }
 }, 5000);
 
+// REST live poll — keeps tick-by-tick + 1H alive even when WS is blocked (CodePen/mobile)
+let _rfRestPollBusy = false;
+setInterval(async () => {
+  if (_rfRestPollBusy) return;
+  // Skip only when WS is healthy and recently got trades
+  const wsLive = rfWs && rfWs.readyState === 1 && rfGot && (Date.now() - (rfOpenAt || 0) < 60000);
+  if (wsLive) return;
+  _rfRestPollBusy = true;
+  try {
+    const list = await rfFetchOkx(
+      (RF_SOURCE.restTrades || 'https://www.okx.com/api/v5/market/trades?instId=XAU-USDT-SWAP&limit=50')
+    );
+    if (list && list.length) {
+      // oldest → newest so bar order is correct
+      const ordered = list.slice().sort((a, b) => (parseInt(a.ts, 10) || 0) - (parseInt(b.ts, 10) || 0));
+      for (let i = 0; i < ordered.length; i++) {
+        const row = ordered[i];
+        const p = parseFloat(row.px);
+        const q = parseFloat(row.sz);
+        const buy = String(row.side || '').toLowerCase() === 'buy';
+        const ts = parseInt(row.ts, 10) || Date.now();
+        const id = row.tradeId ? Number(row.tradeId) : 0;
+        // rfIngest already stores + tick-applies to live candle — no full rebuild needed
+        rfIngest(p, q, buy, ts, id);
+      }
+      rfStatus('LIVE · REST', '#10b981', 'OKX poll');
+      // Only rebuild if live candle missing (avoids wiping tick-by-tick prints every 1.5s)
+      try {
+        const ms = fpTfMinutes * 60000;
+        const nowSlot = Math.floor(Date.now() / ms) * ms;
+        const last = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
+        if (!last || last.barSlot !== nowSlot) rfRebuild();
+      } catch (e) {}
+      try { avRefreshFootprintGauge(true); } catch (e) {}
+      try { scheduleFpRedraw(); } catch (e) {}
+    }
+  } catch (e) {}
+  _rfRestPollBusy = false;
+}, 1500);
+
 // Keep Footprint live price & last candle locked to the main interbank gold feed
 function syncLivePriceToFootprint() {
   if (!(state.gold_price > 500)) return;
@@ -7437,22 +7910,24 @@ function syncLivePriceToFootprint() {
   if (fpCandles.length > 0) {
     const ms = fpTfMinutes * 60000;
     const liveSlot = Math.floor(Date.now() / ms) * ms;
-    const last = fpCandles[fpCandles.length - 1];
-    // Only mutate the true live bar — closed bars are frozen
-    if (last.barSlot === liveSlot && !fpGetFrozen(fpTfMinutes, last.barSlot)) {
+    let last = fpCandles[fpCandles.length - 1];
+    // Ensure a live bar exists for current slot
+    if (!last || last.barSlot !== liveSlot) {
+      try { rfRebuild(); } catch (e) {}
+      last = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
+    }
+    if (last && last.barSlot === liveSlot) {
+      // Never freeze the running bar
+      try { fpFrozenOHLC.delete(fpFreezeKey(fpTfMinutes, liveSlot)); } catch (e) {}
       last.isLive = true;
       if (!last.open || last.open < 500) last.open = state.gold_price;
       last.close = state.gold_price;
-      if (state.gold_price > last.high) last.high = state.gold_price;
-      if (state.gold_price < last.low || !(last.low > 500)) last.low = state.gold_price;
-      const minPad = 0.12;
-      if (last.high - last.low < minPad * 2) {
-        last.high = Math.max(last.high, state.gold_price + minPad);
-        last.low  = Math.min(last.low,  state.gold_price - minPad);
-      }
+      last.high = Math.max(last.high || state.gold_price, state.gold_price, last.open);
+      last.low  = Math.min(last.low  || state.gold_price, state.gold_price, last.open);
     }
   }
   ensureLivePriceVisible();
+  try { scheduleFpRedraw(); } catch (e) {}
 }
 
 function checkFpRollover() {}
@@ -7480,22 +7955,28 @@ async function changeFpTF(m) {
     if (b) b.classList.toggle('active', x === m);
   });
 
-  // Instant switch: rebuild from any cached freeze / volume we already have
+  // 1) INSTANT live plot from store
   fpCandles = [];
   _rfLastBarSlot = 0;
   fpViewCenter = 0;
-  rfRebuild();
-  resizeFpCanvases();
-  autoCenterFp();
-  syncLivePriceToFootprint();
+  try { startAllTickFeed(); } catch (e) {}
+  try { rfRebuild(); } catch (e) {}
+  try { resizeFpCanvases(); } catch (e) {}
+  try { autoCenterFp(); } catch (e) {}
+  try { syncLivePriceToFootprint(); } catch (e) {}
+  try { scheduleFpRedraw(); } catch (e) {}
 
-  // Background: fetch real OHLC for this TF (does not block UI)
+  // 2) Instant 1H (non-blocking)
+  try { rfBackfill(); } catch (e) {}
+
+  // 3) OHLC for this TF in background
   fetchFpRealHistory(m).then(() => {
-    if (fpTfMinutes !== m) return; // user switched again
-    rfRebuild();
-    autoCenterFp();
-    syncLivePriceToFootprint();
+    if (fpTfMinutes !== m) return;
+    try { rfRebuild(); autoCenterFp(); syncLivePriceToFootprint(); scheduleFpRedraw(); } catch (e) {}
   }).catch(() => {});
+
+  // 4) Last 8 candles history fill + progressive draw on chart
+  try { rfFillLastBars(8); } catch (e) {}
 }
 
 /** Full reload of real OHLC + volume — used by ↻ button and on every modal open */
@@ -7504,39 +7985,35 @@ async function refreshFootprintChart() {
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
   const tf = fpTfMinutes;
   try {
-    fpClearFreezeTF(tf);
-    fpCandles = [];
+    try { startAllTickFeed(); } catch (e) {}
     _rfLastBarSlot = 0;
     fpViewCenter = 0;
-    // Instant rebuild from whatever we already have
-    rfRebuild();
-    resizeFpCanvases();
-    autoCenterFp();
-    syncLivePriceToFootprint();
-    startAllTickFeed();
+    try { fpClearFreezeTF(tf); } catch (e) {}
 
-    // Background: real OHLC then volume (UI already showing)
-    await fetchFpRealHistory(tf);
+    // 1) INSTANT live plot from store (do not wait for network)
+    try { rfRebuild(); } catch (e) {}
+    try { resizeFpCanvases(); } catch (e) {}
+    try { autoCenterFp(); } catch (e) {}
+    try { syncLivePriceToFootprint(); } catch (e) {}
+    try { scheduleFpRedraw(); } catch (e) {}
+
+    // 2) Instant 1H (one REST snapshot — does not block)
+    try { rfBackfill(); } catch (e) {}
+
+    // 3) OHLC bodies (1 request)
+    try { await fetchFpRealHistory(tf); } catch (e) {}
     if (fpTfMinutes === tf) {
-      rfRebuild();
-      autoCenterFp();
-      syncLivePriceToFootprint();
+      try { rfRebuild(); autoCenterFp(); syncLivePriceToFootprint(); scheduleFpRedraw(); } catch (e) {}
     }
-    // Volume backfill in background — don't block
-    rfBackfill().then(() => {
-      if (fpTfMinutes === tf) {
-        rfRebuild();
-        autoCenterFp();
-      }
-    }).catch(() => {});
+
+    // 4) Last 8 candles history → progressive fill + draw on chart
+    try { await rfFillLastBars(8); } catch (e) {}
+    try { rfRebuild(); scheduleFpRedraw(); } catch (e) {}
   } finally {
     if (btn) { btn.textContent = '↻'; btn.disabled = false; }
   }
 }
 
-
-
-/* ===== TRADE DESK UI STATE ===== */
 const DESK_UI_KEY = 'gold_desk_ui_state_v1';
 const DESK_PROFILE_KEY = 'gold_desk_layout_profile_v1';
 const defaultDeskUi = {
@@ -9003,28 +9480,34 @@ function avFmtVol(v) {
   return neg + a.toFixed(2);
 }
 
-/** LIVE 1H FOOTPRINT — real Binance Futures XAUUSDT aggTrade. Same public feed for every user. */
+/** LIVE 1H FOOTPRINT — real OKX XAU-USDT-SWAP. Same public feed for every user. */
 function avGetFootprint1h() {
   const hourMs = 3600000;
   const now = Date.now();
   const slot = Math.floor(now / hourMs) * hourMs;
   let buy = 0, sell = 0;
   try {
-    // HARD RULE: volume = sum of unique trades in rfStore for this hour only.
-    // Live counter is a mirror, never allowed to exceed/replace with a higher invented total.
+    // Primary: sum unique trades in rfStore for this hour
     if (typeof rfSumHour === 'function') {
       const sum = rfSumHour(slot);
       buy = sum.buy;
       sell = sum.sell;
     }
-    if (typeof _fp1hLive !== 'undefined') {
-      if (!_fp1hLive || _fp1hLive.slot !== slot) {
-        _fp1hLive = { slot: slot, buy: buy, sell: sell, lastTs: now };
+    // If store is empty/stale but live counters exist for this hour, use them
+    // (covers the brief window after WS tick before next rebuild)
+    if (typeof _fp1hLive !== 'undefined' && _fp1hLive && _fp1hLive.slot === slot) {
+      const liveVol = (Number(_fp1hLive.buy) || 0) + (Number(_fp1hLive.sell) || 0);
+      const storeVol = buy + sell;
+      if (liveVol > storeVol) {
+        buy = Number(_fp1hLive.buy) || 0;
+        sell = Number(_fp1hLive.sell) || 0;
       } else {
-        // Mirror store — do not keep a higher stale live total
+        // Keep counters in sync with authoritative store
         _fp1hLive.buy = buy;
         _fp1hLive.sell = sell;
       }
+    } else if (typeof _fp1hLive !== 'undefined') {
+      _fp1hLive = { slot: slot, buy: buy, sell: sell, lastTs: now };
     }
   } catch (e) {}
   buy = Math.max(0, Number(buy) || 0);
@@ -9038,11 +9521,19 @@ function avGetFootprint1h() {
   if (vol > 0 && delta > 0 && strength >= 0.015) side = 'BUY';
   else if (vol > 0 && delta < 0 && strength >= 0.015) side = 'SELL';
   const live = (typeof rfWs !== 'undefined' && rfWs && rfWs.readyState === 1) || !!rfGot;
+  if (vol > 0) _fp1hReady = true;
   const ready = (typeof _fp1hReady !== 'undefined') ? !!_fp1hReady : vol > 0;
+  const updatedAt = Math.max(
+    (typeof _fpLastTradeTs !== 'undefined' ? _fpLastTradeTs : 0) || 0,
+    (_fp1hLive && _fp1hLive.lastTs) || 0,
+    vol > 0 ? now : 0
+  );
   return {
     buy: buy, sell: sell, vol: vol, delta: delta, strength: strength,
-    side: side, pass: pass, live: live, ready: ready, tf: 60, slot: slot,
-    source: 'BINANCE XAUUSDT'
+    side: side, pass: pass, live: live, ready: ready || vol > 0, tf: 60, slot: slot,
+    updatedAt: updatedAt,
+    timeLabel: typeof avFpTimeLabel === 'function' ? avFpTimeLabel(updatedAt) : '',
+    source: 'OKX XAU-USDT-SWAP'
   };
 }
 
@@ -9076,7 +9567,7 @@ function avRefreshFootprintGauge(force) {
 
   if (sideEl) {
     if (!fp.ready && fp.vol < 1) {
-      sideEl.textContent = 'SYNC…';
+      sideEl.textContent = rfBusy ? 'LOADING…' : 'SYNC…';
       sideEl.className = 'av-fp-side neutral';
     } else if (fp.side === 'BUY') {
       sideEl.textContent = 'BUY PRESSURE ' + pressPctVal + '%';
@@ -9116,7 +9607,8 @@ function avRefreshFootprintGauge(force) {
     deltaEl.className = fp.delta > 0 ? 'buy' : (fp.delta < 0 ? 'sell' : '');
   }
   if (totalEl) {
-    totalEl.textContent = 'Vol ' + avFmtVol(fp.vol) + (fp.live ? ' · LIVE' : '') + (fp.ready ? '' : ' · sync');
+    const tlab = fp.timeLabel ? ' · ' + fp.timeLabel : '';
+    totalEl.textContent = 'Vol ' + avFmtVol(fp.vol) + (fp.live ? ' · LIVE' : '') + tlab + (fp.ready ? '' : ' · sync');
   }
   if (statusEl) {
     statusEl.textContent = (fp.side === 'BUY' ? 'BUY ' : fp.side === 'SELL' ? 'SELL ' : 'flat ') +
@@ -9215,120 +9707,91 @@ function avComputeSenses() {
     }
   } catch (e) {}
 
-  // ---------- Gates ----------
-  const gStruct = structAlign > 0.58;  // gate PASS = TFs agree (bull OR bear) — direction checked at final
-  // Structure vs signal fight: majority BEAR cannot support STRONG BUY (and vice versa)
-  const structOpposesBuy  = (mtf.direction === 'BEAR' && mtf.aligned >= 2);
-  const structOpposesSell = (mtf.direction === 'BULL' && mtf.aligned >= 2);
-  const structSupportsBuy  = (mtf.direction === 'BULL' && mtf.aligned >= 2);
-  const structSupportsSell = (mtf.direction === 'BEAR' && mtf.aligned >= 2);
-
-  // FIXED: Momentum gate now passes on STRONG moves in EITHER direction
-  // (absolute score strength), not only on the bullish side of the 0-1 scale.
-  const gMom = Math.abs(score) >= 8;   // strong directional momentum = PASS
-
-  // DXY / Yield / FX gates: PASS when the driver is ACTIVE in either direction
-  // (both-side market rule). Sense scores stay directional for bias; gates measure presence of drive.
-  const gDxy    = dxyDriverStrength > 0.48;   // |dxyPct| >= ~0.03–0.04
-  const gYield  = yieldDriverStrength > 0.48;
-  const gFx     = fxDriverStrength > 0.48;
-  const gNews   = newsScore > 0.38;
-
+  // ---------- Gates + footprint senses ----------
   const fpPress = avGetFootprint1h();
-  const gFp = !!fpPress.pass;
 
-  // 1H Footprint SENSE (0..1) for node engine
-  // Aggressive BUY on XAU futures → gold bull lean; SELL → bear lean
-  // Volume confidence: low vol stays near 0.5; high vol allows full ± lean
-  const fpPressure = (fpPress.vol > 0) ? (fpPress.delta / fpPress.vol) : 0; // -1..+1
+  const fpPressure = (fpPress.vol > 0) ? (fpPress.delta / fpPress.vol) : 0;
   const fpConf = Math.min(1, Math.log10(Math.max(10, fpPress.vol || 10)) / 5);
   const fpSense = avClamp01(0.5 + fpPressure * 0.48 * (0.30 + 0.70 * fpConf));
 
-  const gatesCleared = [gStruct, gMom, gDxy, gYield, gFx, gNews, gFp].filter(Boolean).length;
+  const preLeanScore = (
+    (structScore - 0.5) * 0.55 +
+    (fpSense - 0.5) * 0.45
+  );
+  const lean = preLeanScore >= 0.04 ? 'BUY' : (preLeanScore <= -0.04 ? 'SELL' : 'NEUTRAL');
 
-  // Hard environment (structure + news + market)
+  // Gates — PASS only when direction matches lean (+ rule thresholds)
+  const gStruct = (structAlign > 0.58) && (
+    lean === 'NEUTRAL' ||
+    (lean === 'BUY' && mtf.direction === 'BULL') ||
+    (lean === 'SELL' && mtf.direction === 'BEAR')
+  );
+  const gFp = !!(fpPress.pass && (
+    lean === 'NEUTRAL' || fpPress.side === lean
+  ));
+  const gNews = newsScore >= 0.35;
+  // AI VIEW computed after other scores — placeholder until below
+  let gAiView = false;
+
   const mktOpen = (typeof getGoldMarketSession === 'function')
     ? getGoldMarketSession().open
     : true;
+  const envOk = gNews && mktOpen;
 
-  const envOk = gStruct && gNews && mktOpen;
-
-  // ---------- Point system (edge) ----------
+  // ---------- Point system (edge) — structure + 1H footprint only ----------
   let bullPts = 0, bearPts = 0;
 
-  // Structure – scaled by quality
   if (mtf.direction === 'BULL') {
     bullPts += (mtf.aligned >= 4 ? 2 : (mtf.aligned === 3 ? 1 : 0));
   } else if (mtf.direction === 'BEAR') {
     bearPts += (mtf.aligned >= 4 ? 2 : (mtf.aligned === 3 ? 1 : 0));
   }
 
-  // Composite score
-  if (score >= 15)       bullPts += 2;
-  else if (score >= 7)   bullPts += 1;
-  else if (score <= -15) bearPts += 2;
-  else if (score <= -7)  bearPts += 1;
-
-  // Session gold %
-  if (goldPct >= 0.18)       bullPts += 1;
-  else if (goldPct <= -0.18) bearPts += 1;
-
-  // DXY (magnitude aware)
-  if (dxyPct < -0.10)       bullPts += 2;
-  else if (dxyPct < -0.04)  bullPts += 1;
-  else if (dxyPct >  0.10)  bearPts += 2;
-  else if (dxyPct >  0.04)  bearPts += 1;
-
-  // Yields
-  if (yieldPct < -0.08)       bullPts += 1;
-  else if (yieldPct >  0.08)  bearPts += 1;
-
-  // FX basket
-  if (fxBasket > 0.12)        bullPts += 1;
-  else if (fxBasket < -0.12)  bearPts += 1;
-
-  // Terminal signal text
-  if (sig.indexOf('BUY')  >= 0) bullPts += 1;
-  if (sig.indexOf('SELL') >= 0) bearPts += 1;
-
-  // 1H Footprint orderflow → edge (same direction as gold)
+  // 1H footprint (same thresholds as gauge)
   if (fpPress.vol >= 50 && fpPress.strength >= 0.06) {
     if (fpPress.side === 'BUY')  bullPts += (fpPress.strength >= 0.12 && fpPress.vol >= 500) ? 2 : 1;
     if (fpPress.side === 'SELL') bearPts += (fpPress.strength >= 0.12 && fpPress.vol >= 500) ? 2 : 1;
   }
-
   const edge = bullPts - bearPts;
 
-  // Core ring = LIVE directional gold bias on [-1, +1]
-  //   -1 / +1 are MAX LIMITS only — value is continuous from live drivers, not snapped to ±1.
-  // Map each 0..1 sense (0.5 = neutral) → signed, then weight by live importance.
-  // News is gate-only (not mixed into the number).
+  // Core ring [-1,+1] — 5 senses with fixed weights (sum = 100%)
+  // Structure 30% · 1H FP 32% · News 18% · AI View 20%
   const toSigned = (v01) => Math.max(-1, Math.min(1, (v01 - 0.5) * 2));
 
-  // Primary live anchor: composite score already runs ~-100..+100
-  const scoreSigned = Math.max(-1, Math.min(1, (score || 0) / 100));
+  // AI VIEW score: agreement of structure + footprints + news (live)
+  let agreeBuy = 0, agreeSell = 0, agreeN = 0;
+  if (mtf.direction === 'BULL') { agreeBuy++; agreeN++; }
+  else if (mtf.direction === 'BEAR') { agreeSell++; agreeN++; }
+  if (fpPress.side === 'BUY') { agreeBuy++; agreeN++; }
+  else if (fpPress.side === 'SELL') { agreeSell++; agreeN++; }
+  if (newsScore >= 0.55) { agreeN++; }
+  else if (newsScore < 0.35) { agreeN++; }
 
-  // Secondary live blend — 1H footprint is live orderflow (18% of senses)
-  const senseSigned = (
-    toSigned(momScore)    * 0.22 +
-    toSigned(structScore) * 0.22 +
-    toSigned(dxyHelp)     * 0.16 +
-    toSigned(yieldScore)  * 0.12 +
-    toSigned(fxScore)     * 0.10 +
-    toSigned(fpSense)     * 0.18
+  const aiSide = agreeBuy > agreeSell ? 'BUY' : (agreeSell > agreeBuy ? 'SELL' : 'NEUTRAL');
+  const aiAgree = agreeN > 0 ? Math.max(agreeBuy, agreeSell) / Math.max(1, agreeBuy + agreeSell) : 0;
+  const aiViewSense = avClamp01(
+    0.50 +
+    (aiSide === 'BUY' ? aiAgree * 0.45 : (aiSide === 'SELL' ? -aiAgree * 0.45 : 0)) +
+    (newsScore >= 0.55 ? 0.05 : (newsScore < 0.35 ? -0.15 : 0))
   );
+  gAiView = (aiAgree >= 0.66 && newsScore >= 0.35 && (aiSide === lean || lean === 'NEUTRAL' || aiSide === 'NEUTRAL'));
 
-  // Point-edge as a mild tilt only (not a jump to ±1)
-  const edgeTilt = Math.max(-0.25, Math.min(0.25, (edge || 0) * 0.04));
+  const gatesCleared = [gStruct, gFp, gNews, gAiView].filter(Boolean).length;
 
-  // Blend: live composite dominates, senses refine, edge gently tilts
-  let core = scoreSigned * 0.55 + senseSigned * 0.35 + edgeTilt * 0.10;
+  const senseSigned =
+    toSigned(structScore) * 0.30 +
+    toSigned(fpSense)     * 0.32 +
+    toSigned(newsScore)   * 0.18 +
+    toSigned(aiViewSense) * 0.20;
 
-  // Structure fight softens core toward neutral (cannot print full ± lean vs MTF)
+  const edgeTilt = Math.max(-0.25, Math.min(0.25, (edge || 0) * 0.05));
+  let core = senseSigned * 0.85 + edgeTilt * 0.15;
+
+  // Structure fight softens core
+  const structOpposesBuy  = (mtf.direction === 'BEAR' && mtf.aligned >= 2);
+  const structOpposesSell = (mtf.direction === 'BULL' && mtf.aligned >= 2);
   if (structOpposesBuy && core > 0) core *= 0.55;
   if (structOpposesSell && core < 0) core *= 0.55;
-
-  // Clamp to legal range — ±1 is ceiling/floor only
   core = Math.max(-1, Math.min(1, core));
 
   // ---------- Final decision ----------
@@ -9389,7 +9852,7 @@ function avComputeSenses() {
   // Thesis line
   let thesis = 'XAU/USD ONLY · ' + finalSignal + ' (' + finalStrength + ') · ';
   thesis += mtf.direction + ' structure ' + mtf.aligned + '/' + mtf.n + ' · ';
-  thesis += 'score ' + score.toFixed(1) + ' · gates ' + gatesCleared + '/7 · edge ' + edge +
+  thesis += 'score ' + score.toFixed(1) + ' · gates ' + gatesCleared + '/4 · edge ' + edge +
     ' · FP ' + (fpPress.side || 'FLAT') + ' ' + (typeof avFmtVol === 'function' ? avFmtVol(fpPress.vol) : Math.round(fpPress.vol));
   if (structOpposesBuy || structOpposesSell) thesis += ' · STRUCTURE FIGHTS SIGNAL';
   if (quiet) thesis += ' · quiet range';
@@ -9407,52 +9870,39 @@ function avComputeSenses() {
         (mtf.detail ? ' · ' + mtf.detail : '') + '.',
       dot: mtf.direction === 'BULL' ? 'green' : (mtf.direction === 'BEAR' ? 'red' : 'amber')
     },
-    momentum: {
-      score: momScore,
-      // Momentum alone owns the composite score display
-      meta: 'composite ' + score.toFixed(1) + ' · ' + sig,
-      thesis: 'Momentum: smoothed composite ' + score.toFixed(1) + ' / signal ' + sig +
-        '. Session gold ' + (goldPct >= 0 ? '+' : '') + goldPct.toFixed(2) + '%.',
-      dot: score >= 8 ? 'green' : (score <= -8 ? 'red' : 'amber')
-    },
-    dxy: {
-      score: dxyHelp,
-      meta: (dxy > 50 ? dxy.toFixed(3) : '—') + ' · ' + (dxyPct >= 0 ? '+' : '') + dxyPct.toFixed(2) + '%' + (Math.abs(dxyPct) >= 0.04 ? ' · ACTIVE' : ''),
-      thesis: 'DXY driver: ' + (dxyPct < -0.04 ? 'weak dollar supports gold (BUY side)' : (dxyPct > 0.04 ? 'strong dollar headwind (SELL side)' : 'neutral / quiet dollar')) + ' · gate uses |move| so both sides can PASS',
-      dot: dxyPct < -0.04 ? 'green' : (dxyPct > 0.04 ? 'red' : 'amber')
-    },
-    yield: {
-      score: yieldScore,
-      meta: (yieldPx > 0 ? yieldPx.toFixed(3) : '—') + ' · ' + (yieldPct >= 0 ? '+' : '') + yieldPct.toFixed(2) + '%',
-      thesis: 'US10Y: ' + (yieldPct > 0.05 ? 'yields rising — headwind' : (yieldPct < -0.05 ? 'yields easing — tailwind' : 'yields quiet')),
-      dot: yieldPct < -0.05 ? 'green' : (yieldPct > 0.05 ? 'red' : 'amber')
-    },
-    fx: {
-      score: fxScore,
-      meta: 'EUR ' + (eurPct >= 0 ? '+' : '') + eurPct.toFixed(2) + '% · AUD ' + (audPct >= 0 ? '+' : '') + audPct.toFixed(2) + '%',
-      thesis: 'FX basket (EUR-heavy): ' + fxBasket.toFixed(2) + '% combined.',
-      dot: fxBasket > 0.1 ? 'green' : (fxBasket < -0.1 ? 'red' : 'amber')
-    },
-    news: {
-      score: newsScore,
-      meta: newsLabel,
-      thesis: 'News risk: ' + newsLabel,
-      dot: newsScore < 0.35 ? 'red' : (newsScore < 0.55 ? 'amber' : 'green')
-    },
     footprint: {
       score: fpSense,
       meta: (fpPress.side || 'FLAT') + ' ' +
         (typeof avFmtVol === 'function' ? avFmtVol(fpPress.vol) : String(Math.round(fpPress.vol || 0))) +
-        (fpPress.live ? ' · LIVE' : ''),
-      thesis: '1H Footprint (Binance XAUUSDT): ' +
+        ' · sc ' + (fpSense * 100 - 50 > 0 ? '+' : '') + ((fpSense - 0.5) * 200).toFixed(0) +
+        (fpPress.live ? ' · LIVE' : '') +
+        (fpPress.timeLabel ? ' · ' + fpPress.timeLabel : ''),
+      thesis: '1H Footprint (OKX): ' +
         (fpPress.side === 'BUY' ? 'BUY pressure supports gold' :
-         fpPress.side === 'SELL' ? 'SELL pressure pressures gold' : 'balanced / thin orderflow') +
+         fpPress.side === 'SELL' ? 'SELL pressure pressures gold' : 'balanced / thin') +
         ' · buy ' + (typeof avFmtVol === 'function' ? avFmtVol(fpPress.buy) : fpPress.buy) +
         ' / sell ' + (typeof avFmtVol === 'function' ? avFmtVol(fpPress.sell) : fpPress.sell) +
-        ' · Δ ' + (fpPress.delta >= 0 ? '+' : '') +
-        (typeof avFmtVol === 'function' ? avFmtVol(fpPress.delta) : fpPress.delta) +
-        ' · gate ' + (gFp ? 'PASS' : 'FAIL') + '.',
+        ' · gate ' + (gFp ? 'PASS' : 'FAIL') + ' (need side match lean ' + lean + ').',
       dot: fpPress.side === 'BUY' ? 'green' : (fpPress.side === 'SELL' ? 'red' : 'amber')
+    },
+    news: {
+      score: newsScore,
+      meta: newsLabel,
+      thesis: 'News risk: ' + newsLabel + ' · gate ' + (gNews ? 'PASS' : 'FAIL') + '.',
+      dot: newsScore < 0.35 ? 'red' : (newsScore < 0.55 ? 'amber' : 'green')
+    },
+    aiView: {
+      score: aiViewSense,
+      meta: (gAiView ? 'PASS' : 'FAIL') + ' · ' + aiSide + ' · agree ' +
+        (Math.round(aiAgree * 100)) + '% · lean ' + lean,
+      thesis: 'AI VIEW (live): system lean ' + lean +
+        ' · consensus ' + aiSide + ' (' + Math.round(aiAgree * 100) + '% agree)' +
+        ' · structure ' + mtf.direction +
+        ' · 1H ' + (fpPress.side || 'FLAT') +
+        ' · news ' + (gNews ? 'clear' : 'risk') +
+        ' · gate ' + (gAiView ? 'PASS' : 'FAIL') +
+        '. Weights: Structure 30% · 1H FP 32% · News 18% · AI View 20%.',
+      dot: gAiView ? (aiSide === 'BUY' ? 'green' : (aiSide === 'SELL' ? 'red' : 'amber')) : 'amber'
     },
     core: core,
     gatesCleared: gatesCleared,
@@ -9463,7 +9913,7 @@ function avComputeSenses() {
     bullPts: bullPts,
     bearPts: bearPts,
     edge: edge,
-    gateFlags: { gStruct, gMom, gDxy, gYield, gFx, gNews, gFp },
+    gateFlags: { gStruct, gFp, gNews, gAiView },
     fpPress: fpPress,
     envOk: envOk,
     quiet: quiet,
@@ -9546,12 +9996,9 @@ function avPaint() {
   // Senses
   const map = [
     ['structure', 'avMetaStruct', 'avDotStruct'],
-    ['momentum', 'avMetaMom', 'avDotMom'],
-    ['dxy', 'avMetaDxy', 'avDotDxy'],
-    ['yield', 'avMetaYield', 'avDotYield'],
-    ['fx', 'avMetaFx', 'avDotFx'],
     ['footprint', 'avMetaFp', 'avDotFp'],
-    ['news', 'avMetaNews', 'avDotNews']
+    ['news', 'avMetaNews', 'avDotNews'],
+    ['aiView', 'avMetaAiView', 'avDotAiView']
   ];
   map.forEach(([key, metaId, dotId]) => {
     const s = d[key];
@@ -9596,7 +10043,7 @@ function avPaint() {
     ruleEl.textContent = band + ' · live · max ±1';
   }
   if (gatesEl) {
-    gatesEl.textContent = d.gatesCleared + '/6 gates · edge ' + (d.edge >= 0 ? '+' : '') + d.edge;
+    gatesEl.textContent = d.gatesCleared + '/4 gates · edge ' + (d.edge >= 0 ? '+' : '') + d.edge;
   }
   if (sigEl) {
     const fs = d.finalSignal || 'NEUTRAL';
@@ -9650,44 +10097,33 @@ function avPaint() {
   };
   const gf = d.gateFlags || {};
   const score = state.smoothed_score || 0;
-  {
-    let structMeta = (d.structure && d.structure.meta) || 'MTF';
-    let structBadge = gf.gStruct ? 'PASS' : 'FAIL';
-    let structCls = gf.gStruct ? 'sync' : 'idle';
-    // Highlight when structure majority fights the live signal
-    const sigU = String(d.finalSignal || d.sig || '').toUpperCase();
-    const metaU = String(structMeta).toUpperCase();
-    if (gf.gStruct && sigU.indexOf('BUY') >= 0 && metaU.indexOf('BEAR') >= 0) {
-      structBadge = 'FIGHT';
-      structCls = 'idle';
-      structMeta = structMeta + ' · vs BUY';
-    } else if (gf.gStruct && sigU.indexOf('SELL') >= 0 && metaU.indexOf('BULL') >= 0) {
-      structBadge = 'FIGHT';
-      structCls = 'idle';
-      structMeta = structMeta + ' · vs SELL';
-    }
-    setGate('avGateGold', 'avBadgeGold', structMeta, structBadge, structCls);
-  }
-  setGate('avGateDxy', 'avBadgeDxy',
-    'score ' + score.toFixed(1) + ' · ' + d.sig,
-    gf.gMom ? 'PASS' : 'FAIL',
-    gf.gMom ? 'sync' : 'idle');
-  setGate('avGateYield', 'avBadgeYield',
-    'DXY ' + (d.dxyPct >= 0 ? '+' : '') + d.dxyPct.toFixed(2) + '%' + (Math.abs(d.dxyPct || 0) >= 0.04 ? ' · drive' : ' · quiet'),
-    gf.gDxy ? 'PASS' : 'FAIL',
-    gf.gDxy ? 'sync' : 'idle');
-  const macroOk = !!(gf.gYield && gf.gFx && gf.gNews);
-  setGate('avGateEur', 'avBadgeEur',
-    'Y ' + (d.yieldPct >= 0 ? '+' : '') + d.yieldPct.toFixed(2) + '% · FX · news',
-    macroOk ? 'PASS' : 'FAIL',
-    macroOk ? 'sync' : 'idle');
+  // G1 Structure
+  setGate('avGateGold', 'avBadgeGold',
+    (d.structure && d.structure.meta) || 'MTF',
+    gf.gStruct ? 'PASS' : 'FAIL',
+    gf.gStruct ? 'sync' : 'idle');
+  // G2 1H Footprint — status still refreshed by avRefreshFootprintGauge
+  setGate('avGateFp', 'avBadgeFp',
+    (d.footprint && d.footprint.meta) || '1H',
+    gf.gFp ? 'PASS' : 'FAIL',
+    gf.gFp ? 'sync' : 'idle');
+  // G3 News
+  setGate('avGateNews', 'avBadgeNews',
+    (d.news && d.news.meta) || 'news',
+    gf.gNews ? 'PASS' : 'FAIL',
+    gf.gNews ? 'sync' : 'idle');
+  // G4 AI View
+  setGate('avGateAiView', 'avBadgeAiView',
+    (d.aiView && d.aiView.meta) || 'AI',
+    gf.gAiView ? 'PASS' : 'FAIL',
+    gf.gAiView ? 'sync' : 'idle');
   try { avRefreshFootprintGauge(true); } catch (e) {}
   {
     const q = document.getElementById('avQualify');
     if (q) {
       const n = d.gatesCleared != null ? d.gatesCleared : 0;
-      const need = 7;
-      const ok = n >= 5;
+      const need = 4;
+      const ok = n >= 3;
       q.textContent = 'QUALIFIED ' + n + '/' + need + ' gates' +
         (ok ? ' · setup ready' : ' · waiting alignment');
       q.className = 'av-qualify' + (ok ? ' ok' : (n <= 2 ? ' bad' : ''));
@@ -9698,7 +10134,7 @@ function avPaint() {
   const council = document.getElementById('avCouncil');
   if (council) {
     const fs = d.finalSignal || 'NEUTRAL';
-    council.innerHTML = '<span>● ' + fs + '</span> ○ ' + (d.finalStrength || '') + ' ○ gates ' + d.gatesCleared + '/7';
+    council.innerHTML = '<span>● ' + fs + '</span> ○ ' + (d.finalStrength || '') + ' ○ gates ' + d.gatesCleared + '/4';
   }
 
   // Do NOT redraw wires every paint — it resets CSS flow animation
@@ -9850,7 +10286,7 @@ async function avRunGpBrief(manual) {
   try {
     const d = avComputeSenses();
     engineLine = 'ENGINE SIGNAL: ' + (d.finalSignal || 'NEUTRAL') + ' · ' + (d.finalStrength || '') +
-      ' · gates ' + d.gatesCleared + '/7 · edge ' + d.edge + ' · core ' + d.core.toFixed(2) + '\n';
+      ' · gates ' + d.gatesCleared + '/4 · edge ' + d.edge + ' · core ' + d.core.toFixed(2) + '\n';
   } catch (e) {}
   const prompt =
     'AI VISUAL · GOLD ONLY (max 8 lines). Ignore other pairs as trade targets.\n' +
@@ -9914,6 +10350,7 @@ function avCheck5mCloseAndBrief() {
 
 function openAiVisual() {
   try { startAllTickFeed(); } catch (e) {}
+  try { if (!rfBusy && !_fp1hReady) rfBackfill(); } catch (e) {}
   try { avRefreshFootprintGauge(true); } catch (e) {}
 
   const el = document.getElementById('aiVisualOverlay');
@@ -9923,6 +10360,12 @@ function openAiVisual() {
   document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
   avPaint();
+  try { clearInterval(window._avLiveTimer); } catch (e) {}
+  window._avLiveTimer = setInterval(function () {
+    if (!_avOpen) return;
+    try { avPaint(); } catch (e) {}
+    try { avRefreshFootprintGauge(true); } catch (e) {}
+  }, 500);
   // default select structure
   const first = document.querySelector('.av-sense-node[data-key="structure"]');
   if (first) {
@@ -9936,6 +10379,7 @@ function openAiVisual() {
   setTimeout(() => { try { avRunGpBrief(false); } catch (e) {} }, 350);
 }
 function closeAiVisual() {
+  try { clearInterval(window._avLiveTimer); } catch (e) {}
   const el = document.getElementById('aiVisualOverlay');
   if (el) el.classList.remove('show');
   _avOpen = false;
@@ -9952,6 +10396,14 @@ setInterval(() => {
   try { avRefreshFootprintGauge(true); } catch (e) {}
   try { avCheck5mCloseAndBrief(); } catch (e) {}
 }, 2000);
+// Keep 1H footprint fresh with single OKX snapshot every 5s while AI Visual open
+setInterval(() => {
+  if (!_avOpen && !(document.getElementById('footprintModal') || {}).style) return;
+  const modal = document.getElementById('footprintModal');
+  const fpOpen = modal && modal.style.display === 'flex';
+  if (!_avOpen && !fpOpen) return;
+  try { if (typeof rfRefresh1hQuick === 'function') rfRefresh1hQuick(); } catch (e) {}
+}, 5000);
 window.addEventListener('resize', () => {
   if (!_avOpen) return;
   clearTimeout(_avWireTimer);
@@ -10730,10 +11182,8 @@ function mvGaugeTick() {
   });
   mvDrawTacho('mvGaugeAv', a.show, -1, 1, {
     digits: 2,
-    unit: '',
-    signal: _mvGauge.lastSigA,
-    centerLabel: _mvGauge.structLabel || '0/5',
-    centerSide: _mvGauge.structSide || ''
+    unit: 'AI',
+    signal: _mvGauge.lastSigA
   });
   // Needle = pressure −1…+1; signal text shows side + volume e.g. "BUY 5.2k"
   mvDrawTacho('mvGaugeFp', f.show, -1, 1, {
@@ -10807,7 +11257,7 @@ function mvUpdateLiveScores() {
     _mvGauge.structSide = '';
   }
 
-  // 1H Footprint live pressure (Binance rfStore — same real data for all users)
+  // 1H Footprint live pressure (OKX rfStore — same real data for all users)
   let fp = { buy: 0, sell: 0, vol: 0, delta: 0, side: 'NEUTRAL', live: false };
   try {
     if (typeof avGetFootprint1h === 'function') fp = avGetFootprint1h();
@@ -11356,7 +11806,7 @@ initApp();
 /* PWA service worker — force update on every load so deploys show immediately */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261022j', { scope: './' })
+    navigator.serviceWorker.register('./sw.js?v=20261022k6', { scope: './' })
       .then(function (reg) {
         console.log('[PWA] SW registered:', reg.scope);
         // Always check for a newer sw.js after deploy
