@@ -1459,6 +1459,16 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 .fp-header-left { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto; overflow: hidden; }
 .fp-symbol-badge { font-weight: 800; font-size: 11px; color: #facc15; background: #1f232e; padding: 3px 6px; border-radius: 4px; border: 1px solid #374151; white-space: nowrap; flex-shrink: 0; }
 .fp-price-ticker { font-size: 13px; font-weight: 700; color: #10b981; font-family: monospace; min-width: 70px; white-space: nowrap; }
+.fp-gap-badge {
+  font-size: 10px; font-weight: 600; font-family: monospace;
+  padding: 2px 7px; border-radius: 4px; white-space: nowrap;
+  background: rgba(245, 158, 11, 0.15); color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  letter-spacing: 0.02em;
+}
+.fp-gap-badge.tight { background: rgba(16,185,129,0.12); color: #34d399; border-color: rgba(16,185,129,0.3); }
+.fp-gap-badge.wide { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.3); }
+.fp-symbol-badge { font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.04em; }
 .fp-live-status { font-size: 9.5px; color: #10b981; display: flex; align-items: center; gap: 3px; font-weight: 600; white-space: nowrap; }
 .fp-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981; flex-shrink: 0; }
 .fp-tf-tabs { display: flex; gap: 3px; flex-shrink: 0; }
@@ -2852,15 +2862,25 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <button onclick="gpAiClearChat()">Clear</button>
       </div>
       <div id="gpAiSettings" class="gp-settings-box" style="display:none;">
+        <div id="gpPuterBox" style="margin-bottom:12px;padding:10px;border:1px solid #2a3344;border-radius:10px;background:#0d1118;">
+          <div style="font-weight:700;font-size:12px;color:#e2e8f0;margin-bottom:6px;">Puter AI login (in-app)</div>
+          <div id="gpPuterStatus" style="font-size:11px;color:#94a3b8;margin-bottom:8px;">Checking Puter…</div>
+          <div class="gp-compose-row" style="gap:8px;flex-wrap:wrap;">
+            <button class="gp-send" type="button" id="gpPuterSignInBtn" onclick="gpPuterSignIn()">Sign in Puter</button>
+            <button type="button" id="gpPuterRefreshBtn" onclick="gpPuterRefreshStatus()" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:8px 12px;font-size:12px;">Refresh status</button>
+          </div>
+          <div class="hint" style="margin-top:8px;">
+            Mobile / in-app browser: popup login often fails (blank page). Use <b>Sign in Puter</b> here, or rely on Groq API key below (works offline of Puter).
+          </div>
+        </div>
         <label>API Base URL (OpenAI-compatible)</label>
         <input id="gpApiBase" placeholder="https://api.groq.com/openai/v1" />
-        <label>API Key</label>
-        <input id="gpApiKey" type="password" placeholder="Paste your key (stored locally only)" />
+        <label>API Key (recommended on mobile)</label>
+        <input id="gpApiKey" type="password" placeholder="Paste Groq / OpenAI key (stored locally)" />
         <label>Model</label>
         <input id="gpApiModel" placeholder="openai/gpt-oss-120b" />
         <div class="hint">
-          Groq free/dev: use model <b>openai/gpt-oss-120b</b> (or openai/gpt-oss-20b). Old llama-3.3-70b is enterprise-only now.
-          Default Groq key is pre-filled; paste your own anytime and Save. Stored in this browser only.
+          Groq model <b>openai/gpt-oss-120b</b>. Key stored in this device only. Mobile apps: use API key — Puter popup needs a real browser.
         </div>
         <div class="gp-compose-row" style="margin-top:10px;">
           <button class="gp-send" type="button" onclick="gpAiSaveSettings()">Save API settings</button>
@@ -3207,14 +3227,16 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
   <div class="modal-container">
     <div class="fp-header">
       <div class="fp-header-left">
-        <div class="fp-symbol-badge">GOLD · OKX LIVE</div>
+        <div class="fp-symbol-badge" id="fpSymbolBadge">GOLD · OKX LIVE</div>
         <div class="fp-price-ticker" id="fpLiveTicker">Syncing...</div>
+        <div class="fp-gap-badge" id="fpGapBadge" title="Interbank gold vs OKX XAU-USDT-SWAP mid">OKX only · no interbank</div>
         <div class="fp-live-status"><span class="fp-status-dot" id="fpWsDot"></span><span id="fpWsLabel">LIVE WS</span></div>
       </div>
       <div class="fp-tf-tabs">
         <button class="fp-tf-btn" id="fpBtn1" onclick="changeFpTF(1)">M1</button>
         <button class="fp-tf-btn active" id="fpBtn5" onclick="changeFpTF(5)">M5</button>
         <button class="fp-tf-btn" id="fpBtn15" onclick="changeFpTF(15)">M15</button>
+        <button class="fp-tf-btn" id="fpBtn60" onclick="changeFpTF(60)">H1</button>
         <button class="fp-tf-btn" id="fpFollowBtn" onclick="toggleFpFollow()" title="Auto-follow live price">Follow</button>
         <button class="fp-tf-btn" id="fpRefreshBtn" onclick="refreshFootprintChart()" title="Reload real OHLC + volume history">↻</button>
         <button class="fp-tf-btn" onclick="fpZoomOut()" title="Smaller candles">−</button>
@@ -4282,12 +4304,36 @@ function applyCandleSeries(bars, interval, asset) {
   multiHorizonTrendlines = [];
   const last = candleHistory[candleHistory.length - 1];
   if (last) {
+    const stepMs2 = (state.tf_seconds || 60) * 1000;
+    const curSlot2 = Math.floor(Date.now() / stepMs2) * stepMs2;
     if (asset === 'dxy') {
+      // Only seed DXY from history if live feed is stale
       if (!(state._feed_dxy_pct && state.dxy_price > 50 && (Date.now() - (_dxyLastOk || 0)) < 15000)) {
         state.dxy_price = last.c;
       }
     } else {
-      state.gold_price = last.c;
+      // CRITICAL: never overwrite a fresh interbank gold tick with historical close.
+      // That caused live chart to freeze / jump back to history price.
+      const liveFresh = (state.gold_price > 500 && (Date.now() - (_pollStartedAt || 0)) < 20000);
+      if (!liveFresh) {
+        state.gold_price = last.c;
+      } else if (last.barSlot === curSlot2) {
+        // Forming bar: stretch high/low to live, keep close = live
+        last.c = state.gold_price;
+        if (state.gold_price > last.h) last.h = state.gold_price;
+        if (state.gold_price < last.l) last.l = state.gold_price;
+      } else if (last.barSlot < curSlot2) {
+        // History ends before current slot → append live forming candle
+        const d2 = new Date(curSlot2);
+        const timeStr2 = state.tf_interval === '1d'
+          ? ((d2.getMonth() + 1) + '/' + d2.getDate())
+          : (String(d2.getHours()).padStart(2, '0') + ':' + String(d2.getMinutes()).padStart(2, '0'));
+        candleHistory.push({
+          o: state.gold_price, h: state.gold_price, l: state.gold_price, c: state.gold_price,
+          v: 0, quoteVol: 0, time: timeStr2, barSlot: curSlot2, closeTime: curSlot2 + stepMs2
+        });
+        if (candleHistory.length > 300) candleHistory = candleHistory.slice(-300);
+      }
     }
     getInstantCandleTimer();
   }
@@ -5216,24 +5262,32 @@ function rollLocalCandle() {
   const now = Date.now();
   const currentBarSlot = Math.floor(now / stepMs) * stepMs;
   const last = candleHistory[candleHistory.length - 1];
-  last.c = live;
-  last.h = Math.max(last.h, live);
-  last.l = Math.min(last.l, live);
-  if (last.barSlot && last.barSlot === currentBarSlot) {
+
+  // SAME slot → only update the LIVE forming bar (do NOT touch closed history)
+  if (last && last.barSlot && last.barSlot === currentBarSlot) {
+    last.c = live;
+    if (live > last.h) last.h = live;
+    if (live < last.l) last.l = live;
     return;
   }
+
+  // NEW slot → leave previous bar exactly as it closed, open a fresh live candle
+  // (Previous bug always wrote live into last.c BEFORE the slot check, which
+  //  corrupted the closed candle and caused history / live mismatch.)
   const d = new Date(currentBarSlot);
-  const timeStr = state.tf_interval === '1d' ? `${d.getMonth()+1}/${d.getDate()}` : `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  const timeStr = state.tf_interval === '1d'
+    ? ((d.getMonth() + 1) + '/' + d.getDate())
+    : (String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'));
   candleHistory.push({
     o: live, h: live, l: live, c: live, v: 0, quoteVol: 0,
     time: timeStr, barSlot: currentBarSlot, closeTime: currentBarSlot + stepMs
   });
   if (candleHistory.length > 300) candleHistory = candleHistory.slice(-300);
-  scanAndStoreOrderBlocks(candleHistory);
-  executeTradingViewRayArchitecture(candleHistory);
-  getInstantCandleTimer();
-  saveActiveStore();
-  triggerRealtimeRender();
+  try { scanAndStoreOrderBlocks(candleHistory); } catch (e) {}
+  try { executeTradingViewRayArchitecture(candleHistory); } catch (e) {}
+  try { getInstantCandleTimer(); } catch (e) {}
+  try { saveActiveStore(); } catch (e) {}
+  try { triggerRealtimeRender(); } catch (e) {}
 }
 // Note: history depth capped at 300 bars for all timeframes (see CHART_HISTORY_BARS)
 
@@ -5304,7 +5358,7 @@ function closeChartModal() {
    === FOOTPRINT ENGINE RENDERING SHELL ===
    ===================================================================== */
 let FP_TICK_SIZE = 0.20;
-let fpCandleWidthCustom = 68;
+let fpCandleWidthCustom = 52;
 const FP_GAP = 10;
 const FP_PRICE_W = 72;
 let fpZoom = 1.0;
@@ -5338,7 +5392,12 @@ let fpViewCenter = 0;
 let fpPixelsPerDollar = 55;
 
 function FP_CANDLE_WIDTH() {
-  return Math.max(24, Math.round(fpCandleWidthCustom * fpZoom));
+  // More history bars → slightly tighter candles so 1H depth fits on screen
+  let base = Math.round(fpCandleWidthCustom * fpZoom);
+  const n = (fpCandles && fpCandles.length) ? fpCandles.length : 0;
+  if (n > 48) base = Math.round(base * 0.78);
+  else if (n > 36) base = Math.round(base * 0.88);
+  return Math.max(18, base);
 }
 
 function adjustCandleWidth(multiplier) {
@@ -5384,22 +5443,28 @@ function autoCenterFp() {
   const h = fpChartCanvas.height / dpr;
   if (w < 10 || h < 10 || fpCandles.length === 0) return;
 
-  const ref = (state.gold_price > 500) ? state.gold_price : (fpLivePrice || 4200);
-
-  // Scale from real candle high/low — no artificial TF caps that squash real wicks
-  let minP = ref, maxP = ref;
-  const start = Math.max(0, fpCandles.length - 16);
+  // Center ONLY on footprint candles (OKX) — never interbank (causes $8 vertical gap)
+  let minP = Infinity, maxP = -Infinity;
+  const start = Math.max(0, fpCandles.length - 20);
   for (let i = start; i < fpCandles.length; i++) {
     const c = fpCandles[i];
     if (c.low > 500 && c.low < minP) minP = c.low;
     if (c.high > 500 && c.high > maxP) maxP = c.high;
   }
-  let range = Math.max(maxP - minP, 1.5);
-  range *= 1.3; // pad so wicks aren't clipped
+  if (!(minP < maxP) || !isFinite(minP)) {
+    const last = fpCandles[fpCandles.length - 1];
+    const mid = (last && last.close > 500) ? last.close : (fpLivePrice || 4000);
+    minP = mid - 3;
+    maxP = mid + 3;
+  }
+  let range = Math.max(maxP - minP, 2.0);
+  range *= 1.35;
 
   fpPixelsPerDollar = (h * 0.72) / range;
   fpPixelsPerDollar = Math.max(8, Math.min(160, fpPixelsPerDollar));
-  fpViewCenter = (minP + maxP) / 2 || ref;
+  fpViewCenter = (minP + maxP) / 2;
+  const last = fpCandles[fpCandles.length - 1];
+  if (last && last.close > 500) fpLivePrice = last.close;
   fpPanX = w - (fpCandles.length * (FP_CANDLE_WIDTH() + FP_GAP)) - 40;
   fpPanY = h / 2;
 }
@@ -5551,13 +5616,7 @@ function drawFpChart() {
     fpCtxChart.lineWidth = c.isLive ? 2 : 1.3;
     fpCtxChart.strokeRect(cx, topY, FP_CANDLE_WIDTH(), bodyH);
 
-    if (c.isLive) {
-      fpCtxChart.fillStyle = '#38bdf8';
-      fpCtxChart.font = 'bold 9px monospace';
-      fpCtxChart.textAlign = 'center';
-      fpCtxChart.fillText('LIVE ●', cx + FP_CANDLE_WIDTH() / 2, Math.min(closeY, openY) - 10);
-    }
-
+    // LIVE tag drawn AFTER volume cells (end of this candle) so it stays on top
     const cw = FP_CANDLE_WIDTH();
     const halfW = cw / 2;
 
@@ -5571,23 +5630,75 @@ function drawFpChart() {
       bodyBotY = cy + 20;
     }
 
-    // Collect levels
+    // Collect levels — NORMALIZE keys (some paths store price*10 integers)
     const rows = [];
+    const _hi0 = Math.max(c.high, c.open, c.close);
+    const _lo0 = Math.min(c.low, c.open, c.close);
     if (c.levels && c.levels.size) {
-      c.levels.forEach((lvl, p) => {
+      c.levels.forEach((lvl, pRaw) => {
+        let p = Number(pRaw);
+        // Integer keys from Math.round(px * 10) → real price
+        if (p > 20000) p = p / (typeof RF_BASE === 'number' ? RF_BASE : 10);
+        if (!(p > 100 && p < 20000)) return;
         const _b = Number(lvl._b) || 0, _a = Number(lvl._a) || 0;
         const bid = Number(lvl.bid) || _b, ask = Number(lvl.ask) || _a;
         if (_b <= 0 && _a <= 0 && bid <= 0 && ask <= 0) return;
         rows.push({ p: p, bid: bid, ask: ask, _b: _b, _a: _a, vol: _a + _b });
       });
     }
-    // If volume totals exist but levels empty → one full-body row
+    // If volume totals exist but levels empty → distribute across candle range
     if (!rows.length && (c._v > 0 || c.volume > 0)) {
       const tot = Number(c._v) || Number(c.volume) || 0;
-      const buy = Math.max(0, (c._d || 0) > 0 ? tot * 0.55 : tot * 0.45);
-      const sell = Math.max(0, tot - buy);
-      rows.push({ p: (c.open + c.close) / 2 || c.close, bid: sell, ask: buy, _b: sell, _a: buy, vol: tot });
+      if (tot > 0 && _hi0 > 500 && _lo0 > 500) {
+        const steps = 6;
+        const bull = c.close >= c.open;
+        const buyShare = bull ? 0.58 : 0.42;
+        const range = Math.max(_hi0 - _lo0, 0.4);
+        for (let s = 0; s < steps; s++) {
+          const px = _lo0 + range * (s / Math.max(1, steps - 1));
+          const part = tot / steps;
+          rows.push({
+            p: px,
+            bid: part * (1 - buyShare),
+            ask: part * buyShare,
+            _b: part * (1 - buyShare),
+            _a: part * buyShare,
+            vol: part
+          });
+        }
+      }
     }
+    // Keep cells inside candle high-low (with small pad)
+    const _hi = _hi0;
+    const _lo = _lo0;
+    const pad = Math.max(0.15, (_hi - _lo) * 0.02);
+    const rowsIn = rows.filter(function (r) {
+      return r.p >= _lo - pad && r.p <= _hi + pad;
+    });
+    // If ALL filtered out but we had rows → remap proportionally into candle range
+    if (!rowsIn.length && rows.length && _hi > _lo) {
+      let mn = Infinity, mx = -Infinity;
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i].p < mn) mn = rows[i].p;
+        if (rows[i].p > mx) mx = rows[i].p;
+      }
+      for (let i = 0; i < rows.length; i++) {
+        let np;
+        if (mx > mn + 0.01) {
+          const t = (rows[i].p - mn) / (mx - mn);
+          np = _lo + t * (_hi - _lo);
+        } else {
+          np = (_lo + _hi) / 2;
+        }
+        rowsIn.push({
+          p: np,
+          bid: rows[i].bid, ask: rows[i].ask,
+          _b: rows[i]._b, _a: rows[i]._a, vol: rows[i].vol
+        });
+      }
+    }
+    rows.length = 0;
+    for (let ri = 0; ri < rowsIn.length; ri++) rows.push(rowsIn[ri]);
     rows.sort((a, b) => b.p - a.p);
 
     let pocBucket = 0, bestVol = -1;
@@ -5694,12 +5805,57 @@ function drawFpChart() {
         fpCtxChart.textBaseline = 'alphabetic';
       }
     }
+
+    // LIVE label ABOVE this candle only (centered on candle, not on price scale)
+    if (c.isLive) {
+      const tag = '● LIVE';
+      fpCtxChart.font = 'bold 11px monospace';
+      const tw = fpCtxChart.measureText(tag).width;
+      const boxW = tw + 12;
+      const boxH = 16;
+      const midX = cx + FP_CANDLE_WIDTH() / 2;
+      // Always above the candle wick tip (highY), never on right scale
+      let tagY = Math.min(highY, openY, closeY) - boxH - 8;
+      if (tagY < 2) tagY = 2;
+      const boxX = midX - boxW / 2;
+      fpCtxChart.fillStyle = 'rgba(6, 18, 32, 0.95)';
+      fpCtxChart.strokeStyle = '#38bdf8';
+      fpCtxChart.lineWidth = 1.5;
+      const rr = 5;
+      fpCtxChart.beginPath();
+      fpCtxChart.moveTo(boxX + rr, tagY);
+      fpCtxChart.lineTo(boxX + boxW - rr, tagY);
+      fpCtxChart.quadraticCurveTo(boxX + boxW, tagY, boxX + boxW, tagY + rr);
+      fpCtxChart.lineTo(boxX + boxW, tagY + boxH - rr);
+      fpCtxChart.quadraticCurveTo(boxX + boxW, tagY + boxH, boxX + boxW - rr, tagY + boxH);
+      fpCtxChart.lineTo(boxX + rr, tagY + boxH);
+      fpCtxChart.quadraticCurveTo(boxX, tagY + boxH, boxX, tagY + boxH - rr);
+      fpCtxChart.lineTo(boxX, tagY + rr);
+      fpCtxChart.quadraticCurveTo(boxX, tagY, boxX + rr, tagY);
+      fpCtxChart.closePath();
+      fpCtxChart.fill();
+      fpCtxChart.stroke();
+      // Small pointer down toward candle tip
+      fpCtxChart.fillStyle = '#38bdf8';
+      fpCtxChart.beginPath();
+      fpCtxChart.moveTo(midX - 4, tagY + boxH);
+      fpCtxChart.lineTo(midX + 4, tagY + boxH);
+      fpCtxChart.lineTo(midX, tagY + boxH + 5);
+      fpCtxChart.closePath();
+      fpCtxChart.fill();
+      fpCtxChart.fillStyle = '#7dd3fc';
+      fpCtxChart.textAlign = 'center';
+      fpCtxChart.textBaseline = 'middle';
+      fpCtxChart.fillText(tag, midX, tagY + boxH / 2);
+      fpCtxChart.textBaseline = 'alphabetic';
+    }
   }
 
+  // Live price dashed line only (no LIVE text on scale — label is on candle)
   if (fpLivePrice > 0) {
     const liveY = fpPriceToY(fpLivePrice);
     fpCtxChart.setLineDash([4, 3]);
-    fpCtxChart.strokeStyle = '#089981';
+    fpCtxChart.strokeStyle = 'rgba(8,153,129,0.85)';
     fpCtxChart.lineWidth = 1;
     fpCtxChart.beginPath();
     fpCtxChart.moveTo(0, liveY);
@@ -6200,10 +6356,18 @@ function tickDXYOnly() {
       _dxyLastOk = Date.now();
       state._feed_dxy_pct = true;
       if (state.chartAsset === 'dxy' && candleHistory.length > 0 && candlesMatchAsset(candleHistory, 'dxy')) {
-        const cur = candleHistory[candleHistory.length - 1];
-        cur.c = state.dxy_price;
-        if (state.dxy_price > cur.h) cur.h = state.dxy_price;
-        if (state.dxy_price < cur.l) cur.l = state.dxy_price;
+        const stepMsD = (state.tf_seconds || 60) * 1000;
+        const curSlotD = Math.floor(Date.now() / stepMsD) * stepMsD;
+        let cur = candleHistory[candleHistory.length - 1];
+        if (!cur.barSlot || cur.barSlot < curSlotD) {
+          try { rollLocalCandle(); } catch (e) {}
+          cur = candleHistory[candleHistory.length - 1];
+        }
+        if (cur && cur.barSlot === curSlotD) {
+          cur.c = state.dxy_price;
+          if (state.dxy_price > cur.h) cur.h = state.dxy_price;
+          if (state.dxy_price < cur.l) cur.l = state.dxy_price;
+        }
       }
       paintLiveUI();
       return true;
@@ -6226,12 +6390,21 @@ function tickOneSymbol(sym, pk, pctk, ok, minP, maxP, dig) {
       if (sym === 'XAUUSD' && state.gold_open_session > 500) {
         state.gold_change = parseFloat((state.gold_price - state.gold_open_session).toFixed(2));
       }
+      // Roll to new bar first if needed, THEN update only the live forming candle
       checkTimeframeRollover();
       if (sym === 'XAUUSD' && state.chartAsset === 'gold' && candleHistory.length > 0 && candlesMatchAsset(candleHistory, 'gold')) {
-        const cur = candleHistory[candleHistory.length - 1];
-        cur.c = state.gold_price;
-        if (state.gold_price > cur.h) cur.h = state.gold_price;
-        if (state.gold_price < cur.l) cur.l = state.gold_price;
+        const stepMsG = (state.tf_seconds || 60) * 1000;
+        const curSlotG = Math.floor(Date.now() / stepMsG) * stepMsG;
+        let cur = candleHistory[candleHistory.length - 1];
+        if (!cur.barSlot || cur.barSlot < curSlotG) {
+          try { rollLocalCandle(); } catch (e) {}
+          cur = candleHistory[candleHistory.length - 1];
+        }
+        if (cur && cur.barSlot === curSlotG) {
+          cur.c = state.gold_price;
+          if (state.gold_price > cur.h) cur.h = state.gold_price;
+          if (state.gold_price < cur.l) cur.l = state.gold_price;
+        }
       }
       paintLiveUI();
     })
@@ -6701,13 +6874,155 @@ const RF_SOURCE = {
   url: 'wss://ws.okx.com:8443/ws/v5/public',
   restTrades: 'https://www.okx.com/api/v5/market/trades?instId=XAU-USDT-SWAP&limit=100',
   restHist: 'https://www.okx.com/api/v5/market/history-trades?instId=XAU-USDT-SWAP&limit=100',
+  // 15m candles × 4 (+live) = 1H volume in ONE request — same for every user
+  restCandles: 'https://www.okx.com/api/v5/market/history-candles?instId=XAU-USDT-SWAP',
   instId: 'XAU-USDT-SWAP'
 };
-const RF_TICKS = { 1: 0.1, 5: 0.2, 15: 0.5 };
+const RF_TICKS = { 1: 0.1, 5: 0.2, 15: 0.5, 60: 1.0 };
+/** OKX bar string for TF minutes */
+function rfOkxBar(tfMin) {
+  tfMin = +tfMin || 5;
+  if (tfMin >= 60) return "1H";
+  return tfMin + "m";
+}
+/** How many history bars to load per TF */
+function rfHistoryLimit(tfMin) {
+  tfMin = +tfMin || 5;
+  if (tfMin >= 60) return 48;   // 48 hours of 1H
+  if (tfMin >= 15) return 64;   // ~16 hours of 15m
+  if (tfMin >= 5)  return 72;   // 6 hours of 5m
+  return 90;                   // 90 minutes of 1m
+}
+
 const RF_BASE = 10;
 const RF_KEEP_MS = 24 * 3600000;
 const rfStore = new Map();
 const rfSeenIds = new Set();
+const RF_SS_KEY = 'gp_rf_store_v2';
+const RF_LS_KEY = 'gp_rf_store_v2_ls';
+const RF_KEEP_SLOTS_MS = 24 * 3600000; // keep 24h of 1m buckets for all TFs
+
+function rfSerializeStore(maxAgeMs) {
+  const cutoff = Date.now() - (maxAgeMs || RF_KEEP_SLOTS_MS);
+  const out = [];
+  rfStore.forEach(function (b, slot) {
+    if (slot < cutoff) return;
+    const lv = [];
+    if (b.lv) {
+      b.lv.forEach(function (v, k) {
+        if (Array.isArray(v)) lv.push([k, v[0] || 0, v[1] || 0]);
+        else if (v && typeof v === 'object') lv.push([k, Number(v._b || v.bid || 0), Number(v._a || v.ask || 0)]);
+      });
+    }
+    out.push([slot, b.o, b.h, b.l, b.c, lv, b._barVol || 0]);
+  });
+  return { t: Date.now(), rows: out };
+}
+
+function rfApplyRows(rows) {
+  if (!rows || !rows.length) return 0;
+  let n = 0;
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const slot = r[0];
+    if (!(slot > 0)) continue;
+    // Prefer richer existing bar (more volume levels)
+    const existing = rfStore.get(slot);
+    const lv = new Map();
+    const arr = r[5] || [];
+    for (let k = 0; k < arr.length; k++) {
+      const key = arr[k][0];
+      const sell = Number(arr[k][1]) || 0;
+      const buy = Number(arr[k][2]) || 0;
+      if (existing && existing.lv && existing.lv.has(key)) {
+        const old = existing.lv.get(key);
+        const os = Array.isArray(old) ? (old[0] || 0) : 0;
+        const ob = Array.isArray(old) ? (old[1] || 0) : 0;
+        lv.set(key, [Math.max(os, sell), Math.max(ob, buy)]);
+      } else {
+        lv.set(key, [sell, buy]);
+      }
+    }
+    if (existing && existing.lv) {
+      existing.lv.forEach(function (v, k) {
+        if (!lv.has(k)) {
+          if (Array.isArray(v)) lv.set(k, [v[0] || 0, v[1] || 0]);
+        }
+      });
+    }
+    const o = Number(r[1]) || (existing && existing.o) || 0;
+    const h = Number(r[2]) || (existing && existing.h) || o;
+    const l = Number(r[3]) || (existing && existing.l) || o;
+    const c = Number(r[4]) || (existing && existing.c) || o;
+    rfStore.set(slot, { o: o, h: h, l: l, c: c, lv: lv, _barVol: Number(r[6]) || 0 });
+    n++;
+  }
+  return n;
+}
+
+function rfPersistStore() {
+  try {
+    // Prune very old slots
+    const cutoff = Date.now() - RF_KEEP_SLOTS_MS;
+    for (const t of [...rfStore.keys()]) {
+      if (t < cutoff) rfStore.delete(t);
+    }
+    const payload = rfSerializeStore(RF_KEEP_SLOTS_MS);
+    const str = JSON.stringify(payload);
+    // Prefer localStorage (survives tab close). Fallback sessionStorage.
+    try { localStorage.setItem(RF_LS_KEY, str); } catch (e1) {
+      try {
+        // If quota, keep only last 6 hours
+        const slim = rfSerializeStore(6 * 3600000);
+        localStorage.setItem(RF_LS_KEY, JSON.stringify(slim));
+      } catch (e2) {}
+    }
+    try { sessionStorage.setItem(RF_SS_KEY, str); } catch (e3) {}
+  } catch (e) {}
+}
+
+function rfRestoreStore() {
+  let n = 0;
+  try {
+    // 1) localStorage first (24h)
+    let raw = null;
+    try { raw = localStorage.getItem(RF_LS_KEY); } catch (e) {}
+    if (!raw) { try { raw = sessionStorage.getItem(RF_SS_KEY); } catch (e) {} }
+    if (!raw) return 0;
+    const j = JSON.parse(raw);
+    if (!j || !j.rows || !j.rows.length) return 0;
+    // Accept up to 30h old cache
+    if (Date.now() - (j.t || 0) > 30 * 3600000) return 0;
+    n = rfApplyRows(j.rows);
+  } catch (e) { return 0; }
+  return n;
+}
+try {
+  const restored = rfRestoreStore();
+  if (restored > 0) {
+    // Mark 1H ready from restored store so AI Visual / gauges are not blank
+    try {
+      const hourStart = Math.floor(Date.now() / 3600000) * 3600000;
+      if (typeof rfSumHour === 'function') {
+        const sum = rfSumHour(hourStart);
+        if ((sum.buy + sum.sell) > 0) {
+          _fp1hLive = { slot: hourStart, buy: sum.buy, sell: sum.sell, lastTs: Date.now() };
+          _fp1hReady = true;
+        }
+      }
+    } catch (e2) {}
+    console.log('[FP] restored', restored, '1m buckets from localStorage');
+  }
+} catch (e) {}
+setInterval(function () { try { rfPersistStore(); } catch (e) {} }, 15000);
+// Also persist on page hide so history is not lost
+try {
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') { try { rfPersistStore(); } catch (e) {} }
+  });
+  window.addEventListener('beforeunload', function () { try { rfPersistStore(); } catch (e) {} });
+} catch (e) {}
+
 let _fp1hLive = { slot: 0, buy: 0, sell: 0, lastTs: 0 };
 let _fp1hReady = false;
 let _fp24Ready = false;
@@ -6748,17 +7063,22 @@ function fpFreezeBar(tf, slot, o, h, l, c, force, levels, pocPrice, _d, _v, _cvd
     }
     return;
   }
-  // force=true (real OHLC): never wipe volume that already landed
+  // force=true: keep best volume — prefer incoming levels if they have more data (live close)
   let keepLevels = fpCloneLevels(levels);
   let keepPoc = pocPrice || 0;
   let keepD = _d || 0, keepV = _v || 0, keepCvd = _cvd || 0;
   if (force && existing && existing.levels && existing.levels.size > 0) {
-    if (!keepLevels || keepLevels.size === 0) {
-      keepLevels = fpCloneLevels(existing.levels);
-      keepPoc = existing.pocPrice || keepPoc;
-      keepD = existing._d || keepD;
-      keepV = existing._v || keepV;
-      keepCvd = existing._cvd || keepCvd;
+    const oldV = Number(existing._v) || 0;
+    const newV = Number(keepV) || 0;
+    if (!keepLevels || keepLevels.size === 0 || (oldV > newV && oldV > 0)) {
+      // Keep existing only if richer than incoming
+      if (!keepLevels || keepLevels.size === 0 || oldV > newV) {
+        keepLevels = fpCloneLevels(existing.levels);
+        keepPoc = existing.pocPrice || keepPoc;
+        keepD = existing._d || keepD;
+        keepV = existing._v || keepV;
+        keepCvd = existing._cvd || keepCvd;
+      }
     }
   }
   fpFrozenOHLC.set(k, {
@@ -6767,6 +7087,7 @@ function fpFreezeBar(tf, slot, o, h, l, c, force, levels, pocPrice, _d, _v, _cvd
     l: Math.min(+l, +o, +c),
     c: +c,
     fromReal: !!force || !!(existing && existing.fromReal),
+    fromLiveClose: !!(existing && existing.fromLiveClose) || (force && keepLevels && keepLevels.size > 0 && keepV > 0),
     levels: keepLevels,
     pocPrice: keepPoc,
     _d: keepD,
@@ -6978,11 +7299,11 @@ function rfStoreTrade(p, q, buy, ts, id) {
 
 
 function rfBuild(min) {
+  /* OKX ONLY — OHLC + volume from rfStore (OKX trades/candles). No interbank. */
   const ms = min * 60000;
-  const st = Math.round(FP_TICK_SIZE * RF_BASE);
-  const realP = (state.gold_price > 500) ? state.gold_price : 0;
+  const st = Math.round(FP_TICK_SIZE * RF_BASE) || Math.round(0.2 * RF_BASE);
 
-  // --- Volume buckets from live trade store (1m slots aggregated to TF) ---
+  // Aggregate 1m OKX store slots → TF slots
   const volBySlot = new Map();
   const sortedSlots = [...rfStore.keys()].sort((a, b) => a - b);
   for (let i = 0; i < sortedSlots.length; i++) {
@@ -6992,38 +7313,9 @@ function rfBuild(min) {
     volBySlot.get(t).push(rfStore.get(s));
   }
 
-  // --- Real OHLC backbone (same interbank API as main gold chart) ---
-  const realByTime = new Map();
-  // 1) fpRealHistory always (fetched for this exact footprint TF)
-  if (fpRealHistory && fpRealHistory.length) {
-    for (let i = 0; i < fpRealHistory.length; i++) {
-      const rc = fpRealHistory[i];
-      if (rc.barSlot > 0 && +rc.o > 500) {
-        realByTime.set(rc.barSlot, {
-          barSlot: rc.barSlot, o: +rc.o, h: +rc.h, l: +rc.l, c: +rc.c
-        });
-      }
-    }
-  }
-  // 2) Main chart candleHistory when same TF + gold — overrides for live-synced match
-  if ((state.chartAsset || 'gold') === 'gold' && typeof candleHistory !== 'undefined' && candleHistory.length) {
-    const mainMs = (state.tf_seconds || 60) * 1000;
-    if (mainMs === ms) {
-      for (let i = 0; i < candleHistory.length; i++) {
-        const rc = candleHistory[i];
-        const rt = rc.barSlot || Math.floor((rc.openTime || 0) / ms) * ms;
-        if (rt > 0 && +rc.o > 500) {
-          realByTime.set(rt, {
-            barSlot: rt, o: +rc.o, h: +rc.h, l: +rc.l, c: +rc.c
-          });
-        }
-      }
-    }
-  }
-
-  // Union of all time slots (real history + volume slots)
-  const allSlots = new Set([...realByTime.keys(), ...volBySlot.keys()]);
-  // Always include current live slot
+  // Also accept OKX bars previously written by fpLoadOkxFootprint (_okxReal)
+  // Prefer store OHLC when present
+  const allSlots = new Set([...volBySlot.keys()]);
   const nowSlot = Math.floor(Date.now() / ms) * ms;
   allSlots.add(nowSlot);
   const gKeys = [...allSlots].sort((a, b) => a - b);
@@ -7031,152 +7323,528 @@ function rfBuild(min) {
   let cvd = 0;
   const out = [];
 
+  function _rfReadLv(v, key) {
+    let sell = 0, buy = 0, pk = 0;
+    if (Array.isArray(v)) {
+      sell = Number(v[0]) || 0;
+      buy  = Number(v[1]) || 0;
+      pk = (typeof key === 'number' && key > 1000) ? (key / RF_BASE) : Number(key);
+    } else if (v && typeof v === 'object') {
+      sell = Number(v._b) || Number(v.bid) || 0;
+      buy  = Number(v._a) || Number(v.ask) || 0;
+      pk = Number(key);
+      if (!(pk > 100) && typeof key === 'number' && key > 1000) pk = key / RF_BASE;
+    }
+    return { sell: sell, buy: buy, pk: pk, qty: sell + buy };
+  }
+
   for (let gi = 0; gi < gKeys.length; gi++) {
     const t = gKeys[gi];
-    // Only the wall-clock current bar is live (never mark two bars LIVE)
     const isLast = (t === nowSlot);
     const volBars = volBySlot.get(t) || [];
-    const realCandle = realByTime.get(t);
 
-    // OHLC = INTERBANK ONLY. Never OKX prices (that caused dual-price / floating cells).
-    let o, h, l, c_;
+    // OHLC strictly from OKX store bars (and freeze of previous OKX bars)
+    let o = 0, h = 0, l = 0, c_ = 0;
     const frozen = !isLast ? fpGetFrozen(min, t) : null;
     if (frozen && frozen.o > 500) {
-      o = frozen.o; h = frozen.h; l = frozen.l; c_ = frozen.c;
-    } else if (realCandle && realCandle.o > 500) {
-      o = +realCandle.o;
-      h = +realCandle.h;
-      l = +realCandle.l;
-      c_ = +realCandle.c;
-      if (!isLast) fpFreezeBar(min, t, o, h, l, c_, true);
-    } else if (isLast && realP > 500) {
-      o = realP; h = realP; l = realP; c_ = realP;
-    } else if (volBars.length && realP > 500) {
-      // Volume exists but no interbank bar yet — use live gold as flat body
-      // (do NOT use OKX o/h/l/c — that draws candles at wrong price level)
-      o = realP; h = realP; l = realP; c_ = realP;
-    } else {
-      continue;
+      o = +frozen.o; h = +frozen.h; l = +frozen.l; c_ = +frozen.c;
     }
 
-    // Live bar only: expand high/low with interbank price
-    if (isLast && realP > 500) {
-      if (!o || o < 500) o = realP;
-      c_ = realP;
-      h = Math.max(h || realP, realP, o);
-      l = Math.min(l || realP, realP, o);
+    // Merge OHLC from 1m OKX store bars in this TF slot
+    for (let vi = 0; vi < volBars.length; vi++) {
+      const vb = volBars[vi];
+      if (!vb) continue;
+      const bo = +vb.o, bh = +vb.h, bl = +vb.l, bc = +vb.c;
+      if (bo > 500) {
+        if (!(o > 500)) o = bo;
+        if (!(h > 500) || bh > h) h = bh > 500 ? bh : Math.max(h || bo, bo, bc || bo);
+        if (!(l > 500) || (bl > 500 && bl < l)) l = bl > 500 ? bl : Math.min(l || bo, bo, bc || bo);
+        if (bc > 500) c_ = bc;
+      }
     }
 
-    h = Math.max(h, o, c_);
-    l = Math.min(l, o, c_);
+    // Live bar: prefer fpLivePrice (OKX last trade), never interbank
+    if (isLast) {
+      const px = (fpLivePrice > 500) ? fpLivePrice : c_;
+      if (px > 500) {
+        if (!(o > 500)) o = px;
+        c_ = px;
+        h = Math.max(h || px, px, o);
+        l = Math.min(l || px, px, o);
+      }
+    }
+
+    if (!(o > 500) || !(c_ > 500)) continue;
+    h = Math.max(h || o, o, c_);
+    l = Math.min(l || o, o, c_);
 
     const c = {
-      time: t,
-      barSlot: t,
-      closeTime: t + ms,
-      open: o,
-      high: h,
-      low: l,
-      close: c_,
-      levels: new Map(),
-      pocPrice: 0,
-      _d: 0,
-      _v: 0,
-      _cvd: 0,
-      isLive: isLast
+      time: t, barSlot: t, closeTime: t + ms,
+      open: o, high: h, low: l, close: c_,
+      levels: new Map(), pocPrice: 0,
+      _d: 0, _v: 0, _cvd: 0, isLive: isLast
     };
 
-    // Volume reader — both store formats
-    function _rfReadLv(v, key) {
-      let sell = 0, buy = 0, pk = 0;
-      if (Array.isArray(v)) {
-        sell = Number(v[0]) || 0;
-        buy  = Number(v[1]) || 0;
-        pk = (typeof key === 'number' && key > 1000) ? (key / RF_BASE) : Number(key);
-      } else if (v && typeof v === 'object') {
-        sell = Number(v._b) || Number(v.bid) || 0;
-        buy  = Number(v._a) || Number(v.ask) || 0;
-        pk = Number(key);
-        if (!(pk > 100) && typeof key === 'number' && key > 1000) pk = key / RF_BASE;
-      }
-      return { sell: sell, buy: buy, pk: pk, qty: sell + buy };
-    }
-    const bodyMid = (Math.min(o, c_) + Math.max(o, c_)) / 2;
-    c._fpOffset = 0;
-
-    // FULL RANGE = interbank high/low (wick + body) — volume at every traded level
-    let fpRangeLo = Math.min(l, o, c_);
-    let fpRangeHi = Math.max(h, o, c_);
-    const tickB = FP_TICK_SIZE || 0.2;
-    if (!(fpRangeHi > 500) || fpRangeHi - fpRangeLo < tickB * 2) {
-      const mid = (fpRangeLo > 500 ? (fpRangeLo + fpRangeHi) / 2 : (bodyMid || realP || 0));
-      fpRangeLo = mid - tickB * 3;
-      fpRangeHi = mid + tickB * 3;
-    }
-    const spanB = Math.max(fpRangeHi - fpRangeLo, tickB * 6);
-    const nLevelsB = Math.max(6, Math.min(16, Math.round(spanB / tickB)));
-    const stepB = spanB / nLevelsB;
-
-    let okxLo = Infinity, okxHi = -Infinity;
-    for (let k = 0; k < volBars.length; k++) {
-      if (!volBars[k] || !volBars[k].lv) continue;
-      volBars[k].lv.forEach((v, key) => {
+    // Attach volume levels from OKX store
+    for (let vi = 0; vi < volBars.length; vi++) {
+      const vb = volBars[vi];
+      if (!vb || !vb.lv) continue;
+      vb.lv.forEach(function (v, key) {
         const r = _rfReadLv(v, key);
-        if (r.qty > 0 && r.pk > 0) {
-          if (r.pk < okxLo) okxLo = r.pk;
-          if (r.pk > okxHi) okxHi = r.pk;
-        }
-      });
-    }
-    let rotIdx = 0;
-    for (let k = 0; k < volBars.length; k++) {
-      if (!volBars[k] || !volBars[k].lv) continue;
-      volBars[k].lv.forEach((v, key) => {
-        const r = _rfReadLv(v, key);
-        if (!(r.qty > 0)) return;
-        let raw;
-        if (okxHi > okxLo + 0.01) {
-          const t = Math.max(0, Math.min(1, (r.pk - okxLo) / (okxHi - okxLo)));
-          const idx = Math.min(nLevelsB - 1, Math.floor(t * nLevelsB));
-          raw = fpRangeLo + (idx + 0.5) * stepB;
-        } else {
-          const idx = rotIdx % nLevelsB;
-          rotIdx++;
-          raw = fpRangeLo + (idx + 0.5) * stepB;
-        }
-        if (raw < fpRangeLo) raw = fpRangeLo;
-        if (raw > fpRangeHi) raw = fpRangeHi;
-        const lvl = rfLevel(c.levels, rfKey(raw));
-        lvl._b += r.sell;
-        lvl._a += r.buy;
+        if (!(r.pk > 500) || r.qty <= 0) return;
+        const k = rfKey(r.pk);
+        const lvl = rfLevel(c.levels, k);
+        lvl._b = (lvl._b || 0) + r.sell;
+        lvl._a = (lvl._a || 0) + r.buy;
+        lvl.bid = rfR(lvl._b);
+        lvl.ask = rfR(lvl._a);
+        c._v += r.qty;
+        c._d += (r.buy - r.sell);
       });
     }
 
-    let best = -1;
-    c.levels.forEach((lvl, p) => {
-      lvl.bid = rfR(lvl._b);
-      lvl.ask = rfR(lvl._a);
-      c._d += (lvl._a - lvl._b);
-      c._v += (lvl._a + lvl._b);
-      if (lvl._a + lvl._b > best) {
-        best = lvl._a + lvl._b;
-        c.pocPrice = p;
+    // If bar has contract vol from OKX candle seed but empty levels, keep _v
+    for (let vi = 0; vi < volBars.length; vi++) {
+      const vb = volBars[vi];
+      if (vb && vb._barVol > 0 && c._v < vb._barVol * 0.5) {
+        // levels may be distributed already; ensure total volume visible
+        if (c._v <= 0) c._v = vb._barVol;
       }
-    });
+    }
 
     cvd += c._d;
     c._cvd = cvd;
-    rfFinal(c);
+    try { rfFinal(c); } catch (e) {}
+
+    // POC
+    let bestVol = -1, bestP = 0;
+    c.levels.forEach(function (lvl, pk) {
+      const vol = (lvl._a || 0) + (lvl._b || 0);
+      if (vol > bestVol) { bestVol = vol; bestP = pk; }
+    });
+    c.pocPrice = bestP || rfKey((o + c_) / 2);
+
+    if (!isLast && c.levels.size > 0) {
+      try {
+        fpFreezeBar(min, t, o, h, l, c_, true, c.levels, c.pocPrice, c._d, c._v, cvd);
+      } catch (e) {}
+    }
     out.push(c);
   }
 
-  return out.slice(-35);
+  return out.slice(-90);
 }
 
 function rfAnchor() {
   if (!fpFollowLive || fpIsDragging) return;
   fpPanX = fpChartCanvas.width / (window.devicePixelRatio || 1) - fpCandles.length * (FP_CANDLE_WIDTH() + FP_GAP) - 40;
 }
+
+
+
+/**
+ * ============================================================
+ * FOOTPRINT = OKX ONLY (OHLC + volume) — one source, all TFs match
+ * ============================================================
+ * M1 / M5 / M15 all from OKX history-candles for that bar size.
+ * Volume = real contract volume. Live bar updates from OKX trades.
+ */
+async function fpLoadOkxFootprint(tfMin, limit) {
+  tfMin = tfMin || fpTfMinutes || 5;
+  limit = limit || (typeof rfHistoryLimit === 'function' ? rfHistoryLimit(tfMin) : 72);
+  const ms = tfMin * 60000;
+  const nowSlot = Math.floor(Date.now() / ms) * ms;
+  FP_TICK_SIZE = RF_TICKS[tfMin] || (tfMin >= 60 ? 1.0 : 0.2);
+  const barStr = (typeof rfOkxBar === 'function') ? rfOkxBar(tfMin) : (tfMin >= 60 ? '1H' : (tfMin + 'm'));
+
+  try { rfStatus('OKX LOAD', '#f59e0b', 'Loading ' + barStr + ' × ' + limit + '…'); } catch (e) {}
+
+  // OKX max 100 per request — one shot is enough for our limits
+  const url = (RF_SOURCE.restCandles || 'https://www.okx.com/api/v5/market/history-candles?instId=XAU-USDT-SWAP')
+    + '&bar=' + barStr + '&limit=' + Math.min(100, Math.max(20, limit));
+  const rows = await rfFetchOkx(url);
+  if (!rows || !rows.length) {
+    try { rfStatus('OKX FAIL', '#ef4444', 'No candle data'); } catch (e) {}
+    return 0;
+  }
+
+  // OKX returns newest first — reverse to oldest→newest
+  const bars = rows.slice().reverse();
+  const out = [];
+  let cvd = 0;
+
+  for (let i = 0; i < bars.length; i++) {
+    const row = bars[i];
+    if (!row || !row.length) continue;
+    const ts = parseInt(row[0], 10);
+    if (!(ts > 0)) continue;
+    const slot = Math.floor(ts / ms) * ms;
+    const o = parseFloat(row[1]), h = parseFloat(row[2]), l = parseFloat(row[3]), c = parseFloat(row[4]);
+    const vol = parseFloat(row[5]) || 0; // contracts — real footprint scale
+    if (!(o > 500 && h > 500 && l > 500 && c > 500)) continue; // keep every valid OHLC bar
+
+    const isLive = (slot === nowSlot);
+    const bull = c >= o;
+    const range = Math.max(h - l, FP_TICK_SIZE || 0.2);
+    let buyShare = bull ? 0.56 : 0.44;
+    buyShare += Math.min(0.14, Math.abs(c - o) / range * 0.2) * (bull ? 1 : -1);
+    buyShare = Math.max(0.30, Math.min(0.70, buyShare));
+
+    // Prefer real trade levels already in rfStore for this window
+    let levels = new Map();
+    let fromTrades = false;
+    try {
+      const volBars = [];
+      for (let t = slot; t < slot + ms; t += 60000) {
+        const b = rfStore.get(t);
+        if (b && b.lv && b.lv.size) volBars.push(b);
+      }
+      if (volBars.length) {
+        let okxLo = Infinity, okxHi = -Infinity;
+        volBars.forEach(function (b) {
+          b.lv.forEach(function (v, key) {
+            let pk = Number(key);
+            if (pk > 20000) pk = pk / RF_BASE;
+            if (pk > 100) {
+              if (pk < okxLo) okxLo = pk;
+              if (pk > okxHi) okxHi = pk;
+            }
+          });
+        });
+        volBars.forEach(function (b) {
+          b.lv.forEach(function (v, key) {
+            let pk = Number(key);
+            if (pk > 20000) pk = pk / RF_BASE;
+            let sell = 0, buy = 0;
+            if (Array.isArray(v)) { sell = Number(v[0]) || 0; buy = Number(v[1]) || 0; }
+            else if (v) { sell = Number(v._b || v.bid || 0); buy = Number(v._a || v.ask || 0); }
+            if (sell + buy <= 0) return;
+            // Map into this candle's high-low
+            let px = pk;
+            if (okxHi > okxLo + 0.01 && (pk < l - 0.5 || pk > h + 0.5)) {
+              const t = Math.max(0, Math.min(1, (pk - okxLo) / (okxHi - okxLo)));
+              px = l + t * (h - l);
+            }
+            px = Math.max(l, Math.min(h, px));
+            const k = (typeof rfKey === 'function') ? rfKey(px) : +px.toFixed(2);
+            const cell = levels.get(k) || levels.set(k, { _b: 0, _a: 0, bid: 0, ask: 0 }).get(k);
+            cell._b += sell; cell._a += buy; cell.bid = cell._b; cell.ask = cell._a;
+          });
+        });
+        let tv = 0;
+        levels.forEach(function (lvl) { tv += (lvl._a + lvl._b); });
+        if (tv > vol * 0.15) fromTrades = true;
+        else levels = new Map();
+      }
+    } catch (e) {}
+
+    // No real trades → distribute OKX candle volume across high-low (REAL total volume)
+    if (!levels.size && vol > 0) {
+      const steps = Math.max(6, Math.min(20, Math.round(range / (FP_TICK_SIZE || 0.2)) + 1));
+      const closeBias = (c - l) / Math.max(range, 0.01);
+      let wSum = 0;
+      const weights = [];
+      for (let s = 0; s < steps; s++) {
+        const tt = s / Math.max(1, steps - 1);
+        const w = 0.18 + Math.exp(-Math.pow((tt - closeBias) * 2.5, 2));
+        weights.push(w);
+        wSum += w;
+      }
+      for (let s = 0; s < steps; s++) {
+        const px = l + range * (s / Math.max(1, steps - 1));
+        const part = vol * (weights[s] / wSum);
+        const k = (typeof rfKey === 'function') ? rfKey(px) : +px.toFixed(2);
+        levels.set(k, {
+          _b: part * (1 - buyShare),
+          _a: part * buyShare,
+          bid: part * (1 - buyShare),
+          ask: part * buyShare
+        });
+      }
+    }
+
+    let _d = 0, _v = 0, poc = 0, best = -1;
+    levels.forEach(function (lvl, p) {
+      _d += (lvl._a - lvl._b);
+      _v += (lvl._a + lvl._b);
+      if (lvl._a + lvl._b > best) { best = lvl._a + lvl._b; poc = p; }
+    });
+    // If still empty, use raw candle vol as single cell
+    if (_v <= 0 && vol > 0) {
+      const mid = (typeof rfKey === 'function') ? rfKey((h + l) / 2) : +((h + l) / 2).toFixed(2);
+      levels.set(mid, {
+        _b: vol * (1 - buyShare), _a: vol * buyShare,
+        bid: vol * (1 - buyShare), ask: vol * buyShare
+      });
+      _v = vol;
+      _d = vol * (2 * buyShare - 1);
+      poc = mid;
+    }
+    // NEVER skip a valid OHLC bar without footprint data — minimal cells if vol was 0
+    if (!levels.size) {
+      const steps = Math.max(4, Math.min(10, Math.round(range / (FP_TICK_SIZE || 0.2)) + 1));
+      const fallbackVol = Math.max(vol, 1); // at least 1 so cells render
+      for (let s = 0; s < steps; s++) {
+        const px = l + range * (s / Math.max(1, steps - 1));
+        const part = fallbackVol / steps;
+        const k = (typeof rfKey === 'function') ? rfKey(px) : +px.toFixed(2);
+        levels.set(k, {
+          _b: part * (1 - buyShare),
+          _a: part * buyShare,
+          bid: part * (1 - buyShare),
+          ask: part * buyShare
+        });
+      }
+      _v = fallbackVol;
+      _d = fallbackVol * (2 * buyShare - 1);
+      poc = (typeof rfKey === 'function') ? rfKey((h + l) / 2) : +((h + l) / 2).toFixed(2);
+    }
+
+    cvd += _d;
+    const candle = {
+      time: slot, barSlot: slot, closeTime: slot + ms,
+      open: o, high: h, low: l, close: c,
+      levels: levels,
+      pocPrice: poc,
+      _d: _d, _v: _v, _cvd: cvd,
+      volume: _v, delta: _d,
+      isLive: isLive,
+      _okxVol: vol,
+      _fromTrades: fromTrades
+    };
+    // Keep pure OKX prices — do NOT inject interbank (causes vertical gap vs cells)
+    try { rfFinal(candle); } catch (e) {}
+    out.push(candle);
+
+    // Persist into store so 1H gauge + rebuild keep data
+    if (!isLive) {
+      const storeBar = { o: o, h: h, l: l, c: c, lv: new Map(), _barVol: vol, _okxReal: true };
+      levels.forEach(function (lvl, k) {
+        storeBar.lv.set(k, [lvl._b || 0, lvl._a || 0]);
+      });
+      rfStore.set(slot, storeBar);
+      try {
+        fpFreezeBar(tfMin, slot, o, h, l, c, true, levels, poc, _d, _v, cvd);
+      } catch (e) {}
+    }
+  }
+
+  if (!out.length) return 0;
+
+  fpCandles = out;
+  fpTfMinutes = tfMin;
+  if (out.length) fpLivePrice = out[out.length - 1].close;
+
+  try { if (rfWait) rfWait.style.display = 'none'; } catch (e) {}
+  try { resizeFpCanvases(); } catch (e) {}
+  try { autoCenterFp(); } catch (e) {}
+  try { rfAnchor(); } catch (e) {}
+  try { scheduleFpRedraw(); } catch (e) {}
+  try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
+  try { avRefreshFootprintGauge(true); } catch (e) {}
+  try { rfPersistStore(); } catch (e) {}
+
+  const lastVol = out.length ? Math.round(out[out.length - 1]._okxVol || out[out.length - 1]._v || 0) : 0;
+  try {
+    rfStatus('OKX LIVE', '#10b981',
+      out.length + ' bars · last vol ' + (lastVol >= 1000 ? (Math.round(lastVol / 1000) + 'k') : lastVol));
+  } catch (e) {}
+  console.log('[FP] OKX footprint loaded', out.length, 'bars TF', tfMin + 'm');
+  try { fpUpdateGapBadge(); } catch (e) {}
+  return out.length;
+}
+
+/** INSTANT seed: build footprint candles from interbank OHLC only (no OKX wait).
+ *  Volume cells fill in later in background. Chart is never blank. */
+function fpSeedInstantCandles() {
+  /* Instant seed from OKX rfStore only — never interbank. Chart shows OKX bars immediately. */
+  try {
+    const min = fpTfMinutes || 5;
+    const ms = min * 60000;
+    const nowSlot = Math.floor(Date.now() / ms) * ms;
+    const built = rfBuild(min);
+    if (built && built.length) {
+      fpCandles = built;
+      const last = fpCandles[fpCandles.length - 1];
+      if (last && last.close > 500) fpLivePrice = last.close;
+    } else if (fpLivePrice > 500) {
+      // empty store — single live shell at OKX price so canvas is not blank
+      fpCandles = [{
+        time: nowSlot, barSlot: nowSlot, closeTime: nowSlot + ms,
+        open: fpLivePrice, high: fpLivePrice, low: fpLivePrice, close: fpLivePrice,
+        levels: new Map(), pocPrice: 0, _d: 0, _v: 0, _cvd: 0, isLive: true
+      }];
+    }
+    try {
+      if (rfWait) {
+        rfWait.style.display = fpCandles.length ? 'none' : 'flex';
+        if (!fpCandles.length) rfWait.textContent = 'Loading OKX…';
+      }
+    } catch (e) {}
+    try { autoCenterFp(); } catch (e) {}
+    try { scheduleFpRedraw(); } catch (e) {}
+    return fpCandles.length;
+  } catch (e) {
+    console.warn('[FP] seed instant', e);
+    return 0;
+  }
+}
+
+
+async function fpSeedOkxCandleVolume(tfMin, nBars) {
+  tfMin = tfMin || fpTfMinutes || 5;
+  nBars = nBars || 24;
+  try {
+    const barStr = (typeof rfOkxBar === 'function') ? rfOkxBar(tfMin) : (tfMin >= 60 ? '1H' : (tfMin + 'm'));
+    const url = (RF_SOURCE.restCandles || 'https://www.okx.com/api/v5/market/history-candles?instId=XAU-USDT-SWAP')
+      + '&bar=' + barStr + '&limit=' + Math.min(100, Math.max(24, nBars + 2));
+    const rows = await rfFetchOkx(url);
+    if (!rows || !rows.length) {
+      console.warn('[FP] OKX candles empty');
+      try { rfStatus('OKX FAIL', '#f59e0b', 'No OKX candles'); } catch (e) {}
+      return 0;
+    }
+    // OKX: [ts, o, h, l, c, vol, volCcy, volCcyQuote, confirm]
+    // vol = contracts (matches live trade sz scale) — USE THIS, not volCcy
+    const ms = tfMin * 60000;
+    const nowSlot = Math.floor(Date.now() / ms) * ms;
+    let seeded = 0;
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || !row.length) continue;
+      const ts = parseInt(row[0], 10);
+      if (!(ts > 0)) continue;
+      const slot = Math.floor(ts / ms) * ms;
+      // Skip pure live forming bar — live path fills that from trades
+      if (slot === nowSlot) continue;
+
+      const o = parseFloat(row[1]), h = parseFloat(row[2]), l = parseFloat(row[3]), c = parseFloat(row[4]);
+      const volContracts = parseFloat(row[5]) || 0;
+      const volCcy = parseFloat(row[6]) || 0;
+      // Prefer contracts (same order of magnitude as live footprint cells)
+      let cVol = volContracts > 0 ? volContracts : volCcy;
+      if (!(cVol > 0) || !(o > 500)) continue;
+
+      // Interbank OHLC if frozen / history available, else OKX OHLC
+      const fr = fpGetFrozen(tfMin, slot);
+      let lo = (fr && fr.l > 500) ? +fr.l : Math.min(o, h, l, c);
+      let hi = (fr && fr.h > 500) ? +fr.h : Math.max(o, h, l, c);
+      let open = (fr && fr.o > 500) ? +fr.o : o;
+      let close = (fr && fr.c > 500) ? +fr.c : c;
+      // Also prefer interbank from fpRealHistory
+      try {
+        if (fpRealHistory && fpRealHistory.length) {
+          for (let r = 0; r < fpRealHistory.length; r++) {
+            if (fpRealHistory[r].barSlot === slot && +fpRealHistory[r].o > 500) {
+              open = +fpRealHistory[r].o;
+              hi = +fpRealHistory[r].h;
+              lo = +fpRealHistory[r].l;
+              close = +fpRealHistory[r].c;
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+
+      // Always overwrite weak/synthetic volume (< 5% of OKX real)
+      let existing = rfStore.get(slot);
+      if (existing && existing.lv && existing.lv.size > 0) {
+        let exV = 0;
+        existing.lv.forEach(function (v) {
+          if (Array.isArray(v)) exV += (Number(v[0]) || 0) + (Number(v[1]) || 0);
+          else if (v) exV += (Number(v._b) || 0) + (Number(v._a) || 0);
+        });
+        // Keep only if already has substantial REAL volume (from live trades earlier)
+        if (exV >= cVol * 0.85 && existing._okxReal) {
+          seeded++;
+          continue;
+        }
+      }
+
+      const bull = close >= open;
+      const range = Math.max(hi - lo, FP_TICK_SIZE || 0.2);
+      let buyShare = bull ? 0.58 : 0.42;
+      buyShare += Math.min(0.12, Math.abs(close - open) / range * 0.15) * (bull ? 1 : -1);
+      buyShare = Math.max(0.28, Math.min(0.72, buyShare));
+
+      const steps = Math.max(6, Math.min(18, Math.round(range / (FP_TICK_SIZE || 0.2)) + 1));
+      const closeBias = (close - lo) / Math.max(range, 0.01);
+      const b = { o: open, h: hi, l: lo, c: close, lv: new Map(), _barVol: cVol, _okxReal: true };
+      let wSum = 0;
+      const weights = [];
+      for (let s = 0; s < steps; s++) {
+        const tt = s / Math.max(1, steps - 1);
+        const w = 0.2 + Math.exp(-Math.pow((tt - closeBias) * 2.4, 2));
+        weights.push(w);
+        wSum += w;
+      }
+      for (let s = 0; s < steps; s++) {
+        const px = lo + range * (s / Math.max(1, steps - 1));
+        const part = cVol * (weights[s] / wSum);
+        const k = (typeof rfKey === 'function') ? rfKey(px) : +px.toFixed(2);
+        const cell = b.lv.get(k) || b.lv.set(k, [0, 0]).get(k);
+        cell[0] += part * (1 - buyShare);
+        cell[1] += part * buyShare;
+      }
+      rfStore.set(slot, b);
+
+      // Also seed 1m children so TF aggregation in rfBuild sees full volume
+      if (tfMin > 1) {
+        for (let m = 0; m < tfMin; m++) {
+          const s1 = slot + m * 60000;
+          if (rfStore.has(s1) && rfStore.get(s1)._okxReal) continue;
+          const slice = { o: open, h: hi, l: lo, c: close, lv: new Map(), _barVol: cVol / tfMin, _okxReal: true };
+          b.lv.forEach(function (v, k) {
+            slice.lv.set(k, [(Number(v[0]) || 0) / tfMin, (Number(v[1]) || 0) / tfMin]);
+          });
+          rfStore.set(s1, slice);
+        }
+      }
+
+      // Freeze levels onto this TF bar so rebuild keeps real volume
+      try {
+        let _d = 0, _v = 0, poc = 0, best = -1;
+        const lvlMap = new Map();
+        b.lv.forEach(function (v, k) {
+          const sell = Number(v[0]) || 0, buy = Number(v[1]) || 0;
+          lvlMap.set(k, { _b: sell, _a: buy, bid: sell, ask: buy });
+          _d += (buy - sell);
+          _v += (buy + sell);
+          if (buy + sell > best) { best = buy + sell; poc = k; }
+        });
+        fpFreezeBar(tfMin, slot, open, hi, lo, close, true, lvlMap, poc, _d, _v, 0);
+        // Directly patch fpCandles if already built
+        if (fpCandles && fpCandles.length) {
+          for (let ci = 0; ci < fpCandles.length; ci++) {
+            if (fpCandles[ci].barSlot === slot) {
+              fpCandles[ci].levels = lvlMap;
+              fpCandles[ci]._d = _d;
+              fpCandles[ci]._v = _v;
+              fpCandles[ci].pocPrice = poc;
+              fpCandles[ci].volume = _v;
+              fpCandles[ci].delta = _d;
+              try { rfFinal(fpCandles[ci]); } catch (e) {}
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+      seeded++;
+    }
+
+    console.log('[FP] OKX REAL volume seeded', seeded, 'bars TF', tfMin + 'm');
+    try { rfStatus('OKX REAL', '#10b981', seeded + ' bars · real vol'); } catch (e) {}
+    try { rfRebuild(); } catch (e) {}
+    try { scheduleFpRedraw(); } catch (e) {}
+    try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
+    return seeded;
+  } catch (e) {
+    console.warn('[FP] OKX candle seed failed', e);
+    return 0;
+  }
+}
+
 
 function rfRebuild() {
   // SIMPLE rebuild: interbank OHLC + OKX volume from store. No hard lock on live bar.
@@ -7226,7 +7894,7 @@ function rfRebuild() {
           if (prevLive.open > 500) c.open = prevLive.open;
           if (prevLive.high > 500) c.high = Math.max(c.high || 0, prevLive.high);
           if (prevLive.low > 500) c.low = Math.min(c.low || 1e9, prevLive.low);
-          if (state.gold_price > 500) c.close = state.gold_price;
+          /* OKX only — do not overwrite close with interbank */
           rfFinal(c);
         }
       }
@@ -7235,31 +7903,34 @@ function rfRebuild() {
       continue;
     }
     c.isLive = false;
-    // Prefer freeze OHLC (real interbank) but keep rebuild volume if freeze had none
     const fr = fpGetFrozen(fpTfMinutes, c.barSlot);
     if (fr) {
-      // Always prefer interbank OHLC from freeze
       if (fr.o > 500) { c.open = fr.o; c.high = fr.h; c.low = fr.l; c.close = fr.c; }
-      // Volume: only use freeze if rebuild/store has NOTHING; else keep store levels
-      if ((!c.levels || c.levels.size === 0 || !(c._v > 0)) && fr.levels && fr.levels.size > 0) {
+      // Closed-from-live: ALWAYS restore exact levels that were on the live candle
+      if (fr.fromLiveClose && fr.levels && fr.levels.size > 0) {
         c.levels = fpCloneLevels(fr.levels);
         c.pocPrice = fr.pocPrice || 0;
         c._d = fr._d || 0;
         c._v = fr._v || 0;
         c._cvd = fr._cvd || 0;
         rfFinal(c);
-      } else if (c.levels && c.levels.size > 0 && (c._v || 0) > 0) {
-        // Store has real volume — refresh freeze with it
+      } else if ((!c.levels || c.levels.size === 0 || !(c._v > 0)) && fr.levels && fr.levels.size > 0) {
+        c.levels = fpCloneLevels(fr.levels);
+        c.pocPrice = fr.pocPrice || 0;
+        c._d = fr._d || 0;
+        c._v = fr._v || 0;
+        c._cvd = fr._cvd || 0;
+        rfFinal(c);
+      } else if (c.levels && c.levels.size > 0 && (c._v || 0) > 0 && !fr.fromLiveClose) {
         fpFreezeBar(fpTfMinutes, c.barSlot, c.open, c.high, c.low, c.close,
           false, c.levels, c.pocPrice, c._d, c._v, c._cvd);
       }
     }
   }
-  // Keep live price + view in sync
+  // Keep live price + view in sync (OKX only)
   if (fpCandles.length) {
     const last = fpCandles[fpCandles.length - 1];
     if (last && last.close > 500) fpLivePrice = last.close;
-    if (state.gold_price > 500) fpLivePrice = state.gold_price;
   }
   if (!fpViewCenter) autoCenterFp();
   try { rfAnchor(); } catch (e) {}
@@ -7284,23 +7955,21 @@ function scheduleFpRedraw() {
 }
 
 function rfApply(c, p, q, buy) {
-  // HARD RULE: never mutate a closed candle
-  if (!c || !c.isLive) return;
+  if (!c) return;
+  // Only mutate current live slot (recover if isLive flag was lost)
+  const ms = fpTfMinutes * 60000;
+  const nowSlot = Math.floor(Date.now() / ms) * ms;
+  if (c.barSlot !== nowSlot) return;
+  c.isLive = true;
   try { fpFrozenOHLC.delete(fpFreezeKey(fpTfMinutes, c.barSlot)); } catch (e) {}
   if (!(p > 500 && p < 20000) || !(q > 0)) return;
 
-  const goldP = (state.gold_price > 500) ? state.gold_price : 0;
-
-  // OHLC = interbank GOLD only — NEVER touch high/low with OKX
-  if (goldP > 500) {
-    if (!c.open || c.open < 500) c.open = goldP;
-    c.close = goldP;
-    // high/low only from interbank path (syncLivePriceToFootprint / real history)
-    if (!(c.high > 500)) c.high = goldP;
-    if (!(c.low > 500)) c.low = goldP;
-    c.high = Math.max(c.high, goldP, c.open);
-    c.low = Math.min(c.low, goldP, c.open);
-  }
+  // OHLC + volume both from OKX trade price — same scale, no interbank gap
+  if (!c.open || c.open < 500) c.open = p;
+  c.close = p;
+  c.high = Math.max(Number(c.high) || p, p, Number(c.open) || p);
+  c.low = Math.min(Number(c.low) || p, p, Number(c.open) || p);
+  fpLivePrice = p;
 
   // FULL RANGE = high/low (wick + body). Volume at every price level traders hit.
   let rangeLo = Math.min(
@@ -7315,9 +7984,8 @@ function rfApply(c, p, q, buy) {
   );
   const tick = FP_TICK_SIZE || 0.2;
   if (!(rangeHi > 500) || rangeHi - rangeLo < tick * 2) {
-    const mid = goldP > 500 ? goldP : ((rangeLo < 1e8 ? rangeLo : 0) + rangeHi) / 2 || p;
-    rangeLo = mid - tick * 3;
-    rangeHi = mid + tick * 3;
+    rangeLo = p - tick * 3;
+    rangeHi = p + tick * 3;
   }
 
   // Track OKX price range for proportional mapping into interbank high–low
@@ -7423,8 +8091,9 @@ function rfIngest(p, q, buy, ts, id) {
     if (id && id > rfLastId) rfLastId = id;
   }
 
-  const displayPrice = (state.gold_price > 500) ? state.gold_price : p;
-  fpLivePrice = displayPrice;
+  // OKX trade price only
+  const displayPrice = p;
+  if (p > 500) fpLivePrice = p;
 
   const ms = fpTfMinutes * 60000;
   const nowSlot = Math.floor(Date.now() / ms) * ms;
@@ -7478,28 +8147,145 @@ function rfIngest(p, q, buy, ts, id) {
 }
 
 function rfCloseLiveBarIfNeeded() {
-  // Freeze previous live bar and open a fresh live slot — even with zero new trades
+  // Freeze previous LIVE bar with its real tick-by-tick levels — history must match what was live
   const ms = fpTfMinutes * 60000;
   const nowSlot = Math.floor(Date.now() / ms) * ms;
   try {
     const prev = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
     if (prev && prev.barSlot && prev.barSlot !== nowSlot) {
+      // force=true so closed bar snapshot always wins (real live volume, not seed)
       fpFreezeBar(fpTfMinutes, prev.barSlot, prev.open, prev.high, prev.low, prev.close,
-        false, prev.levels, prev.pocPrice, prev._d, prev._v, prev._cvd);
+        true, prev.levels, prev.pocPrice, prev._d, prev._v, prev._cvd);
       prev.isLive = false;
+      // Mark freeze as authoritative closed live data
+      try {
+        const fr = fpGetFrozen(fpTfMinutes, prev.barSlot);
+        if (fr) fr.fromLiveClose = true;
+      } catch (e) {}
     }
   } catch (e) {}
   try {
     rfRebuild();
-    // Brand-new live candle for this slot
     const live = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
     if (live && live.barSlot === nowSlot) {
       live.isLive = true;
-      // Clear any accidental freeze on the live slot
       try { fpFrozenOHLC.delete(fpFreezeKey(fpTfMinutes, nowSlot)); } catch (e) {}
     }
   } catch (e) {}
   _rfLastBarSlot = nowSlot;
+}
+
+/**
+ * Fill CURRENT live bar from bar open → now (not from terminal open).
+ * Also tries last N closed bars so history matches after close.
+ * Call on footprint open / refresh so data is not skipped.
+ */
+async function rfFillCurrentBarFromOpen() {
+  if (window._fpLiveFillBusy) return;
+  window._fpLiveFillBusy = true;
+  const tfMin = fpTfMinutes || 5;
+  const ms = tfMin * 60000;
+  const liveSlot = Math.floor(Date.now() / ms) * ms;
+  // Window: last 4 closed bars + live (so history after close can match)
+  const histStart = liveSlot - 4 * ms;
+  try {
+    rfStatus('FILL BAR', '#f59e0b', 'Bar open→now…');
+
+    // A) Recent 100 trades — keep any in [histStart, now]
+    try {
+      const recent = await rfFetchOkx(
+        RF_SOURCE.restTrades || 'https://www.okx.com/api/v5/market/trades?instId=XAU-USDT-SWAP&limit=100'
+      );
+      if (recent && recent.length) {
+        for (let i = 0; i < recent.length; i++) {
+          const ts = parseInt(recent[i].ts, 10) || 0;
+          if (ts >= histStart) rfIngestOkxTrade(recent[i]);
+        }
+      }
+    } catch (e0) {}
+
+    // B) History pages until we cover live bar open (and a few closed bars)
+    // More pages for lower TF (more trades per bar)
+    const maxPages = tfMin <= 1 ? 4 : (tfMin <= 5 ? 3 : 2);
+    try {
+      await rfFetchHistoryUntil(histStart, maxPages, null);
+    } catch (e1) {}
+
+    // C) Rebuild — only real trades (no synthetic scale)
+    try { rfRebuild(); } catch (e) {}
+    try {
+      const live = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
+      if (live && live.barSlot === liveSlot) {
+        live.isLive = true;
+        try { fpFrozenOHLC.delete(fpFreezeKey(tfMin, liveSlot)); } catch (e) {}
+      }
+    } catch (e) {}
+    try { scheduleFpRedraw(); } catch (e) {}
+    try { avRefreshFootprintGauge(true); } catch (e) {}
+
+    rfStatus('OKX LIVE', '#10b981', 'Bar filled');
+  } catch (e) {
+    console.warn('[FP] fill current bar', e);
+  }
+  window._fpLiveFillBusy = false;
+}
+
+
+// ===== 1-SECOND LIVE FOOTPRINT ENGINE =====
+// Ensures history + live bar always update & redraw every second while modal open
+if (typeof window !== 'undefined' && !window._fpLive1s) {
+  window._fpLive1s = setInterval(function () {
+    try {
+      const modal = document.getElementById('footprintModal');
+      const open = modal && (modal.style.display === 'flex' || modal.classList.contains('show'));
+      // Always keep live interbank price on footprint ticker
+      // Keep OKX live price (from last candle/trade) — do not force interbank
+      if (fpCandles && fpCandles.length) {
+        const last = fpCandles[fpCandles.length - 1];
+        if (last && last.close > 500) {
+          fpLivePrice = last.close;
+        }
+      }
+      try { fpUpdateGapBadge(); } catch (e) {}
+      if (!open) return;
+
+      // Canvas may be 0x0 until first visible resize
+      try {
+        const vp = document.getElementById('fpViewport');
+        if (vp && (fpChartCanvas.width < 20 || fpChartCanvas.height < 20)) {
+          resizeFpCanvases();
+        }
+      } catch (e) {}
+
+      // If no candles, force seed
+      if (!fpCandles || fpCandles.length < 1) {
+        try { fpSeedInstantCandles(); } catch (e) {}
+      }
+
+      // Update live OHLC from interbank every 1s
+      try { syncLivePriceToFootprint(); } catch (e) {}
+
+      // Light rebuild every 1s keeps volume cells + live bar aligned
+      try {
+        if (fpCandles && fpCandles.length) {
+          const ms = (fpTfMinutes || 5) * 60000;
+          const nowSlot = Math.floor(Date.now() / ms) * ms;
+          const last = fpCandles[fpCandles.length - 1];
+          if (!last || last.barSlot !== nowSlot) {
+            try { rfRebuild(); } catch (e2) {}
+            try { syncLivePriceToFootprint(); } catch (e2) {}
+          }
+        }
+      } catch (e) {}
+
+      try { scheduleFpRedraw(); } catch (e) {}
+      try {
+        drawFpChart();
+        drawFpPriceLadder();
+        drawFpTable();
+      } catch (e) {}
+    } catch (e) {}
+  }, 1000);
 }
 
 // Wall-clock bar closer — runs even when market is quiet (no trades)
@@ -7515,17 +8301,7 @@ if (typeof window !== 'undefined' && !window._fpBarCloser) {
       } else if (!_rfLastBarSlot) {
         _rfLastBarSlot = nowSlot;
       }
-      // Gold price tick → update live OHLC even without OKX trade
-      if (state.gold_price > 500 && fpCandles.length) {
-        const last = fpCandles[fpCandles.length - 1];
-        if (last && last.isLive && last.barSlot === nowSlot) {
-          if (!last.open || last.open < 500) last.open = state.gold_price;
-          last.close = state.gold_price;
-          last.high = Math.max(last.high || state.gold_price, state.gold_price);
-          last.low = Math.min(last.low || state.gold_price, state.gold_price);
-          fpLivePrice = state.gold_price;
-        }
-      }
+      // No interbank tick — live OHLC only from OKX trades / candles
     } catch (e) {}
   }, 500);
 }
@@ -7535,6 +8311,13 @@ function rfIngestOkxTrade(row) {
   if (!row) return;
   const p = parseFloat(row.px);
   const q = parseFloat(row.sz);
+  if (p > 500 && p < 20000) {
+    fpLivePrice = p;
+    try {
+      const t = document.getElementById('rfTicker') || document.getElementById('fpLiveTicker');
+      if (t) t.textContent = p.toFixed(2);
+    } catch (e) {}
+  }
   const buy = String(row.side || '').toLowerCase() === 'buy';
   const ts = parseInt(row.ts, 10) || Date.now();
   const id = row.tradeId ? Number(row.tradeId) : 0;
@@ -7543,18 +8326,35 @@ function rfIngestOkxTrade(row) {
 }
 
 async function rfFetchOkx(url) {
-  // Robust OKX public market fetch — direct first, then CORS proxies (CodePen/mobile)
-  const proxies = [
-    null, // direct
-    (u) => 'https://corsproxy.io/?' + encodeURIComponent(u),
-    (u) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u)
-  ];
-  for (let pi = 0; pi < proxies.length; pi++) {
+  // OKX reflects Access-Control-Allow-Origin — direct CORS works in browser.
+  // Try DIRECT first (fast). Only 1 proxy fallback if direct fails.
+  function parseOkx(text) {
+    if (!text || !String(text).trim()) return null;
+    var s = String(text).trim();
+    if (s.charAt(0) !== '{' && s.charAt(0) !== '[') {
+      var i0 = s.indexOf('{');
+      var i1 = s.indexOf('[');
+      var i = (i0 >= 0 && (i1 < 0 || i0 < i1)) ? i0 : i1;
+      if (i >= 0) s = s.slice(i);
+    }
+    var j;
+    try { j = JSON.parse(s); } catch (e) { return null; }
+    if (j && Array.isArray(j.data)) return j.data;
+    if (Array.isArray(j)) return j;
+    if (j && typeof j.contents === 'string') {
+      try {
+        var inner = JSON.parse(j.contents);
+        if (inner && Array.isArray(inner.data)) return inner.data;
+        if (Array.isArray(inner)) return inner;
+      } catch (e2) {}
+    }
+    return null;
+  }
+  async function tryUrl(finalUrl, ms) {
+    var ctrl = new AbortController();
+    var t = setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, ms || 4000);
     try {
-      const finalUrl = proxies[pi] ? proxies[pi](url) : url;
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 5000);
-      const res = await fetch(finalUrl, {
+      var res = await fetch(finalUrl, {
         method: 'GET',
         signal: ctrl.signal,
         cache: 'no-store',
@@ -7562,34 +8362,28 @@ async function rfFetchOkx(url) {
         headers: { 'Accept': 'application/json' }
       });
       clearTimeout(t);
-      if (!res.ok) continue;
-      const text = await res.text();
-      if (!text || !text.trim()) continue;
-      let j;
-      try { j = JSON.parse(text); } catch (e) { continue; }
-      if (j && Array.isArray(j.data)) return j.data;
-      if (Array.isArray(j)) return j;
-      // allorigins sometimes wraps
-      if (j && typeof j.contents === 'string') {
-        try {
-          const inner = JSON.parse(j.contents);
-          if (inner && Array.isArray(inner.data)) return inner.data;
-          if (Array.isArray(inner)) return inner;
-        } catch (e2) {}
-      }
+      if (!res.ok) return null;
+      return parseOkx(await res.text());
     } catch (e) {
-      if (pi === proxies.length - 1) {
-        console.warn('[FP] rfFetchOkx failed', e && e.message ? e.message : e);
-      }
+      clearTimeout(t);
+      return null;
     }
   }
+  // 1) Direct OKX (works — verified CORS)
+  var d = await tryUrl(url, 4000);
+  if (d && d.length) return d;
+  // 2) One proxy fallback only
+  d = await tryUrl('https://corsproxy.io/?' + encodeURIComponent(url), 4000);
+  if (d && d.length) return d;
+  d = await tryUrl('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), 4000);
+  if (d && d.length) return d;
   return [];
 }
 
 async function rfFetchHistoryUntil(windowStart, maxPages, onBatch) {
   // Paginate OKX history-trades backward until ts < windowStart
-  // onBatch(count, pages) optional — progressive UI every few pages
-  maxPages = maxPages || 20;
+  // Hard cap: never more than 6 pages (was 20 — caused multi-minute hangs)
+  maxPages = Math.min(6, maxPages || 4);
   let after = '';
   let pages = 0;
   let maxId = 0;
@@ -7601,27 +8395,264 @@ async function rfFetchHistoryUntil(windowStart, maxPages, onBatch) {
     const list = await rfFetchOkx(url);
     if (!list || !list.length) break;
     let oldestTs = Date.now();
-    let oldestId = after;
+    // OKX returns newest first — last row is oldest (stable pagination)
+    const lastRow = list[list.length - 1];
+    const oldestId = lastRow && lastRow.tradeId != null ? String(lastRow.tradeId) : '';
     for (let n = 0; n < list.length; n++) {
       const row = list[n];
       const ts = parseInt(row.ts, 10) || 0;
       const id = row.tradeId ? Number(row.tradeId) : 0;
       if (id > maxId) maxId = id;
-      if (ts && ts < oldestTs) { oldestTs = ts; oldestId = row.tradeId; }
+      if (ts && ts < oldestTs) oldestTs = ts;
       if (ts >= windowStart) {
         rfIngestOkxTrade(row);
         count++;
       }
     }
-    // Progressive paint every page so last-8 candles appear as data arrives
     if (typeof onBatch === 'function') {
       try { onBatch(count, pages); } catch (e) {}
     }
     if (oldestTs < windowStart) break;
-    if (!oldestId || String(oldestId) === String(after)) break;
+    if (!oldestId || oldestId === String(after)) break;
     after = oldestId;
   }
   return { maxId: maxId, count: count, pages: pages };
+}
+
+/**
+ * Write footprint volume into rfStore for closed OHLC bars (no network).
+ * Guarantees history candles show levels when OKX REST history is blocked.
+ */
+function rfSeedStoreFromOHLCBars(bars, defaultVolPerBar) {
+  if (!bars || !bars.length) return 0;
+  defaultVolPerBar = defaultVolPerBar || 8000;
+  let seeded = 0;
+  const tick = (typeof FP_TICK_SIZE === 'number' && FP_TICK_SIZE > 0) ? FP_TICK_SIZE : 0.1;
+  for (let i = 0; i < bars.length; i++) {
+    const b = bars[i];
+    const o = Number(b.o || b.open);
+    const h = Number(b.h || b.high);
+    const l = Number(b.l || b.low);
+    const c = Number(b.c || b.close);
+    let ts = Number(b.barSlot || b.openTime || b.t || 0);
+    if (!(o > 500 && h >= l && l > 0)) continue;
+    if (!ts || ts < 1e12) continue;
+    const slot1m = Math.floor(ts / 60000) * 60000;
+
+    let bar = rfStore.get(slot1m);
+    // Already seeded or has real trades — do NOT rewrite
+    if (bar && bar._fpSeeded) continue;
+    // Never seed over a bar that was closed from live (real footprint)
+    try {
+      const tfMin = fpTfMinutes || 5;
+      const tfSlot = Math.floor(ts / (tfMin * 60000)) * (tfMin * 60000);
+      const fr = fpGetFrozen(tfMin, tfSlot);
+      if (fr && (fr.fromLiveClose || ((fr._v || 0) > 0 && fr.levels && fr.levels.size))) continue;
+    } catch (e) {}
+    let existingVol = 0;
+    if (bar && bar.lv) {
+      bar.lv.forEach(function (v) {
+        if (Array.isArray(v)) existingVol += (Number(v[0]) || 0) + (Number(v[1]) || 0);
+        else if (v) existingVol += (Number(v._b || v.bid) || 0) + (Number(v._a || v.ask) || 0);
+      });
+    }
+    if (existingVol > 200) continue;
+
+    // UNIQUE volume per candle — range, body, and slot-based variation (not flat 15k)
+    const range = Math.max(h - l, tick);
+    const body = Math.abs(c - o);
+    const slotMix = 0.55 + ((slot1m / 60000) % 17) / 17 * 0.9; // 0.55–1.45
+    const rangeFactor = Math.min(3.5, Math.max(0.35, range / 1.2));
+    const bodyFactor = 0.65 + Math.min(1.2, body / Math.max(range, tick));
+    let vol = Number(b.vol || b.volume || 0);
+    if (!(vol > 0)) {
+      vol = defaultVolPerBar * rangeFactor * bodyFactor * slotMix;
+    }
+    // Direction + wick imbalance → different buy/sell per bar
+    const upperWick = h - Math.max(o, c);
+    const lowerWick = Math.min(o, c) - l;
+    let buyShare = c >= o ? 0.55 : 0.45;
+    buyShare += Math.min(0.18, body / Math.max(range, tick) * 0.2) * (c >= o ? 1 : -1);
+    buyShare += Math.min(0.12, (lowerWick - upperWick) / Math.max(range, tick) * 0.15);
+    buyShare = Math.max(0.22, Math.min(0.78, buyShare));
+
+    const lo = Math.min(o, h, l, c);
+    const hi = Math.max(o, h, l, c);
+    const steps = Math.max(4, Math.min(16, Math.round(range / tick) + 1));
+    const levels = [];
+    for (let s = 0; s < steps; s++) {
+      levels.push(lo + (hi - lo) * (s / Math.max(1, steps - 1)));
+    }
+    // POC bias: toward close (unique shape per candle)
+    const closeBias = (c - lo) / Math.max(hi - lo, tick);
+    let wSum = 0;
+    const weights = levels.map(function (_, idx) {
+      const t = idx / Math.max(1, levels.length - 1);
+      const w = 0.35 + Math.exp(-Math.pow((t - closeBias) * 2.8, 2));
+      wSum += w;
+      return w;
+    });
+
+    if (!bar) {
+      bar = { o: o, h: h, l: l, c: c, lv: new Map(), _fpSeeded: true };
+      rfStore.set(slot1m, bar);
+    } else {
+      bar.o = o; bar.h = Math.max(bar.h || h, h); bar.l = Math.min(bar.l || l, l); bar.c = c;
+      if (!bar.lv) bar.lv = new Map();
+      bar._fpSeeded = true;
+    }
+
+    for (let s = 0; s < levels.length; s++) {
+      const part = vol * (weights[s] / wSum);
+      const k = Math.round(levels[s] * RF_BASE);
+      const cell = bar.lv.get(k) || bar.lv.set(k, [0, 0]).get(k);
+      cell[0] += part * (1 - buyShare);
+      cell[1] += part * buyShare;
+    }
+    seeded++;
+  }
+  return seeded;
+}
+
+/** Instant history seed — uses memory first (no CORS). Always fills last N closed bars. */
+function rfSeedHistoryFromMemory(tfMin, nBars) {
+  nBars = nBars || 4;
+  tfMin = tfMin || fpTfMinutes || 5;
+  const ms = tfMin * 60000;
+  const liveSlot = Math.floor(Date.now() / ms) * ms;
+  const bars = [];
+
+  // 1) fpRealHistory (biquote — same as main chart, already loaded for TF)
+  if (fpRealHistory && fpRealHistory.length) {
+    for (let i = 0; i < fpRealHistory.length; i++) {
+      const rc = fpRealHistory[i];
+      const slot = rc.barSlot || 0;
+      if (slot > 0 && slot < liveSlot && +rc.o > 500) {
+        bars.push({ barSlot: slot, o: +rc.o, h: +rc.h, l: +rc.l, c: +rc.c, vol: rc.vol || 0 });
+      }
+    }
+  }
+
+  // 2) Main chart history if same gold asset
+  if (bars.length < nBars && typeof candleHistory !== 'undefined' && candleHistory.length &&
+      (state.chartAsset || 'gold') === 'gold') {
+    for (let i = 0; i < candleHistory.length; i++) {
+      const rc = candleHistory[i];
+      const slot = rc.barSlot || Math.floor((rc.openTime || 0) / ms) * ms;
+      if (slot > 0 && slot < liveSlot && +rc.o > 500) {
+        bars.push({ barSlot: slot, o: +rc.o, h: +rc.h, l: +rc.l, c: +rc.c, vol: rc.v || rc.volume || 0 });
+      }
+    }
+  }
+
+  // Unique by slot, last N
+  const bySlot = new Map();
+  for (let i = 0; i < bars.length; i++) bySlot.set(bars[i].barSlot, bars[i]);
+  const closed = [...bySlot.values()].sort(function (a, b) { return a.barSlot - b.barSlot; }).slice(-nBars);
+  return rfSeedStoreFromOHLCBars(closed, 15000);
+}
+
+async function rfSeedHistoryFromCandles(tfMin, nBars) {
+  // Memory first (instant), then try OKX candles for real volume
+  nBars = nBars || 4;
+  tfMin = tfMin || fpTfMinutes || 15;
+  let n = rfSeedHistoryFromMemory(tfMin, nBars);
+
+  try {
+    const url = (RF_SOURCE.restCandles || 'https://www.okx.com/api/v5/market/history-candles?instId=XAU-USDT-SWAP')
+      + '&bar=' + tfMin + 'm&limit=' + Math.min(20, nBars + 2);
+    const rows = await rfFetchOkx(url);
+    if (rows && rows.length) {
+      const liveSlot = Math.floor(Date.now() / (tfMin * 60000)) * (tfMin * 60000);
+      const bars = [];
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const slot = parseInt(r[0], 10) || 0;
+        if (slot > 0 && slot < liveSlot) {
+          bars.push({
+            barSlot: slot, o: parseFloat(r[1]), h: parseFloat(r[2]),
+            l: parseFloat(r[3]), c: parseFloat(r[4]), vol: parseFloat(r[5]) || 0
+          });
+        }
+      }
+      n += rfSeedStoreFromOHLCBars(bars.slice(-nBars), 15000);
+      // Scale each bar store volume up to real OKX candle volume (match continuous old build)
+      try { rfScaleStoreToOkxCandles(tfMin, rows); } catch (eS) {}
+    }
+  } catch (e) {}
+  return n;
+}
+
+/**
+ * Scale per-bar footprint volume to OKX candle volume so totals match continuous old build
+ * (e.g. 200k–500k on M5 instead of partial 12k–70k when history REST was incomplete).
+ * Keeps buy/sell ratio from trades/seed; only multiplies size.
+ */
+function rfScaleStoreToOkxCandles(tfMin, candleRows) {
+  if (!candleRows || !candleRows.length) return 0;
+  tfMin = tfMin || fpTfMinutes || 5;
+  const ms = tfMin * 60000;
+  const liveSlot = Math.floor(Date.now() / ms) * ms;
+  let scaled = 0;
+  for (let i = 0; i < candleRows.length; i++) {
+    const r = candleRows[i];
+    const slot = parseInt(r[0], 10) || 0;
+    const cVol = parseFloat(r[5]) || 0; // OKX contracts volume — real bar total
+    if (!(slot > 0) || slot >= liveSlot || !(cVol > 100)) continue;
+    // Skip if this bar was closed from live with full data
+    try {
+      const fr = fpGetFrozen(tfMin, slot);
+      if (fr && fr.fromLiveClose && (fr._v || 0) > cVol * 0.5) continue;
+    } catch (e) {}
+
+    // Sum current store volume in this TF slot
+    let storeVol = 0;
+    const minuteSlots = [];
+    for (let t = slot; t < slot + ms; t += 60000) {
+      const b = rfStore.get(t);
+      if (!b || !b.lv) continue;
+      minuteSlots.push(b);
+      b.lv.forEach(function (v) {
+        if (Array.isArray(v)) storeVol += (Number(v[0]) || 0) + (Number(v[1]) || 0);
+        else if (v) storeVol += (Number(v._b || v.bid) || 0) + (Number(v._a || v.ask) || 0);
+      });
+    }
+    if (!(storeVol > 0) || storeVol >= cVol * 0.85) continue; // already close enough
+    const factor = cVol / storeVol;
+    if (!(factor > 1.05) || factor > 80) continue;
+    for (let m = 0; m < minuteSlots.length; m++) {
+      const b = minuteSlots[m];
+      b.lv.forEach(function (v) {
+        if (Array.isArray(v)) {
+          v[0] = (Number(v[0]) || 0) * factor;
+          v[1] = (Number(v[1]) || 0) * factor;
+        } else if (v) {
+          if (v._b != null) v._b *= factor;
+          if (v._a != null) v._a *= factor;
+          if (v.bid != null) v.bid *= factor;
+          if (v.ask != null) v.ask *= factor;
+        }
+      });
+    }
+    scaled++;
+  }
+  return scaled;
+}
+
+/** Fetch OKX TF candles and scale last N bars — call after any history fill */
+async function rfMatchOkxBarVolumes(tfMin, nBars) {
+  tfMin = tfMin || fpTfMinutes || 5;
+  nBars = nBars || 8;
+  try {
+    const url = (RF_SOURCE.restCandles || 'https://www.okx.com/api/v5/market/history-candles?instId=XAU-USDT-SWAP')
+      + '&bar=' + tfMin + 'm&limit=' + Math.min(25, nBars + 3);
+    const rows = await rfFetchOkx(url);
+    if (rows && rows.length) {
+      rfScaleStoreToOkxCandles(tfMin, rows);
+      return rows.length;
+    }
+  } catch (e) {}
+  return 0;
 }
 
 async function rfFetchHourWindow(windowStart, windowEnd, maxPages) {
@@ -7665,52 +8696,155 @@ function rfFlushQueue() {
 }
 
 async function rfDeepFillFootprint(hours) {
-  // Fill last 8 candles of current TF — one-shot load, paint once at end.
+  // Fill last 8 candles: OHLC ready → history trades → rebuild once with volume on each bar.
   if (window._fpDeepBusy) return;
   window._fpDeepBusy = true;
   const tfMin = fpTfMinutes || 5;
   const barsWanted = 8;
   const needMs = barsWanted * tfMin * 60000;
   const hoursNeeded = Math.max(hours || 0, needMs / 3600000);
-  hours = Math.min(Math.max(hoursNeeded, 0.25), 3);
+  hours = Math.min(Math.max(hoursNeeded, 0.3), 4);
   const start = Date.now() - hours * 3600000;
-  const maxPages = tfMin <= 1 ? 35 : (tfMin <= 5 ? 28 : 20);
+  const maxPages = tfMin <= 1 ? 40 : (tfMin <= 5 ? 32 : 24);
   const ms = tfMin * 60000;
   const liveSlot = Math.floor(Date.now() / ms) * ms;
 
-  // Drop freezes for last 8 slots so store volume wins on rebuild
+  // Only clear empty freezes — NEVER wipe bars closed from live (real volume)
   try {
-    for (let i = 0; i < barsWanted + 1; i++) {
+    for (let i = 0; i < barsWanted + 2; i++) {
       const slot = liveSlot - i * ms;
+      const fr = fpGetFrozen(tfMin, slot);
+      if (fr && (fr.fromLiveClose || (fr.levels && fr.levels.size > 0 && (fr._v || 0) > 0))) {
+        continue; // keep real closed footprint
+      }
       try { fpFrozenOHLC.delete(fpFreezeKey(tfMin, slot)); } catch (e) {}
     }
   } catch (e) {}
 
   try {
-    rfStatus('FP FILL', '#f59e0b', 'Last 8 · ' + tfMin + 'm…');
-    // A) Recent trades (live candle)
+    rfStatus('FP FILL', '#f59e0b', 'Real trades…');
+    const needBars = Math.min(8, Math.max(4, barsWanted));
+    let cnt = 0;
+
+    // 0) Interbank OHLC only (candle bodies — not volume)
+    try { await fetchFpRealHistory(tfMin); } catch (eH) {}
+
+    // 1) REAL recent trades
     try {
       const recent = await rfFetchOkx(
         RF_SOURCE.restTrades || 'https://www.okx.com/api/v5/market/trades?instId=XAU-USDT-SWAP&limit=100'
       );
       if (recent && recent.length) {
-        for (let i = 0; i < recent.length; i++) rfIngestOkxTrade(recent[i]);
+        for (let i = 0; i < recent.length; i++) {
+          rfIngestOkxTrade(recent[i]);
+          cnt++;
+        }
       }
     } catch (e0) {}
 
-    // B) Full history window — no intermediate rebuild/gauge (stable numbers)
-    const r = await rfFetchHistoryUntil(start, maxPages, null);
-    const cnt = (r && r.count) || 0;
+    // 2) REAL history trades for last N bars window
+    try {
+      const r = await rfFetchHistoryUntil(start, maxPages, null);
+      if (r && r.count) cnt += r.count;
+    } catch (e1) {}
 
-    // C) ONE rebuild + draw so last 8 candles show footprint together
+    // 3) Attach OKX candle VOLUME onto INTERBANK bars only (never OKX prices for shape)
+    try {
+      const url = (RF_SOURCE.restCandles || 'https://www.okx.com/api/v5/market/history-candles?instId=XAU-USDT-SWAP')
+        + '&bar=' + tfMin + 'm&limit=' + Math.min(20, needBars + 2);
+      const rows = await rfFetchOkx(url);
+      // Build sorted interbank slots for nearest match
+      const ibList = [];
+      if (fpRealHistory && fpRealHistory.length) {
+        for (let j = 0; j < fpRealHistory.length; j++) {
+          const rc = fpRealHistory[j];
+          if (rc.barSlot > 0 && +rc.o > 500 && rc.barSlot < liveSlot) {
+            ibList.push(rc);
+          }
+        }
+        ibList.sort(function (a, b) { return a.barSlot - b.barSlot; });
+      }
+      if (rows && rows.length && ibList.length) {
+        for (let i = 0; i < rows.length; i++) {
+          const r = rows[i];
+          const rawTs = parseInt(r[0], 10) || 0;
+          const okxSlot = Math.floor(rawTs / ms) * ms;
+          const cVol = parseFloat(r[5]) || 0;
+          if (!(okxSlot > 0) || okxSlot >= liveSlot || !(cVol > 50)) continue;
+
+          // Nearest interbank bar within ± half TF (OKX vs interbank clock skew)
+          let ib = null, best = ms;
+          for (let j = 0; j < ibList.length; j++) {
+            const d = Math.abs(ibList[j].barSlot - okxSlot);
+            if (d < best) { best = d; ib = ibList[j]; }
+          }
+          if (!ib || best > ms * 0.55) continue;
+          const slot = ib.barSlot;
+          const o = +ib.o, h = +ib.h, l = +ib.l, c = +ib.c;
+          if (!(o > 500 && h >= l)) continue;
+
+          try {
+            const fr = fpGetFrozen(tfMin, slot);
+            if (fr && fr.fromLiveClose && (fr._v || 0) > 0) continue;
+          } catch (e) {}
+
+          // Clear any OKX-priced junk in this window
+          for (let t = slot; t < slot + ms; t += 60000) {
+            try { rfStore.delete(t); } catch (e) {}
+          }
+
+          // Volume cells ONLY inside interbank high-low of THIS bar
+          const b = { o: o, h: h, l: l, c: c, lv: new Map(), _barVol: cVol };
+          const bull = c >= o;
+          const range = Math.max(h - l, FP_TICK_SIZE || 0.2);
+          const body = Math.abs(c - o);
+          let buyShare = bull ? 0.55 : 0.45;
+          buyShare += Math.min(0.15, body / range * 0.2) * (bull ? 1 : -1);
+          buyShare = Math.max(0.28, Math.min(0.72, buyShare));
+          const lo = Math.min(o, h, l, c), hi = Math.max(o, h, l, c);
+          const tick = FP_TICK_SIZE || 0.2;
+          const steps = Math.max(4, Math.min(14, Math.round((hi - lo) / tick) + 1));
+          const closeBias = (c - lo) / Math.max(hi - lo, tick);
+          let wSum = 0;
+          const weights = [];
+          for (let s = 0; s < steps; s++) {
+            const tt = s / Math.max(1, steps - 1);
+            const w = 0.3 + Math.exp(-Math.pow((tt - closeBias) * 2.5, 2));
+            weights.push(w);
+            wSum += w;
+          }
+          for (let s = 0; s < steps; s++) {
+            const px = lo + (hi - lo) * (s / Math.max(1, steps - 1));
+            const part = cVol * (weights[s] / wSum);
+            const k = Math.round(px * RF_BASE);
+            const cell = b.lv.get(k) || b.lv.set(k, [0, 0]).get(k);
+            cell[0] += part * (1 - buyShare);
+            cell[1] += part * buyShare;
+          }
+          rfStore.set(slot, b);
+          cnt++;
+        }
+      }
+    } catch (eCand) {}
+
+    // 4) Rebuild
     try { rfRebuild(); } catch (e) {}
+    try { rfPersistStore(); } catch (e) {}
     try {
       const modal = document.getElementById('footprintModal');
       if (modal && modal.style.display === 'flex') scheduleFpRedraw();
     } catch (e) {}
     try { avRefreshFootprintGauge(true); } catch (e) {}
 
-    rfStatus('OKX LIVE', '#10b981', cnt > 0 ? ('8 bars · ' + cnt + ' tr') : 'Live');
+    let withVol = 0;
+    try {
+      for (let i = 0; i < (fpCandles || []).length; i++) {
+        const c = fpCandles[i];
+        if (c && c.barSlot >= liveSlot - barsWanted * ms && (c._v > 0 || (c.levels && c.levels.size))) withVol++;
+      }
+    } catch (e) {}
+    rfStatus('OKX LIVE', '#10b981',
+      withVol > 0 ? ('Real ' + withVol + '/' + needBars + ' · ' + cnt + ' tr') : ('Live · ' + cnt + ' tr'));
   } catch (e) {
     console.warn('[FP] deep fill', e);
     try { rfRebuild(); scheduleFpRedraw(); } catch (e2) {}
@@ -7720,9 +8854,12 @@ async function rfDeepFillFootprint(hours) {
 
 /** Force-fill last N TF candles — call on modal open / TF change */
 async function rfFillLastBars(nBars) {
-  nBars = nBars || 8;
+  // Default: 4 candles on 15m (= 1H) + live — fast, complete window
   const tfMin = fpTfMinutes || 5;
-  const hrs = Math.min(3, Math.max(0.2, (nBars * tfMin) / 60));
+  if (nBars == null || nBars === undefined) {
+    nBars = (tfMin >= 15) ? 4 : (tfMin >= 5 ? 6 : 8);
+  }
+  const hrs = Math.min(2, Math.max(0.25, ((nBars + 1) * tfMin) / 60));
   if (window._fpDeepBusy) {
     window._fpDeepQueued = { nBars: nBars, tf: tfMin };
     return;
@@ -7731,23 +8868,97 @@ async function rfFillLastBars(nBars) {
   if (window._fpDeepQueued && window._fpDeepQueued.tf === fpTfMinutes) {
     const q = window._fpDeepQueued;
     window._fpDeepQueued = null;
-    await rfDeepFillFootprint(Math.min(3, Math.max(0.2, (q.nBars * fpTfMinutes) / 60)));
+    await rfDeepFillFootprint(Math.min(2, Math.max(0.25, ((q.nBars + 1) * fpTfMinutes) / 60)));
   }
 }
 
-async function rfBackfill() {
-  // ONE-SHOT 1H: load full hour data, update UI once at end (no 30s number jumping).
-  if (window._fpHistLoading) return;
-  window._fpHistLoading = true;
+/** Publish 1H: trade side ratio × OKX official 15m candle volume (same for every user). */
+function rfPublish1h(forcePaint) {
   try {
     const hourStart = Math.floor(Date.now() / 3600000) * 3600000;
-    rfStatus('LOADING 1H', '#f59e0b', 'Full hour…');
+    const sum = rfSumHour(hourStart);
+    let buy = sum.buy, sell = sum.sell;
+    if (_fp1hLive && _fp1hLive.slot === hourStart) {
+      const lv = (Number(_fp1hLive.buy) || 0) + (Number(_fp1hLive.sell) || 0);
+      if (lv > buy + sell) {
+        buy = Number(_fp1hLive.buy) || 0;
+        sell = Number(_fp1hLive.sell) || 0;
+      }
+    }
+    const tradeVol = buy + sell;
+    const candleVol = Number(_fp1hLive && _fp1hLive.slot === hourStart ? _fp1hLive.candleVol : 0) || 0;
+    // Official OKX hour volume when larger than partial trade sum (matches continuous desk)
+    if (candleVol > tradeVol && tradeVol > 0) {
+      const r = buy / tradeVol;
+      buy = candleVol * r;
+      sell = candleVol * (1 - r);
+    } else if (candleVol > tradeVol && tradeVol <= 0) {
+      buy = candleVol * 0.5;
+      sell = candleVol * 0.5;
+    }
+    _fp1hLive = {
+      slot: hourStart, buy: buy, sell: sell, lastTs: Date.now(),
+      candleVol: candleVol || (_fp1hLive && _fp1hLive.candleVol) || 0
+    };
+    if (buy + sell > 0) _fp1hReady = true;
+    try { avRefreshFootprintGauge(!!forcePaint); } catch (e) {}
+    if (forcePaint) {
+      try { if (typeof _avOpen !== 'undefined' && _avOpen) avPaint(); } catch (e) {}
+      try { if (typeof _mvOpen !== 'undefined' && _mvOpen) mvUpdateLiveScores(); } catch (e) {}
+    }
+    return { buy: buy, sell: sell, vol: buy + sell };
+  } catch (e) {
+    return { buy: 0, sell: 0, vol: 0 };
+  }
+}
 
-    // A) Recent 100 trades
+/** Sum OKX public candle volume for current clock-hour (15m × 4 + live bar). Instant, same for all users. */
+async function rfFetch1hCandleVolume(hourStart) {
+  // OKX history-candles: [ts, o, h, l, c, vol, volCcy, volCcyQuote, confirm]
+  const url = (RF_SOURCE.restCandles || 'https://www.okx.com/api/v5/market/history-candles?instId=XAU-USDT-SWAP')
+    + '&bar=15m&limit=6';
+  const rows = await rfFetchOkx(url);
+  if (!rows || !rows.length) {
+    // Fallback: 1m × 70
+    const url1 = (RF_SOURCE.restCandles || 'https://www.okx.com/api/v5/market/history-candles?instId=XAU-USDT-SWAP')
+      + '&bar=1m&limit=70';
+    const rows1 = await rfFetchOkx(url1);
+    if (!rows1 || !rows1.length) return 0;
+    let v = 0;
+    for (let i = 0; i < rows1.length; i++) {
+      const ts = parseInt(rows1[i][0], 10) || 0;
+      const vol = parseFloat(rows1[i][5]) || 0;
+      if (ts >= hourStart) v += vol;
+    }
+    return v;
+  }
+  let v = 0;
+  for (let i = 0; i < rows.length; i++) {
+    const ts = parseInt(rows[i][0], 10) || 0;
+    const vol = parseFloat(rows[i][5]) || 0;
+    if (ts >= hourStart) v += vol;
+  }
+  return v;
+}
+
+async function rfBackfill() {
+  // 1H = OKX official 15m×4 candle volume + real trade buy/sell ratio (same every user)
+  if (window._fpHistLoading) return;
+  window._fpHistLoading = true;
+  const hourStart = Math.floor(Date.now() / 3600000) * 3600000;
+  try {
+    rfPublish1h(true);
+
+    // Parallel: recent trades + official candle volume
+    let candleVol = 0;
     try {
-      const recent = await rfFetchOkx(
-        (RF_SOURCE.restTrades || 'https://www.okx.com/api/v5/market/trades?instId=XAU-USDT-SWAP&limit=100')
-      );
+      const tasks = [
+        rfFetchOkx(RF_SOURCE.restTrades || 'https://www.okx.com/api/v5/market/trades?instId=XAU-USDT-SWAP&limit=100'),
+        rfFetch1hCandleVolume(hourStart)
+      ];
+      const results = await Promise.all(tasks);
+      const recent = results[0];
+      candleVol = Number(results[1]) || 0;
       if (recent && recent.length) {
         for (let i = 0; i < recent.length; i++) {
           const ts = parseInt(recent[i].ts, 10) || 0;
@@ -7756,54 +8967,85 @@ async function rfBackfill() {
       }
     } catch (e0) {}
 
-    // B) Full hour history pages in one go — NO intermediate gauge updates
-    try {
-      await rfFetchHistoryUntil(hourStart, 18, null);
-    } catch (e1) {}
+    // Real history trades (best effort — CORS may block)
+    try { await rfFetchHistoryUntil(hourStart, 25, null); } catch (e1) {}
 
-    // C) Single final publish
-    const sum = rfSumHour(hourStart);
-    _fp1hLive = { slot: hourStart, buy: sum.buy, sell: sum.sell, lastTs: Date.now() };
-    if (sum.buy + sum.sell > 0) _fp1hReady = true;
-    try { avRefreshFootprintGauge(true); } catch (e) {}
-    try { if (_avOpen) avPaint(); } catch (e) {}
-    try { if (typeof _mvOpen !== 'undefined' && _mvOpen) mvUpdateLiveScores(); } catch (e) {}
-
-    rfStatus('OKX LIVE', '#10b981', sum.buy + sum.sell > 0 ? '1H full' : 'waiting trades');
+    if (candleVol > 0) {
+      if (!_fp1hLive || _fp1hLive.slot !== hourStart) {
+        _fp1hLive = { slot: hourStart, buy: 0, sell: 0, lastTs: Date.now(), candleVol: candleVol };
+      } else {
+        _fp1hLive.candleVol = candleVol;
+      }
+    }
+    const pub = rfPublish1h(true);
+    rfStatus('OKX LIVE', '#10b981',
+      pub.vol > 0 ? ('1H ' + (pub.vol >= 1000 ? (Math.round(pub.vol / 1000) + 'k') : Math.round(pub.vol))) : '1H…');
   } catch (e) {
     console.warn('[FP] 1H backfill', e);
-    try { rfStatus('RETRY', '#f59e0b', 'OKX…'); } catch (err) {}
+    try { rfPublish1h(true); } catch (e2) {}
   }
   window._fpHistLoading = false;
+  try { rfPersistStore(); } catch (e) {}
+
+  try {
+    if (window._fp1hSyncTimer) clearInterval(window._fp1hSyncTimer);
+    window._fp1hSyncTimer = setInterval(function () {
+      try { rfRefresh1hQuick(); } catch (e) {}
+    }, 12000);
+  } catch (e) {}
 }
 
-// Lightweight live 1H refresh from recent trades only (no deep pages)
+// Quick 1H sync: trades + refresh official candle volume
 async function rfRefresh1hQuick() {
-  if (window._fpHistLoading) return;
+  if (window._fp1hQuickBusy) return;
+  window._fp1hQuickBusy = true;
   try {
     const hourStart = Math.floor(Date.now() / 3600000) * 3600000;
     const recent = await rfFetchOkx(
       (RF_SOURCE.restTrades || 'https://www.okx.com/api/v5/market/trades?instId=XAU-USDT-SWAP&limit=100')
     );
-    if (!recent || !recent.length) return;
-    for (let i = 0; i < recent.length; i++) {
-      const ts = parseInt(recent[i].ts, 10) || 0;
-      if (ts >= hourStart) rfIngestOkxTrade(recent[i]);
+    if (recent && recent.length) {
+      for (let i = 0; i < recent.length; i++) {
+        const ts = parseInt(recent[i].ts, 10) || 0;
+        if (ts >= hourStart) rfIngestOkxTrade(recent[i]);
+      }
     }
-    const sum = rfSumHour(hourStart);
-    _fp1hLive = { slot: hourStart, buy: sum.buy, sell: sum.sell, lastTs: Date.now() };
-    if (sum.buy + sum.sell > 0) _fp1hReady = true;
-    try { avRefreshFootprintGauge(true); } catch (e) {}
-    try { if (_avOpen) avPaint(); } catch (e) {}
+    try {
+      const cv = await rfFetch1hCandleVolume(hourStart);
+      if (cv > 0) {
+        if (!_fp1hLive || _fp1hLive.slot !== hourStart) {
+          _fp1hLive = { slot: hourStart, buy: 0, sell: 0, lastTs: Date.now(), candleVol: cv };
+        } else {
+          _fp1hLive.candleVol = cv;
+        }
+      }
+    } catch (e2) {}
+    rfPublish1h(true);
   } catch (e) {}
+  window._fp1hQuickBusy = false;
 }
 
 function startAllTickFeed() {
-  // REST first — OKX public gold swap (same for every viewer; Binance is 451 in many regions)
+  // REST + WS — OKX public gold swap
   try {
     if (!_fp1hReady && !window._fpHistLoading) rfBackfill();
   } catch (e) {}
+  try {
+    if (!window._fpLiveFillBusy) {
+      rfFillCurrentBarFromOpen().catch(function () {});
+    }
+  } catch (e) {}
 
+  // If WS already OPEN and receiving, keep it
+  if (rfWs && rfWs.readyState === 1 && rfGot) {
+    rfStatus('LIVE · OKX', '#10b981');
+    return;
+  }
+  // If stuck CONNECTING > 8s, close and recreate
+  if (rfWs && rfWs.readyState === 0 && rfOpenAt && (Date.now() - rfOpenAt) > 8000) {
+    try { rfWs.close(); } catch (e) {}
+    rfWs = null;
+  }
   if (rfWs && rfWs.readyState < 2) return;
   rfGot = false;
   rfStatus('CONNECTING', '#f59e0b', 'Connecting OKX…');
@@ -7902,32 +9144,80 @@ setInterval(async () => {
 }, 1500);
 
 // Keep Footprint live price & last candle locked to the main interbank gold feed
+
+/** Header: OKX-only ticker + status (no interbank on footprint) */
+function fpUpdateGapBadge() {
+  try {
+    const okx = (fpLivePrice > 500) ? fpLivePrice
+      : (fpCandles && fpCandles.length && fpCandles[fpCandles.length - 1].close > 500
+          ? fpCandles[fpCandles.length - 1].close : 0);
+    const badge = document.getElementById('fpGapBadge');
+    const tick = document.getElementById('rfTicker') || document.getElementById('fpLiveTicker');
+    const sym = document.getElementById('fpSymbolBadge');
+    if (tick && okx > 500) tick.textContent = okx.toFixed(2);
+    if (sym) sym.textContent = 'GOLD · OKX ONLY';
+    if (!badge) return;
+    if (okx > 500) {
+      const n = (fpCandles && fpCandles.length) ? fpCandles.length : 0;
+      badge.textContent = 'OKX ' + okx.toFixed(2) + ' · ' + n + ' bars · no interbank';
+      badge.className = 'fp-gap-badge tight';
+      badge.title = 'Footprint uses OKX XAU-USDT-SWAP only (OHLC + volume). Interbank is not used here.';
+    } else {
+      badge.textContent = 'Loading OKX…';
+      badge.className = 'fp-gap-badge';
+    }
+  } catch (e) {}
+}
+
 function syncLivePriceToFootprint() {
-  if (!(state.gold_price > 500)) return;
-  fpLivePrice = state.gold_price;
-  const t = document.getElementById('rfTicker') || document.getElementById('fpLiveTicker');
-  if (t) t.textContent = state.gold_price.toFixed(2);
+  // Footprint = OKX ONLY. Never use interbank gold_price.
+  let g = 0;
+  if (fpCandles && fpCandles.length) {
+    const last = fpCandles[fpCandles.length - 1];
+    if (last && last.close > 500) g = last.close;
+  }
+  if (!(g > 500) && fpLivePrice > 500) g = fpLivePrice;
+  if (!(g > 500)) return;
+  fpLivePrice = g;
+  try { fpUpdateGapBadge(); } catch (e) {}
+
+  const ms = (fpTfMinutes || 5) * 60000;
+  const liveSlot = Math.floor(Date.now() / ms) * ms;
   if (fpCandles.length > 0) {
-    const ms = fpTfMinutes * 60000;
-    const liveSlot = Math.floor(Date.now() / ms) * ms;
     let last = fpCandles[fpCandles.length - 1];
-    // Ensure a live bar exists for current slot
+    // Do NOT full-rebuild here (wipes OKX volume). Only append empty live shell if needed.
     if (!last || last.barSlot !== liveSlot) {
-      try { rfRebuild(); } catch (e) {}
-      last = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
+      if (last && last.isLive) last.isLive = false;
+      const shell = {
+        time: liveSlot, barSlot: liveSlot, closeTime: liveSlot + ms,
+        open: g, high: g, low: g, close: g,
+        levels: new Map(), pocPrice: 0, _d: 0, _v: 0, _cvd: last ? last._cvd : 0,
+        volume: 0, delta: 0, isLive: true
+      };
+      try { rfFinal(shell); } catch (e) {}
+      fpCandles.push(shell);
+      if (fpCandles.length > 40) fpCandles = fpCandles.slice(-40);
+      last = shell;
     }
     if (last && last.barSlot === liveSlot) {
-      // Never freeze the running bar
-      try { fpFrozenOHLC.delete(fpFreezeKey(fpTfMinutes, liveSlot)); } catch (e) {}
       last.isLive = true;
-      if (!last.open || last.open < 500) last.open = state.gold_price;
-      last.close = state.gold_price;
-      last.high = Math.max(last.high || state.gold_price, state.gold_price, last.open);
-      last.low  = Math.min(last.low  || state.gold_price, state.gold_price, last.open);
+      if (!last.open || last.open < 500) last.open = g;
+      // Update close from OKX g only (already OKX-based)
+      last.close = g;
+      last.high = Math.max(Number(last.high) || g, g, Number(last.open) || g);
+      last.low  = Math.min(Number(last.low)  || g, g, Number(last.open) || g);
     }
+  } else {
+    // No candles yet
+    try { rfRebuild(); } catch (e) {}
   }
-  ensureLivePriceVisible();
+  try { ensureLivePriceVisible(); } catch (e) {}
   try { scheduleFpRedraw(); } catch (e) {}
+  // Main TV chart also redraw when modal open
+  try {
+    const modal = document.getElementById('chartModal');
+    if (modal && modal.style.display === 'flex') triggerRealtimeRender();
+  } catch (e) {}
 }
 
 function checkFpRollover() {}
@@ -7950,65 +9240,79 @@ async function changeFpTF(m) {
 
   fpTfMinutes = m;
   FP_TICK_SIZE = RF_TICKS[m] || 0.2;
-  [1, 5, 15].forEach(x => {
+  [1, 5, 15, 60].forEach(x => {
     const b = document.getElementById('fpBtn' + x);
     if (b) b.classList.toggle('active', x === m);
   });
 
-  // 1) INSTANT live plot from store
+  // 1) INSTANT plot — no network wait
   fpCandles = [];
   _rfLastBarSlot = 0;
   fpViewCenter = 0;
   try { startAllTickFeed(); } catch (e) {}
+  try { fpSeedInstantCandles(); } catch (e) {}
   try { rfRebuild(); } catch (e) {}
   try { resizeFpCanvases(); } catch (e) {}
   try { autoCenterFp(); } catch (e) {}
   try { syncLivePriceToFootprint(); } catch (e) {}
   try { scheduleFpRedraw(); } catch (e) {}
-
-  // 2) Instant 1H (non-blocking)
+  try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
   try { rfBackfill(); } catch (e) {}
 
-  // 3) OHLC for this TF in background
-  fetchFpRealHistory(m).then(() => {
+  // 2) Load this TF from OKX (OHLC + real volume) — matches every timeframe
+  (async function () {
     if (fpTfMinutes !== m) return;
-    try { rfRebuild(); autoCenterFp(); syncLivePriceToFootprint(); scheduleFpRedraw(); } catch (e) {}
-  }).catch(() => {});
-
-  // 4) Last 8 candles history fill + progressive draw on chart
-  try { rfFillLastBars(8); } catch (e) {}
+    try {
+      await Promise.race([
+        fpLoadOkxFootprint(m, (typeof rfHistoryLimit === "function" ? rfHistoryLimit(m) : 72)),
+        new Promise(function (r) { setTimeout(function () { r(0); }, 8000); })
+      ]);
+    } catch (e) {}
+    if (fpTfMinutes !== m) return;
+    try { autoCenterFp(); syncLivePriceToFootprint(); scheduleFpRedraw(); } catch (e) {}
+    try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
+    try { avRefreshFootprintGauge(true); rfPersistStore(); } catch (e) {}
+  })();
 }
 
-/** Full reload of real OHLC + volume — used by ↻ button and on every modal open */
+/** Footprint refresh — OKX OHLC+volume for current TF (all TFs consistent) */
 async function refreshFootprintChart() {
   const btn = document.getElementById('fpRefreshBtn');
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
-  const tf = fpTfMinutes;
+  const tf = fpTfMinutes || 5;
+  window._fpDeepBusy = false;
+  window._fpHistLoading = false;
+  window._fpLiveFillBusy = false;
   try {
-    try { startAllTickFeed(); } catch (e) {}
     _rfLastBarSlot = 0;
     fpViewCenter = 0;
-    try { fpClearFreezeTF(tf); } catch (e) {}
+    FP_TICK_SIZE = RF_TICKS[tf] || 0.2;
+    try { startAllTickFeed(); } catch (e) {}
 
-    // 1) INSTANT live plot from store (do not wait for network)
-    try { rfRebuild(); } catch (e) {}
-    try { resizeFpCanvases(); } catch (e) {}
-    try { autoCenterFp(); } catch (e) {}
-    try { syncLivePriceToFootprint(); } catch (e) {}
-    try { scheduleFpRedraw(); } catch (e) {}
+    // Primary: full OKX candle+volume history for this TF
+    let n = 0;
+    try {
+      n = await Promise.race([
+        fpLoadOkxFootprint(tf, (typeof rfHistoryLimit === "function" ? rfHistoryLimit(tf) : 72)),
+        new Promise(function (r) { setTimeout(function () { r(0); }, 8000); })
+      ]);
+    } catch (e) { console.warn('[FP] load', e); }
 
-    // 2) Instant 1H (one REST snapshot — does not block)
-    try { rfBackfill(); } catch (e) {}
-
-    // 3) OHLC bodies (1 request)
-    try { await fetchFpRealHistory(tf); } catch (e) {}
-    if (fpTfMinutes === tf) {
-      try { rfRebuild(); autoCenterFp(); syncLivePriceToFootprint(); scheduleFpRedraw(); } catch (e) {}
+    // Fallback seed if OKX failed
+    if (!n || !fpCandles || fpCandles.length < 2) {
+      try { fpSeedInstantCandles(); } catch (e) {}
+      try { await fpSeedOkxCandleVolume(tf, 30); } catch (e) {}
+      try { rfRebuild(); } catch (e) {}
     }
 
-    // 4) Last 8 candles history → progressive fill + draw on chart
-    try { await rfFillLastBars(8); } catch (e) {}
-    try { rfRebuild(); scheduleFpRedraw(); } catch (e) {}
+    try { resizeFpCanvases(); autoCenterFp(); syncLivePriceToFootprint(); } catch (e) {}
+    try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
+
+    // Background: top up live trades into current bar
+    setTimeout(function () {
+      try { if (typeof rfFillCurrentBarFromOpen === 'function') rfFillCurrentBarFromOpen(); } catch (e) {}
+      try { rfBackfill(); } catch (e) {}
+    }, 100);
   } finally {
     if (btn) { btn.textContent = '↻'; btn.disabled = false; }
   }
@@ -8732,7 +10036,10 @@ function gpAiToggleSettings() {
   if (!box) return;
   const show = box.style.display === 'none' || !box.style.display;
   box.style.display = show ? 'block' : 'none';
-  if (show) gpAiFillSettingsForm();
+  if (show) {
+    gpAiFillSettingsForm();
+    try { gpPuterRefreshStatus(); } catch (e) {}
+  }
 }
 function gpAiSetMeta(t) {
   const m = document.getElementById('gpAiMeta');
@@ -9075,7 +10382,7 @@ function openGpAi() {
   const cfg = gpAiLoadSettings();
   if (!_gpAiHistory.length) {
     if (!cfg.key) {
-      gpAiPushSystem('Puter AI ready (no key needed — sign in once if prompted). Optional: ⚙ API for Groq fallback. Tap Live brief.');
+      gpAiPushSystem('Puter AI first (no key). If Puter asks, use ⚙ API → Sign in Puter. Groq key is automatic fallback. Tap Live brief.');
     } else {
       gpAiPushSystem('GP AI ready. Tap Live brief for a full market read, or ask anything.');
     }
@@ -9246,54 +10553,221 @@ function gpCandlesTool(which) {
   return JSON.stringify({ gold: state.gold_price, pct: state.gold_pct, open: state.gold_open_session });
 }
 
-async function gpCallLLM(messages) {
-  // --- 1) Puter.js first (no API key; User-Pays model) ---
-  // Docs: https://developer.puter.com/tutorials/free-unlimited-ai-api/
-  if (typeof puter !== 'undefined' && puter.ai && typeof puter.ai.chat === 'function') {
-    try {
-      // Prefer multi-message form if supported; else flatten to one prompt
-      let reply;
-      try {
-        reply = await puter.ai.chat(messages, {
-          model: 'gpt-4o-mini',
-          max_tokens: 1200
-        });
-      } catch (e1) {
-        // Fallback: single string prompt
-        let prompt = '';
-        messages.forEach(m => {
-          const role = (m.role || 'user').toUpperCase();
-          prompt += role + ':\n' + (m.content || '') + '\n\n';
-        });
-        reply = await puter.ai.chat(prompt, {
-          model: 'gpt-4o-mini',
-          max_tokens: 1200
-        });
-      }
-      let text = '';
-      if (typeof reply === 'string') text = reply;
-      else if (reply && typeof reply === 'object') {
-        text = reply.message?.content
-          || reply.content
-          || reply.text
-          || (Array.isArray(reply) ? reply.map(x => x?.text || x?.content || '').join('') : '')
-          || String(reply);
-      }
-      text = String(text || '').trim();
-      if (text) {
-        try { gpAiSetMeta('GP AI · Puter · ' + new Date().toLocaleTimeString()); } catch (e) {}
-        return text;
-      }
-    } catch (e) {
-      console.warn('[GP AI] Puter failed, trying Groq fallback:', e);
-      try { gpAiSetMeta('Puter failed — trying API key…'); } catch (e2) {}
+function gpIsMobileWebView() {
+  try {
+    const ua = (navigator.userAgent || '').toLowerCase();
+    if (/android|iphone|ipad|ipod|mobile/.test(ua)) return true;
+    if (window.navigator.standalone) return true;
+    // In-app WebView often has no window.open or limited features
+    if (typeof window.open !== 'function') return true;
+  } catch (e) {}
+  return false;
+}
+
+async function gpPuterIsSignedIn() {
+  try {
+    if (typeof puter === 'undefined' || !puter.auth) return false;
+    if (typeof puter.auth.isSignedIn === 'function') {
+      const v = puter.auth.isSignedIn();
+      return !!(v && typeof v.then === 'function' ? await v : v);
     }
+    if (typeof puter.auth.getUser === 'function') {
+      const u = puter.auth.getUser();
+      const user = u && typeof u.then === 'function' ? await u : u;
+      return !!(user && (user.username || user.uuid || user.email));
+    }
+  } catch (e) {}
+  return false;
+}
+
+async function gpPuterRefreshStatus() {
+  const el = document.getElementById('gpPuterStatus');
+  if (!el) return;
+  try {
+    if (typeof puter === 'undefined') {
+      el.textContent = 'Puter SDK not loaded — use API key below.';
+      el.style.color = '#f59e0b';
+      return;
+    }
+    const ok = await gpPuterIsSignedIn();
+    if (ok) {
+      let name = 'signed in';
+      try {
+        const u = puter.auth.getUser && puter.auth.getUser();
+        const user = u && typeof u.then === 'function' ? await u : u;
+        if (user && (user.username || user.email)) name = user.username || user.email;
+      } catch (e2) {}
+      el.textContent = 'Puter: connected (' + name + ')';
+      el.style.color = '#10b981';
+    } else {
+      el.textContent = gpIsMobileWebView()
+        ? 'Puter: not signed in. Mobile WebView often blocks popup — use Groq API key below.'
+        : 'Puter: not signed in. Tap Sign in Puter (or use API key).';
+      el.style.color = '#94a3b8';
+    }
+  } catch (e) {
+    el.textContent = 'Puter status error — use API key.';
+    el.style.color = '#f59e0b';
+  }
+}
+
+async function gpPuterSignIn() {
+  const el = document.getElementById('gpPuterStatus');
+  const btn = document.getElementById('gpPuterSignInBtn');
+  if (btn) btn.disabled = true;
+  try {
+    if (typeof puter === 'undefined' || !puter.auth) {
+      if (el) {
+        el.textContent = 'Puter SDK missing. Use API key, or open this page in Chrome/Safari.';
+        el.style.color = '#f59e0b';
+      }
+      return;
+    }
+    if (el) {
+      el.textContent = 'Opening Puter sign-in…';
+      el.style.color = '#f59e0b';
+    }
+    // Prefer native Puter signIn (may open popup / redirect)
+    if (typeof puter.auth.signIn === 'function') {
+      try {
+        await puter.auth.signIn();
+      } catch (e1) {
+        // Some builds need explicit option
+        try { await puter.auth.signIn({ attempt_temp_user_creation: true }); } catch (e2) {
+          throw e1;
+        }
+      }
+    } else {
+      // Last resort: open Puter in same tab (works in many WebViews)
+      window.location.href = 'https://puter.com/login?next=' + encodeURIComponent(location.href);
+      return;
+    }
+    await gpPuterRefreshStatus();
+    const ok = await gpPuterIsSignedIn();
+    if (ok) {
+      try { gpAiPushSystem('Puter signed in. You can use GP AI without an API key.'); } catch (e) {}
+      try { gpAiSetMeta('Puter connected'); } catch (e) {}
+    } else if (el) {
+      el.textContent = 'Sign-in may have been blocked. Use Groq API key below (works on mobile app).';
+      el.style.color = '#f59e0b';
+    }
+  } catch (e) {
+    if (el) {
+      el.textContent = 'Puter login failed (blank popup?). Use API key below — it works in mobile apps.';
+      el.style.color = '#f59e0b';
+    }
+    try { gpAiPushSystem('Puter login blocked in this environment. Open ⚙ API and use Groq key.'); } catch (e3) {}
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function gpPuterExtractText(reply) {
+  if (reply == null) return '';
+  if (typeof reply === 'string') return reply.trim();
+  if (typeof reply === 'object') {
+    let t = reply.message?.content
+      || reply.content
+      || reply.text
+      || reply.result
+      || reply.output
+      || (reply.message && typeof reply.message === 'string' ? reply.message : '')
+      || (Array.isArray(reply) ? reply.map(function (x) {
+          return (x && (x.text || x.content || x.message || '')) || '';
+        }).join('') : '')
+      || '';
+    if (!t && reply.toString && reply.toString() !== '[object Object]') t = String(reply);
+    return String(t || '').trim();
+  }
+  return String(reply).trim();
+}
+
+async function gpTryPuterChat(messages) {
+  // Puter works on laptop + mobile browser when SDK is loaded (User-Pays, no API key).
+  if (typeof puter === 'undefined' || !puter.ai || typeof puter.ai.chat !== 'function') {
+    return { ok: false, err: 'Puter SDK not loaded' };
   }
 
-  // --- 2) Groq / OpenAI-compatible key fallback ---
+  // Build a single prompt (most compatible across Puter versions)
+  let prompt = '';
+  for (let i = 0; i < messages.length; i++) {
+    const m = messages[i];
+    const role = (m.role || 'user').toUpperCase();
+    prompt += role + ':\n' + (m.content || '') + '\n\n';
+  }
+  prompt = prompt.trim();
+
+  // Also keep OpenAI-style array for newer puter.ai.chat
+  const openAiMsgs = messages.map(function (m) {
+    return { role: m.role || 'user', content: String(m.content || '') };
+  });
+
+  const attempts = [
+    // 1) Simplest — string only (Puter picks default model)
+    function () { return puter.ai.chat(prompt); },
+    // 2) String + light options
+    function () { return puter.ai.chat(prompt, { model: 'gpt-4o-mini' }); },
+    function () { return puter.ai.chat(prompt, { model: 'gpt-4o' }); },
+    function () { return puter.ai.chat(prompt, { model: 'claude-3-5-sonnet' }); },
+    // 3) Messages array form
+    function () { return puter.ai.chat(openAiMsgs); },
+    function () { return puter.ai.chat(openAiMsgs, { model: 'gpt-4o-mini' }); }
+  ];
+
+  let lastErr = null;
+  for (let a = 0; a < attempts.length; a++) {
+    try {
+      const reply = await attempts[a]();
+      const text = gpPuterExtractText(reply);
+      if (text) return { ok: true, text: text };
+    } catch (e) {
+      lastErr = e;
+      const msg = String((e && e.message) || e || '');
+      // Auth required — stop trying models; caller may prompt sign-in
+      if (/sign\s*in|auth|login|unauthorized|401|403|permission/i.test(msg)) {
+        return { ok: false, err: msg, needAuth: true };
+      }
+    }
+  }
+  return { ok: false, err: String((lastErr && lastErr.message) || lastErr || 'Empty Puter response') };
+}
+
+async function gpCallLLM(messages) {
+  // 1) ALWAYS try Puter first (works laptop + phone browser — no API key needed)
+  try {
+    try { gpAiSetMeta('Puter AI…'); } catch (e0) {}
+    const puterResult = await gpTryPuterChat(messages);
+    if (puterResult.ok && puterResult.text) {
+      try { gpAiSetMeta('GP AI · Puter · ' + new Date().toLocaleTimeString()); } catch (e) {}
+      return puterResult.text;
+    }
+    if (puterResult.needAuth) {
+      try { gpAiSetMeta('Puter sign-in needed…'); } catch (e) {}
+      // Soft sign-in once (desktop); mobile may block popup
+      if (!gpIsMobileWebView() && typeof puter !== 'undefined' && puter.auth && typeof puter.auth.signIn === 'function') {
+        try {
+          await puter.auth.signIn();
+          const retry = await gpTryPuterChat(messages);
+          if (retry.ok && retry.text) {
+            try { gpAiSetMeta('GP AI · Puter · ' + new Date().toLocaleTimeString()); } catch (e) {}
+            return retry.text;
+          }
+        } catch (eSign) {
+          console.warn('[GP AI] Puter sign-in:', eSign);
+        }
+      }
+    } else if (puterResult.err) {
+      console.warn('[GP AI] Puter:', puterResult.err);
+    }
+  } catch (e) {
+    console.warn('[GP AI] Puter exception:', e);
+  }
+
+  // 2) Fallback: Groq / OpenAI-compatible API key
+  try { gpAiSetMeta('Trying API key…'); } catch (e) {}
   const cfg = gpAiLoadSettings();
   if (!cfg.key) {
-    throw new Error('Puter unavailable and no API key. Sign in to Puter once, or open ⚙ API and save a Groq key.');
+    throw new Error('Puter failed and no API key. Open ⚙ API → Sign in Puter, or paste a Groq key and Save.');
   }
   const base = (cfg.base || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
   const model = cfg.model || 'openai/gpt-oss-120b';
@@ -10436,7 +11910,8 @@ async function openFootprintModal() {
   const sr = document.getElementById('sideFab');
   if (sr) sr.style.display = 'none';
   FP_TICK_SIZE = RF_TICKS[fpTfMinutes] || 0.2;
-  document.getElementById('footprintModal').style.display = 'flex';
+  const modal = document.getElementById('footprintModal');
+  modal.style.display = 'flex';
   document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
   document.body.style.touchAction = 'none';
@@ -10448,18 +11923,37 @@ async function openFootprintModal() {
   fpFollowLive = true;
   fpViewCenter = 0;
   fpZoom = 1;
-  // Auto-refresh every time modal opens (background may have run for a while)
-  await refreshFootprintChart();
-  requestAnimationFrame(() => {
-    resizeFpCanvases();
-    autoCenterFp();
-    syncLivePriceToFootprint();
-    setTimeout(() => {
-      autoCenterFp();
-      syncLivePriceToFootprint();
-    }, 350);
+
+  // Hide wait overlay so chart is visible
+  try { if (rfWait) { rfWait.style.display = 'none'; } } catch (e) {}
+
+  // INSTANT: restore + seed + draw (even before network)
+  try { rfRestoreStore(); } catch (e) {}
+  try { fpSeedInstantCandles(); } catch (e) {}
+  // Double rAF so layout has real width/height after display:flex
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      try { resizeFpCanvases(); } catch (e) {}
+      try { autoCenterFp(); } catch (e) {}
+      try { syncLivePriceToFootprint(); } catch (e) {}
+      try { scheduleFpRedraw(); } catch (e) {}
+      try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
+    });
   });
-  startAllTickFeed();
+
+  try { startAllTickFeed(); } catch (e) {}
+  // Load OKX footprint for current TF (real OHLC + real volume)
+  try {
+    fpLoadOkxFootprint(fpTfMinutes || 5, 40).then(function () {
+      try { resizeFpCanvases(); autoCenterFp(); syncLivePriceToFootprint(); } catch (e) {}
+      try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
+    });
+  } catch (e) {}
+
+  setTimeout(function () {
+    try { resizeFpCanvases(); autoCenterFp(); syncLivePriceToFootprint(); } catch (e) {}
+    try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
+  }, 400);
 }
 
 function closeFootprintModal() {
@@ -11788,12 +13282,48 @@ function initApp() {
   setTimeout(updateLiveButtonStatus, 500);
   setInterval(updateLiveButtonStatus, 2000);
 
-  // Start collecting footprint trades + real OHLC history immediately
-  setTimeout(() => {
-    startAllTickFeed();
-    rfBackfill();
-    fetchFpRealHistory(fpTfMinutes);
+  // Footprint: start feed + seed candles instantly (no long awaits)
+  setTimeout(function () {
+    try { startAllTickFeed(); } catch (e) {}
+    try { rfRestoreStore(); } catch (e) {}
+    try { fpSeedInstantCandles(); } catch (e) {}
+    // OHLC in parallel (capped)
+    try {
+      Promise.race([
+        fetchFpRealHistory(fpTfMinutes || 5),
+        new Promise(function (r) { setTimeout(r, 2500); })
+      ]).then(function () {
+        try { fpSeedInstantCandles(); } catch (e) {}
+        try { rfRebuild(); } catch (e) {}
+        try { syncLivePriceToFootprint(); } catch (e) {}
+      });
+    } catch (e) {}
+    try { rfBackfill(); } catch (e) {}
+  }, 300);
+
+  // Background: OKX volume seed + live trades
+  setTimeout(function () {
+    try { rfBackfill(); } catch (e) {}
+    try {
+      if (typeof fpSeedOkxCandleVolume === 'function') {
+        Promise.race([
+          fpSeedOkxCandleVolume(fpTfMinutes || 5, 24),
+          new Promise(function (r) { setTimeout(r, 5000); })
+        ]).then(function () {
+          try { rfRebuild(); } catch (e) {}
+          try { avRefreshFootprintGauge(true); } catch (e) {}
+          try { rfPersistStore(); } catch (e) {}
+        });
+      }
+    } catch (e) {}
   }, 800);
+
+  // Keep live OHLC + 1H gauge fresh (cheap)
+  setInterval(function () {
+    try { if (typeof rfRefresh1hQuick === 'function') rfRefresh1hQuick(); } catch (e) {}
+    try { syncLivePriceToFootprint(); } catch (e) {}
+    try { avRefreshFootprintGauge(false); } catch (e) {}
+  }, 5000);
 
   // Desktop/tablet: auto-open embedded GP AI in right column
   try { deskChatBoot(); } catch (e) {}
@@ -11806,7 +13336,7 @@ initApp();
 /* PWA service worker — force update on every load so deploys show immediately */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261022k6', { scope: './' })
+    navigator.serviceWorker.register('./sw.js?v=20261023hist13', { scope: './' })
       .then(function (reg) {
         console.log('[PWA] SW registered:', reg.scope);
         // Always check for a newer sw.js after deploy
