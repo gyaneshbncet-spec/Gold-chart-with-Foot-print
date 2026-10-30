@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Gold & Multi-Asset Live Stream</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1135,7 +1135,8 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
   color: #fff;
   box-shadow: 0 2px 8px rgba(37,99,235,0.35);
 }
-.front-bias-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+.front-bias-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+@media (max-width: 420px) { .front-bias-grid { grid-template-columns: repeat(3, 1fr); } }
 .front-bias-col { background: #0c0e14; border: 1px solid #1f2430; border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .front-bias-tf { font-size: 10.5px; font-weight: 700; color: #8e95a5; }
 .front-badge { font-size: 8.5px; font-weight: 800; padding: 2px 4px; border-radius: 4px; width: 92%; }
@@ -1199,15 +1200,226 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
 .live-pair-chg.neg { color: #ff2a44; }
 .live-pair-chg.flat { color: #f59e0b; }
 @media (min-width: 768px) { .live-pair-right { min-width: 100px; } .live-pair-price { font-size: 16px; } }
-.modal-overlay { overscroll-behavior: none; touch-action: none; display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.94); backdrop-filter: blur(10px); z-index: 99999; justify-content: center; align-items: center; }
-.modal-container { background: #080a0f; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-@media (min-width: 768px) {
-  .modal-overlay { padding: 14px; }
-  .modal-container { width: 96vw; max-width: 1400px; height: 94vh; border-radius: 14px; border: 1px solid #1f2430; box-shadow: 0 24px 60px rgba(0,0,0,0.95); }
+.modal-overlay {
+  overscroll-behavior: none; touch-action: none; display: none;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.94); backdrop-filter: blur(10px);
+  z-index: 99999; justify-content: center; align-items: stretch;
+  width: 100%; height: 100%;
+  height: 100dvh; max-height: 100dvh;
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
 }
-#footprintModal .modal-container { height: 94vh; max-height: 96vh; }
-@media (max-width: 767px) { #footprintModal .modal-container { height: 100%; max-height: 100vh; } }
-.tv-top-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-bottom: 1px solid #1a1e29; background: #0c0e14; flex-shrink: 0; min-height: 48px; gap: 6px; }
+.modal-container {
+  background: #080a0f;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  box-sizing: border-box;
+  position: relative;
+}
+@media (min-width: 768px) {
+  .modal-overlay {
+    padding: 14px;
+    align-items: center;
+    height: 100%;
+    max-height: none;
+    height: 100vh;
+  }
+  .modal-container {
+    width: 96vw; max-width: 1400px; height: 94vh; max-height: 94vh;
+    border-radius: 14px; border: 1px solid #1f2430;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.95);
+  }
+}
+#chartModal .modal-container {
+  min-height: 0;
+  overflow: hidden;
+}
+#chartModal .tv-top-bar,
+#chartModal .chart-bias-bar,
+#chartModal .tv-tf-bar,
+#chartModal .chart-mkt-closed {
+  flex: 0 0 auto;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+#chartModal .canvas-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+#chartModal canvas#tvCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+/* Footprint always fullscreen — desktop padding/centering was hiding the footer */
+#footprintModal.modal-overlay,
+#footprintModal {
+  padding: 0 !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  height: 100% !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  width: 100% !important;
+  inset: 0 !important;
+}
+#footprintModal .modal-container {
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: block !important;
+  position: relative !important;
+  overflow: hidden !important;
+  --fp-footer-h: 110px;
+}
+#footprintModal .chart-mkt-closed { display: none !important; }
+#footprintModal .fp-header {
+  position: absolute !important;
+  top: 0; left: 0; right: 0;
+  height: 48px !important;
+  z-index: 50;
+}
+#footprintModal .fp-chart-viewport {
+  position: absolute !important;
+  top: 48px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: var(--fp-footer-h, 100px) !important;
+  flex: none !important;
+  min-height: 80px !important;
+  overflow: hidden !important;
+  z-index: 1;
+}
+#footprintModal .fp-resize-handle {
+  position: absolute !important;
+  left: 0; right: 0;
+  bottom: var(--fp-footer-h, 100px) !important;
+  height: 12px !important;
+  margin-bottom: -6px;
+  z-index: 70;
+  cursor: ns-resize;
+  touch-action: none;
+  background: transparent;
+}
+#footprintModal .fp-resize-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 5px;
+  border-radius: 3px;
+  background: #3b82f6;
+  opacity: 0.9;
+  box-shadow: 0 0 8px rgba(59,130,246,0.5);
+}
+#footprintModal .fp-resize-handle:active,
+#footprintModal .fp-resize-handle.active {
+  background: rgba(59,130,246,0.18);
+}
+#footprintModal .fp-footer-summary {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  top: auto !important;
+  height: var(--fp-footer-h, 100px) !important;
+  min-height: 80px !important;
+  max-height: none !important;
+  flex: none !important;
+  display: grid !important;
+  grid-template-columns: 1fr 72px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 60;
+  background: #0b0d12 !important;
+  border-top: 1px solid #2a3344 !important;
+  box-sizing: border-box !important;
+}
+/* Jump-to-live arrow (shown when viewing history) */
+.fp-goto-live {
+  display: none;
+  position: absolute;
+  right: 84px;
+  bottom: calc(var(--fp-footer-h, 100px) + 16px);
+  z-index: 80;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(16,185,129,0.55);
+  background: rgba(8,12,18,0.92);
+  color: #34d399;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.55);
+  touch-action: manipulation;
+}
+.fp-goto-live.show { display: flex; }
+.fp-goto-live:active { transform: scale(0.96); }
+.fp-goto-live .arr { font-size: 16px; line-height: 1; }
+@media (min-width: 768px) {
+  #footprintModal.modal-overlay,
+  #footprintModal {
+    padding: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+  #footprintModal .modal-container {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    max-height: none !important;
+    --fp-footer-h: 120px;
+  }
+}
+@media (max-width: 767px) {
+  #footprintModal .modal-container {
+    --fp-footer-h: 100px;
+  }
+  #footprintModal .fp-footer-summary {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  #chartModal .tv-top-bar {
+    padding-top: max(6px, env(safe-area-inset-top, 0px));
+    min-height: 44px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+  #chartModal .chart-bias-bar {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #chartModal .tv-tf-bar {
+    max-width: 100%;
+    overflow-x: auto;
+    gap: 4px;
+  }
+  #chartModal .tv-news-strip {
+    max-width: 120px;
+    flex-shrink: 1;
+  }
+}
+.tv-top-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-bottom: 1px solid #1a1e29; background: #0c0e14; flex-shrink: 0; min-height: 48px; gap: 6px; min-width: 0; width: 100%; box-sizing: border-box; }
 .chart-mkt-closed {
   display: none;
   align-items: center;
@@ -1258,21 +1470,53 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
   box-shadow: 0 2px 10px rgba(16, 185, 129, 0.45);
 }
 .fp-ai-btn { padding: 4px 8px; font-size: 10.5px; }
-.chart-bias-bar { display: flex; align-items: center; gap: 8px; overflow-x: auto; white-space: nowrap; padding: 5px 10px; background: #0a0c12; border-bottom: 1px solid #1a1e29; scrollbar-width: none; flex-shrink: 0; }
+.chart-bias-bar {
+  display: flex; align-items: center; gap: 8px;
+  overflow-x: auto; white-space: nowrap;
+  padding: 5px 10px; background: #0a0c12;
+  border-bottom: 1px solid #1a1e29;
+  scrollbar-width: none; flex-shrink: 0;
+  width: 100%; max-width: 100%; box-sizing: border-box;
+  min-width: 0;
+}
 .chart-bias-bar::-webkit-scrollbar { display: none; }
 .bias-chip { font-size: 10.5px; font-weight: 700; color: #8e95a5; display: flex; align-items: center; gap: 4px; background: #12151e; border: 1px solid #1e2434; padding: 2px 6px; border-radius: 5px; }
 .chip-badge { font-size: 9px; font-weight: 800; padding: 1px 4px; border-radius: 3px; }
 .chip-bull { background: rgba(0, 245, 155, 0.15); color: #00f59b; }
 .chip-bear { background: rgba(255, 42, 68, 0.15); color: #ff2a44; }
 .chip-neut { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
-.tv-tf-bar { display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; border-bottom: 1px solid #1a1e29; background: #0c0e14; flex-shrink: 0; }
-.tv-tf-group { display: flex; gap: 3px; }
+.tv-tf-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 10px; border-bottom: 1px solid #1a1e29; background: #0c0e14;
+  flex-shrink: 0; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0;
+  gap: 6px;
+}
+.tv-tf-group { display: flex; gap: 3px; flex-wrap: nowrap; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.tv-tf-group::-webkit-scrollbar { display: none; }
 .tv-tf { padding: 3px 7px; font-size: 10.5px; font-weight: 600; color: #787b86; border-radius: 4px; cursor: pointer; border: none; background: none; }
 .tv-tf.active { color: #3b82f6; background: #131722; font-weight: 700; border: 1px solid #3b82f6; }
 .tv-reset-btn { border: 1px solid #1f2430; background: #131722; border-radius: 4px; padding: 3px 7px; font-size: 10px; font-weight: 600; color: #3b82f6; cursor: pointer; }
-.canvas-container { flex: 1; position: relative; width: 100%; height: 100%; background: #080a0f; overflow: hidden; cursor: grab; touch-action: none; user-select: none; }
+.canvas-container {
+  flex: 1 1 auto;
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+  background: #080a0f;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
 .canvas-container:active { cursor: grabbing; }
-canvas#tvCanvas { width: 100%; height: 100%; display: block; }
+canvas#tvCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+}
 
 /* ===== MULTI VIEW SPLIT ===== */
 .mv-overlay {
@@ -1475,7 +1719,15 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 .fp-tf-btn { background: #191d27; border: 1px solid #2e3444; color: #6b7280; padding: 4px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .fp-tf-btn.active { background: #089981; color: #fff; border-color: #089981; }
 .fp-exit-btn { background: #ff2a44; color: #ffffff; border: none; font-weight: 700; font-size: 11px; padding: 5px 10px; border-radius: 6px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-.fp-chart-viewport { flex: 1 1 auto; display: grid; grid-template-columns: 1fr 72px; position: relative; overflow: hidden; background: #0a0b0e; min-height: 0; }
+.fp-chart-viewport {
+  flex: 1 1 0;
+  display: grid;
+  grid-template-columns: 1fr 72px;
+  position: relative;
+  overflow: hidden;
+  background: #0a0b0e;
+  min-height: 0;
+}
 #fpChartCanvas { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; -webkit-user-select: none; user-select: none; }
 #fpChartCanvas:active { cursor: grabbing; }
 #fpPriceCanvas { width: 100%; height: 100%; display: block; background: #0d0f14; border-left: 1px solid #212530; touch-action: none; -webkit-user-select: none; user-select: none; cursor: ns-resize; }
@@ -1485,10 +1737,56 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 .fp-w-btn { background: #19202f; border: 1px solid #333f57; color: #e2e8f0; font-size: 14px; font-weight: 800; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; transition: background 0.15s, border-color 0.15s, transform 0.1s; }
 .fp-w-btn:hover { background: #2563eb; border-color: #3b82f6; color: #ffffff; }
 .fp-w-btn:active { transform: scale(0.9); }
-.fp-footer-summary { height: 92px; min-height: 50px; background: #0b0d12; border-top: 1px solid #212530; display: grid; grid-template-columns: 72px 1fr 72px; flex-shrink: 0; font-family: monospace; font-size: 10px; transition: height 0.1s ease; }
-.fp-metrics-labels { background: #11141c; border-right: 1px solid #212530; display: flex; flex-direction: column; justify-content: space-around; padding: 4px 5px; color: #6b7280; overflow: hidden; }
-#fpTableCanvas { width: 100%; height: 100%; display: block; }
-.fp-footer-corner { background: #0d0f14; border-left: 1px solid #212530; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 4px; user-select: none; }
+/* Footer: [table same width as chart | 72px corner under price scale] */
+.fp-footer-summary {
+  background: #0b0d12;
+  border-top: 1px solid #2a3344;
+  font-family: monospace;
+  font-size: 10px;
+  overflow: hidden;
+}
+.fp-metrics-labels {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 58px;
+  z-index: 3;
+  background: rgba(11,13,18,0.94);
+  border-right: 1px solid #212530;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 3px 4px;
+  color: #94a3b8;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+#fpTableCanvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  grid-column: 1;
+}
+.fp-footer-corner {
+  grid-column: 2;
+  background: #0d0f14;
+  border-left: 1px solid #212530;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px;
+  user-select: none;
+}
+.fp-resize-handle {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
 .fp-corner-h-btn { width: 28px; height: 28px; background: #151a24; border: 1px solid #2a3449; color: #94a3b8; border-radius: 6px; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; transition: all 0.15s; }
 .fp-corner-h-btn:hover { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
 .fp-corner-h-btn:active { background: #0284c7; color: #ffffff; transform: scale(0.92); }
@@ -2368,6 +2666,310 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 .av-fp-press-labels .buy { color: #00e676; }
 .av-fp-press-labels #avFpPressPct { color: #cbd5e1; font-variant-numeric: tabular-nums; }
 
+
+/* ===== ALL CHART VIEW — 4-pane workspace ===== */
+.acv-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 99995;
+  background: #050608;
+  flex-direction: column;
+}
+.acv-overlay.show { display: flex; }
+.acv-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 10px; background: #0c0e14; border-bottom: 1px solid #1a1e29;
+  flex-shrink: 0; gap: 8px; flex-wrap: wrap;
+}
+.acv-top h2 {
+  margin: 0; font-size: 13px; font-weight: 800; color: #f3f4f6;
+  letter-spacing: 0.3px; white-space: nowrap;
+}
+.acv-top h2 span { color: #f59e0b; }
+.acv-top .acv-close {
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  background: #151822; color: #9ca3af; cursor: pointer; font-size: 18px;
+  flex-shrink: 0;
+}
+.acv-top .acv-hint {
+  font-size: 11px; color: #64748b; font-weight: 600;
+}
+.acv-body {
+  flex: 1; min-height: 0;
+  display: block;
+  background: #1a1e29;
+  position: relative;
+  overflow: hidden;
+}
+.acv-pane {
+  display: flex; flex-direction: column;
+  background: #080a0f; min-height: 0; position: absolute;
+  overflow: hidden;
+  box-sizing: border-box;
+  border: 1.5px solid #12151c;
+}
+.acv-pane.closed { display: none !important; }
+.acv-pane-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 5px 8px; background: #0c0e14; border-bottom: 1px solid #1a1e29;
+  flex-shrink: 0; gap: 6px; flex-wrap: wrap;
+}
+.acv-pane-title {
+  font-size: 12px; font-weight: 800; color: #e5e7eb;
+  display: flex; align-items: center; gap: 6px;
+}
+.acv-pane-title .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.acv-pane-title .dot.gold { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+.acv-pane-title .dot.dxy { background: #3b82f6; box-shadow: 0 0 6px #3b82f6; }
+.acv-pane-title .dot.av { background: #00f2fe; box-shadow: 0 0 6px #00f2fe; }
+.acv-pane-title .dot.fp { background: #10b981; box-shadow: 0 0 6px #10b981; }
+.acv-pane-actions { display: flex; gap: 4px; align-items: center; }
+.acv-pane-actions button {
+  border: 1px solid #2a3142; background: #151822; color: #94a3b8;
+  font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px;
+  cursor: pointer; white-space: nowrap;
+}
+.acv-pane-actions button:active { background: #1e2433; color: #e2e8f0; }
+.acv-pane-actions button.x {
+  width: 28px; height: 28px; padding: 0; border-radius: 8px;
+  font-size: 14px; color: #f87171; border-color: rgba(239,68,68,0.35);
+}
+.acv-canvas-wrap {
+  flex: 1; min-height: 0; position: relative; overflow: hidden;
+  touch-action: none; cursor: grab; background: #080a0f;
+}
+.acv-canvas-wrap:active { cursor: grabbing; }
+.acv-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+.acv-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: #6b7280; font-size: 12px; font-weight: 600; pointer-events: none;
+}
+.acv-embed {
+  flex: 1; min-height: 0; overflow: auto; position: relative;
+  background: #080a0f; -webkit-overflow-scrolling: touch;
+}
+.acv-av-body {
+  padding: 10px; display: flex; flex-direction: column; gap: 8px;
+  font-family: ui-monospace, monospace;
+}
+.acv-av-core {
+  text-align: center; padding: 12px; border-radius: 12px;
+  background: rgba(0,242,254,0.06); border: 1px solid rgba(0,210,255,0.3);
+}
+.acv-av-score {
+  font-size: 28px; font-weight: 800; color: #00f2fe;
+  font-variant-numeric: tabular-nums;
+}
+.acv-av-score.buy { color: #00e676; }
+.acv-av-score.sell { color: #ff5252; }
+.acv-av-sig {
+  font-size: 13px; font-weight: 800; margin-top: 4px; color: #e2e8f0;
+}
+.acv-av-gates {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+}
+.acv-av-gate {
+  background: #12161f; border: 1px solid #243044; border-radius: 8px;
+  padding: 8px; font-size: 11px;
+}
+.acv-av-gate b { display: block; color: #94a3b8; margin-bottom: 2px; font-size: 10px; }
+.acv-av-thesis {
+  font-size: 11px; color: #cbd5e1; line-height: 1.4;
+  background: #0f131c; border: 1px solid #1f2937; border-radius: 8px; padding: 8px;
+}
+.acv-fp-body {
+  padding: 10px; display: flex; flex-direction: column; gap: 8px;
+}
+.acv-fp-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 10px; background: #12161f; border: 1px solid #243044; border-radius: 8px;
+  font-size: 12px;
+}
+.acv-fp-side.buy { color: #00e676; font-weight: 800; }
+.acv-fp-side.sell { color: #ff5252; font-weight: 800; }
+.acv-fp-side.neut { color: #94a3b8; font-weight: 800; }
+.acv-restore-bar {
+  display: none; flex-wrap: wrap; gap: 6px; padding: 6px 10px;
+  background: #0c0e14; border-top: 1px solid #1a1e29; flex-shrink: 0;
+}
+.acv-restore-bar.show { display: flex; }
+.acv-restore-bar button {
+  border: 1px solid #2a3142; background: #151822; color: #c8cdd8;
+  font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 8px; cursor: pointer;
+}
+.acv-split-v, .acv-split-h, .acv-split-hl, .acv-split-hr {
+  position: absolute; z-index: 30; background: #1f2937;
+  touch-action: none;
+}
+.acv-split-v:hover, .acv-split-h:hover, .acv-split-hl:hover, .acv-split-hr:hover,
+.acv-split-v.active, .acv-split-h.active, .acv-split-hl.active, .acv-split-hr.active {
+  background: #3b82f6;
+}
+.acv-split-v {
+  top: 0; bottom: 0; width: 8px; margin-left: -4px;
+  cursor: col-resize;
+}
+.acv-split-hl, .acv-split-hr {
+  height: 8px; margin-top: -4px;
+  cursor: row-resize;
+}
+/* legacy full-width H hidden — replaced by per-column splitters */
+.acv-split-h { display: none !important; }
+@media (max-width: 700px) {
+  .acv-split-v, .acv-split-h, .acv-split-hl, .acv-split-hr { display: none !important; }
+}
+
+
+/* ACV embeds real AI Footprint chart */
+.acv-fp-host {
+  display: block;
+  padding: 0 !important;
+  overflow: hidden !important;
+  min-height: 0;
+  height: 100%;
+  position: relative;
+}
+.acv-fp-host .modal-container {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: block !important;
+  position: relative !important;
+  background: #080a0f;
+  overflow: hidden;
+  min-height: 0;
+}
+.acv-fp-host .fp-header {
+  position: absolute !important;
+  top: 0; left: 0; right: 0;
+  height: 36px !important;
+  min-height: 36px !important;
+  z-index: 20;
+}
+.acv-fp-host .fp-chart-viewport {
+  position: absolute !important;
+  top: 36px !important;
+  left: 0; right: 0;
+  bottom: var(--fp-footer-h, 80px) !important;
+  overflow: hidden;
+}
+.acv-fp-host .fp-resize-handle {
+  position: absolute !important;
+  left: 0; right: 0;
+  bottom: var(--fp-footer-h, 80px);
+  height: 10px;
+  margin-bottom: -5px;
+  z-index: 30;
+}
+.acv-fp-host .fp-footer-summary {
+  position: absolute !important;
+  left: 0; right: 0; bottom: 0 !important;
+  height: var(--fp-footer-h, 80px) !important;
+  min-height: 64px !important;
+  display: grid !important;
+  grid-template-columns: 1fr 72px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 20;
+}
+.acv-fp-host .fp-exit-btn {
+  display: none !important; /* use pane ✕ instead while docked */
+}
+.acv-fp-host .chart-mkt-closed {
+  display: none !important;
+}
+.acv-fp-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #6b7280; font-size: 12px; font-weight: 600;
+  pointer-events: none;
+}
+/* when footprint is docked into ACV, hide the full-screen overlay shell */
+#footprintModal.acv-docked {
+  display: none !important;
+  position: static !important;
+  inset: auto !important;
+  background: transparent !important;
+  z-index: auto !important;
+}
+
+
+.acv-av-fp1h {
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.35);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.acv-av-fp1h-head {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
+  color: #6ee7b7; text-transform: uppercase; margin-bottom: 6px;
+}
+.acv-av-fp1h-side {
+  font-size: 15px; font-weight: 800; color: #e2e8f0; margin-bottom: 4px;
+}
+.acv-av-fp1h-vols {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-size: 12px; font-weight: 700;
+}
+.acv-av-fp1h-vols .buy { color: #00e676; }
+.acv-av-fp1h-vols .sell { color: #ff5252; }
+
+
+/* ACV timeframe switcher */
+.acv-tf-row {
+  display: flex; align-items: center; gap: 3px;
+  padding: 3px 8px 5px;
+  background: #0a0c12;
+  border-bottom: 1px solid #1a1e29;
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.acv-tf-row::-webkit-scrollbar { display: none; }
+.acv-tf {
+  padding: 2px 7px;
+  font-size: 10px; font-weight: 700;
+  color: #787b86;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.acv-tf.active {
+  color: #3b82f6;
+  background: #131722;
+  border-color: #3b82f6;
+}
+.acv-tf:active { opacity: 0.85; }
+
+/* Dual scores: AI Visual + front-page Correlation */
+.acv-av-dual {
+  display: flex; align-items: stretch; justify-content: center;
+  gap: 0; width: 100%;
+}
+.acv-av-score-block {
+  flex: 1; text-align: center; padding: 0 6px;
+}
+.acv-av-score-label {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.6px;
+  color: #64748b; text-transform: uppercase; margin-bottom: 2px;
+}
+.acv-av-score-divider {
+  width: 1px; background: #1e2434; align-self: stretch;
+  margin: 4px 0;
+}
+.acv-av-score.corr { font-size: 22px; }
+.acv-av-score.corr.buy { color: #00e676; }
+.acv-av-score.corr.sell { color: #ff5252; }
+
 </style>
 </head>
 <body>
@@ -2565,6 +3167,12 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
     </span>
     <span class="sd-text">Multi View<span class="sd-sub">Split · Gold + DXY · dual TF</span></span>
   </button>
+  <button class="side-drawer-item" onclick="openAllChartView(); closeSideDrawer();" style="background:linear-gradient(135deg,rgba(180,131,18,0.22),rgba(124,58,237,0.15));border:1px solid rgba(180,131,18,0.45);">
+    <span class="sd-ico" style="background:linear-gradient(135deg,#b48312,#7c3aed);color:#fff;">
+      <span style="font-size:10px;font-weight:900;">ALL</span>
+    </span>
+    <span class="sd-text">Open All in Chart View<span class="sd-sub">Gold · DXY · AI Visual · Footprint</span></span>
+  </button>
 
   <div class="side-drawer-section">Trade desk</div>
   <button class="side-drawer-item" onclick="deskExportSnapshot(); closeSideDrawer();">
@@ -2688,6 +3296,12 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
             <div class="front-badge chip-bear" id="fb-1d">BEARISH</div>
             <div class="neg" id="fv-1d" style="font-size:9.5px; font-weight:700;">-0.48%</div>
             <div class="bias-bar-track"><div class="bias-bar-fill neut" id="bb-1d"></div></div>
+          </div>
+          <div class="front-bias-col">
+            <div class="front-bias-tf">1W</div>
+            <div class="front-badge chip-neut" id="fb-1w">NEUTRAL</div>
+            <div class="flat" id="fv-1w" style="font-size:9.5px; font-weight:700;">0.00%</div>
+            <div class="bias-bar-track"><div class="bias-bar-fill neut" id="bb-1w"></div></div>
           </div>
         </div>
       </div>
@@ -3133,6 +3747,131 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
 </div>
 
 <!-- ===== MULTI VIEW (split charts) ===== -->
+
+<!-- ALL CHART VIEW — Gold · DXY · AI Visual · Footprint -->
+<div class="acv-overlay" id="allChartViewOverlay">
+  <div class="acv-top">
+    <h2>ALL <span>CHART VIEW</span></h2>
+    <span class="acv-hint">Drag edges — each pane resizes independently · close any you don’t need</span>
+    <button type="button" class="acv-close" onclick="closeAllChartView()" aria-label="Close">✕</button>
+  </div>
+  <div class="acv-body" id="acvBody">
+    <div class="acv-split-v" id="acvSplitV" title="Drag to resize left/right width"></div>
+    <div class="acv-split-hl" id="acvSplitHL" title="Drag to resize Gold / AI Visual height"></div>
+    <div class="acv-split-hr" id="acvSplitHR" title="Drag to resize DXY / Footprint height"></div>
+    <div class="acv-split-h" id="acvSplitH" title="Drag to resize rows"></div>
+
+    <!-- 1 GOLD -->
+    <div class="acv-pane" id="acvPaneGold" data-pane="gold">
+      <div class="acv-pane-bar">
+        <div class="acv-pane-title"><span class="dot gold"></span> GOLD · XAU/USD</div>
+        <div class="acv-pane-actions">
+          <button type="button" onclick="acvOpenFull('gold')">FULL</button>
+          <button type="button" class="x" onclick="acvClosePane('gold')" title="Close pane">✕</button>
+        </div>
+      </div>
+      <div class="acv-tf-row" id="acvTfGold">
+        <button type="button" class="acv-tf" data-tf="1m" onclick="acvSetTf('gold','1m',60,this)">1m</button>
+        <button type="button" class="acv-tf" data-tf="3m" onclick="acvSetTf('gold','3m',180,this)">3m</button>
+        <button type="button" class="acv-tf" data-tf="5m" onclick="acvSetTf('gold','5m',300,this)">5m</button>
+        <button type="button" class="acv-tf active" data-tf="15m" onclick="acvSetTf('gold','15m',900,this)">15m</button>
+        <button type="button" class="acv-tf" data-tf="1h" onclick="acvSetTf('gold','1h',3600,this)">1H</button>
+        <button type="button" class="acv-tf" data-tf="4h" onclick="acvSetTf('gold','4h',14400,this)">4H</button>
+        <button type="button" class="acv-tf" data-tf="1d" onclick="acvSetTf('gold','1d',86400,this)">1D</button>
+      </div>
+      <div class="acv-canvas-wrap" id="acvWrapGold">
+        <canvas id="acvCanvasGold"></canvas>
+        <div class="acv-empty" id="acvEmptyGold">Loading Gold…</div>
+      </div>
+    </div>
+
+    <!-- 2 DXY -->
+    <div class="acv-pane" id="acvPaneDxy" data-pane="dxy">
+      <div class="acv-pane-bar">
+        <div class="acv-pane-title"><span class="dot dxy"></span> DXY · Dollar Index</div>
+        <div class="acv-pane-actions">
+          <button type="button" onclick="acvOpenFull('dxy')">FULL</button>
+          <button type="button" class="x" onclick="acvClosePane('dxy')" title="Close pane">✕</button>
+        </div>
+      </div>
+      <div class="acv-tf-row" id="acvTfDxy">
+        <button type="button" class="acv-tf" data-tf="1m" onclick="acvSetTf('dxy','1m',60,this)">1m</button>
+        <button type="button" class="acv-tf" data-tf="3m" onclick="acvSetTf('dxy','3m',180,this)">3m</button>
+        <button type="button" class="acv-tf" data-tf="5m" onclick="acvSetTf('dxy','5m',300,this)">5m</button>
+        <button type="button" class="acv-tf active" data-tf="15m" onclick="acvSetTf('dxy','15m',900,this)">15m</button>
+        <button type="button" class="acv-tf" data-tf="1h" onclick="acvSetTf('dxy','1h',3600,this)">1H</button>
+        <button type="button" class="acv-tf" data-tf="4h" onclick="acvSetTf('dxy','4h',14400,this)">4H</button>
+        <button type="button" class="acv-tf" data-tf="1d" onclick="acvSetTf('dxy','1d',86400,this)">1D</button>
+      </div>
+      <div class="acv-canvas-wrap" id="acvWrapDxy">
+        <canvas id="acvCanvasDxy"></canvas>
+        <div class="acv-empty" id="acvEmptyDxy">Loading DXY…</div>
+      </div>
+    </div>
+
+    <!-- 3 AI VISUAL -->
+    <div class="acv-pane" id="acvPaneAv" data-pane="av">
+      <div class="acv-pane-bar">
+        <div class="acv-pane-title"><span class="dot av"></span> AI VISUAL</div>
+        <div class="acv-pane-actions">
+          <button type="button" onclick="openAiVisual()">EXPAND</button>
+          <button type="button" class="x" onclick="acvClosePane('av')" title="Close pane">✕</button>
+        </div>
+      </div>
+      <div class="acv-embed" id="acvEmbedAv">
+        <div class="acv-av-body">
+          <div class="acv-av-core">
+            <div class="acv-av-dual">
+              <div class="acv-av-score-block">
+                <div class="acv-av-score-label">AI VISUAL</div>
+                <div class="acv-av-score" id="acvAvScore">0.00</div>
+              </div>
+              <div class="acv-av-score-divider"></div>
+              <div class="acv-av-score-block">
+                <div class="acv-av-score-label">CORR SCORE</div>
+                <div class="acv-av-score corr" id="acvCorrScore">0.0</div>
+              </div>
+            </div>
+            <div class="acv-av-sig" id="acvAvSig">NEUTRAL</div>
+            <div style="font-size:10px;color:#64748b;margin-top:4px;" id="acvAvGates">0/4 gates</div>
+          </div>
+          <div class="acv-av-gates">
+            <div class="acv-av-gate"><b>STRUCTURE</b><span id="acvAvStruct">—</span></div>
+            <div class="acv-av-gate"><b>NEWS</b><span id="acvAvNews">—</span></div>
+            <div class="acv-av-gate"><b>AI VIEW</b><span id="acvAvView">—</span></div>
+            <div class="acv-av-gate"><b>GATES</b><span id="acvAvGateFlags">—</span></div>
+          </div>
+          <!-- 1H Footprint mini (AI Visual only — not the full Footprint chart) -->
+          <div class="acv-av-fp1h" id="acvAvFp1hBox">
+            <div class="acv-av-fp1h-head">1H FOOTPRINT <span style="opacity:.7;font-weight:600;">· AI Visual sense</span></div>
+            <div class="acv-av-fp1h-side" id="acvAvFp">—</div>
+            <div class="acv-av-fp1h-vols">
+              <span class="buy" id="acvAvFpBuy">Buy —</span>
+              <span class="sell" id="acvAvFpSell">Sell —</span>
+            </div>
+          </div>
+          <div class="acv-av-thesis" id="acvAvThesis">Waiting for live senses…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 AI FOOTPRINT — real sidebar footprint chart (separate from AI Visual 1H) -->
+    <div class="acv-pane" id="acvPaneFp" data-pane="fp">
+      <div class="acv-pane-bar">
+        <div class="acv-pane-title"><span class="dot fp"></span> AI FOOTPRINT CHART</div>
+        <div class="acv-pane-actions">
+          <button type="button" onclick="acvPopoutFootprint()" title="Open footprint full screen">FULL</button>
+          <button type="button" class="x" onclick="acvClosePane('fp')" title="Close pane">✕</button>
+        </div>
+      </div>
+      <div class="acv-embed acv-fp-host" id="acvEmbedFp">
+        <div class="acv-fp-placeholder" id="acvFpPlaceholder">Loading AI Footprint chart…</div>
+      </div>
+    </div>
+  </div>
+  <div class="acv-restore-bar" id="acvRestoreBar"></div>
+</div>
+
 <div class="mv-overlay" id="multiViewOverlay">
   <div class="mv-top">
     <h2>MULTI <span>VIEW</span></h2>
@@ -3229,7 +3968,7 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
       <div class="fp-header-left">
         <div class="fp-symbol-badge" id="fpSymbolBadge">GOLD · OKX LIVE</div>
         <div class="fp-price-ticker" id="fpLiveTicker">Syncing...</div>
-        <div class="fp-gap-badge" id="fpGapBadge" title="Interbank gold vs OKX XAU-USDT-SWAP mid">OKX only · no interbank</div>
+        <div class="fp-gap-badge" id="fpGapBadge" title="OKX vs interbank $ Diff">OKX only · $ Diff</div>
         <div class="fp-live-status"><span class="fp-status-dot" id="fpWsDot"></span><span id="fpWsLabel">LIVE WS</span></div>
       </div>
       <div class="fp-tf-tabs">
@@ -3237,7 +3976,6 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
         <button class="fp-tf-btn active" id="fpBtn5" onclick="changeFpTF(5)">M5</button>
         <button class="fp-tf-btn" id="fpBtn15" onclick="changeFpTF(15)">M15</button>
         <button class="fp-tf-btn" id="fpBtn60" onclick="changeFpTF(60)">H1</button>
-        <button class="fp-tf-btn" id="fpFollowBtn" onclick="toggleFpFollow()" title="Auto-follow live price">Follow</button>
         <button class="fp-tf-btn" id="fpRefreshBtn" onclick="refreshFootprintChart()" title="Reload real OHLC + volume history">↻</button>
         <button class="fp-tf-btn" onclick="fpZoomOut()" title="Smaller candles">−</button>
         <button class="fp-tf-btn" onclick="fpZoomIn()" title="Larger candles">+</button>
@@ -3262,6 +4000,10 @@ canvas#tvCanvas { width: 100%; height: 100%; display: block; }
       </div>
     </div>
 
+    <div class="fp-resize-handle" id="fpResizeHandle" title="Drag to resize bottom panel height"></div>
+    <button type="button" class="fp-goto-live" id="fpGotoLive" onclick="fpJumpToLive()" title="Jump to live candle">
+      <span class="arr">▶</span> LIVE
+    </button>
     <div class="fp-footer-summary" id="fpFooterSummary">
       <div class="fp-metrics-labels" id="fpMetricsLabels">
         <div>Delta</div>
@@ -3435,21 +4177,24 @@ const state = {
     '5m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
     '15m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
     '1h': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
-    '1d': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 }
+    '1d': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
+    '1w': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 }
   },
   tf_biases_gold: {
     '3m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
     '5m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
     '15m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
     '1h': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
-    '1d': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 }
+    '1d': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
+    '1w': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 }
   },
   tf_biases_dxy: {
     '3m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
     '5m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
     '15m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
     '1h': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
-    '1d': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 }
+    '1d': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 },
+    '1w': { text: 'NEUTRAL', class: 'chip-neut', delta: 0.00 }
   }
 };
 
@@ -3613,7 +4358,8 @@ function biasNeutralMap() {
     '5m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0 },
     '15m': { text: 'NEUTRAL', class: 'chip-neut', delta: 0 },
     '1h': { text: 'NEUTRAL', class: 'chip-neut', delta: 0 },
-    '1d': { text: 'NEUTRAL', class: 'chip-neut', delta: 0 }
+    '1d': { text: 'NEUTRAL', class: 'chip-neut', delta: 0 },
+    '1w': { text: 'NEUTRAL', class: 'chip-neut', delta: 0 }
   };
 }
 
@@ -3700,6 +4446,7 @@ function computeBiasFromCandles(candles, sessionPct, livePrice, isDxy) {
   if (!(live > 0) || !candles || candles.length < 4) {
     const d = sessionPct || 0;
     out['1d'] = make(d);
+    out['1w'] = make(d * 1.4);
     out['3m'] = make(d * 0.1);
     out['5m'] = make(d * 0.2);
     out['15m'] = make(d * 0.45);
@@ -3753,6 +4500,8 @@ function computeBiasFromCandles(candles, sessionPct, livePrice, isDxy) {
   out['15m'] = make(structurePct(3 * 60 * 60 * 1000));
   out['1h']  = make(structurePct(8 * 60 * 60 * 1000));
   out['1d']  = make(sessionPct || 0);
+  // 1W structure: ~5 trading days lookback (net + candle vote + swing)
+  out['1w']  = make(structurePct(5 * 24 * 60 * 60 * 1000));
   return out;
 }
 
@@ -3807,7 +4556,7 @@ function setFrontBiasView(view) {
 function paintFrontBiasMatrix() {
   const view = state.frontBiasView === 'dxy' ? 'dxy' : 'gold';
   const map = view === 'dxy' ? (state.tf_biases_dxy || {}) : (state.tf_biases_gold || {});
-  ['3m', '5m', '15m', '1h', '1d'].forEach(tf => {
+  ['3m', '5m', '15m', '1h', '1d', '1w'].forEach(tf => {
     const info = map[tf] || { text: 'NEUTRAL', class: 'chip-neut', delta: 0 };
     const fBadge = document.getElementById('fb-' + tf);
     const fVal = document.getElementById('fv-' + tf);
@@ -4523,8 +5272,8 @@ function scanAndStoreOrderBlocks(data) {
     const next1 = data[i + 1];
     const next2 = data[i + 2];
     const avgRange = (data[i-1].h - data[i-1].l + data[i-2].h - data[i-2].l) / 2 || 2;
-    const isBull = (next1.c > next1.o) && ((next1.c - next1.o) + (next2.c - next2.o) > avgRange * 1.4);
-    if (current.c < current.o && isBull && (next2.c > current.h)) {
+    const isBull = (next1.c > next1.o) && ((next1.c - next1.o) + (next2.c - next2.o) > avgRange * 1.05);
+    if (current.c < current.o && isBull && (next2.c > current.h * 0.999)) {
       const top = Math.max(current.o, current.c);
       const bottom = current.l;
       const rawK = current.quoteVol ? (current.quoteVol / 1000) : (current.v * 4.3);
@@ -4538,8 +5287,8 @@ function scanAndStoreOrderBlocks(data) {
         tfName: state.tf_interval.toUpperCase()
       });
     }
-    const isBear = (next1.c < next1.o) && ((next1.o - next1.c) + (next2.o - next2.c) > avgRange * 1.4);
-    if (current.c > current.o && isBear && (next2.c < current.l)) {
+    const isBear = (next1.c < next1.o) && ((next1.o - next1.c) + (next2.o - next2.c) > avgRange * 1.05);
+    if (current.c > current.o && isBear && (next2.c < current.l * 1.001)) {
       const top = current.h;
       const bottom = Math.min(current.o, current.c);
       const rawK = current.quoteVol ? (current.quoteVol / 1000) : (current.v * 4.3);
@@ -4566,8 +5315,8 @@ function refreshActiveOrderBlocks(data) {
   const mergedSupply = mergeOverlappingZones(validSupplyPool);
   mergedDemand.sort((a, b) => b.startIndex - a.startIndex);
   mergedSupply.sort((a, b) => b.startIndex - a.startIndex);
-  storedDemandOBs = mergedDemand.slice(0, 3);
-  storedSupplyOBs = mergedSupply.slice(0, 3);
+  storedDemandOBs = mergedDemand.slice(0, 5);
+  storedSupplyOBs = mergedSupply.slice(0, 5);
 }
 
 function executeTradingViewRayArchitecture(data) {
@@ -5001,40 +5750,43 @@ function drawTradingViewChart() {
     const xStart = Math.max(0, getX(ob.startIndex));
     const yTop = getY(ob.top);
     const yBottom = getY(ob.bottom);
-    const obHeight = Math.max(8, yBottom - yTop);
+    const obHeight = Math.max(8, Math.abs(yBottom - yTop));
+    const yDraw = Math.min(yTop, yBottom);
     const obWidth = chartW - xStart;
-    if (obWidth > 0 && yTop < chartH && yBottom > 0) {
+    if (obWidth > 0 && yDraw < topPad + chartH && (yDraw + obHeight) > topPad) {
       ctx.fillStyle = "rgba(255, 75, 95, 0.24)";
-      ctx.fillRect(xStart, yTop, obWidth, obHeight);
+      ctx.fillRect(xStart, yDraw, obWidth, obHeight);
       ctx.strokeStyle = "rgba(255, 75, 95, 0.75)";
       ctx.lineWidth = 1;
-      ctx.strokeRect(xStart, yTop, obWidth, obHeight);
+      ctx.strokeRect(xStart, yDraw, obWidth, obHeight);
       ctx.fillStyle = "#ff8a99";
       ctx.font = `bold ${w > 768 ? 11 : 10}px sans-serif`;
       ctx.textAlign = "center";
       const centerX = xStart + (obWidth / 2);
-      const centerY = yTop + (obHeight / 2) + 4;
+      const centerY = yDraw + (obHeight / 2) + 4;
       ctx.fillText(`${ob.volume.toFixed(3)}k (${ob.pct}%) ${ob.tfName} OB`, centerX, centerY);
     }
   });
 
   storedDemandOBs.forEach(ob => {
     const xStart = Math.max(0, getX(ob.startIndex));
-    const yTop = getY(ob.bottom);
+    // top of zone = higher price = smaller Y; bottom of zone = lower price = larger Y
+    const yTop = getY(ob.top);
     const yBottom = getY(ob.bottom);
-    const obHeight = Math.max(8, yBottom - yTop);
+    const obHeight = Math.max(8, Math.abs(yBottom - yTop));
+    const yDraw = Math.min(yTop, yBottom);
     const obWidth = chartW - xStart;
-    if (obWidth > 0 && yTop < chartH && yBottom > 0) {
+    if (obWidth > 0 && yDraw < topPad + chartH && (yDraw + obHeight) > topPad) {
       ctx.fillStyle = "rgba(40, 195, 170, 0.22)";
-      ctx.fillRect(xStart, yTop, obWidth, obHeight);
+      ctx.fillRect(xStart, yDraw, obWidth, obHeight);
       ctx.strokeStyle = "rgba(40, 195, 170, 0.75)";
       ctx.lineWidth = 1;
-      ctx.strokeRect(xStart, yTop, obWidth, obHeight);
+      ctx.strokeRect(xStart, yDraw, obWidth, obHeight);
       ctx.fillStyle = "#5ef0d2";
       ctx.font = `bold ${w > 768 ? 11 : 10}px sans-serif`;
       ctx.textAlign = "center";
       const centerX = xStart + (obWidth / 2);
-      const centerY = yTop + (obHeight / 2) + 4;
+      const centerY = yDraw + (obHeight / 2) + 4;
       ctx.fillText(`${ob.volume.toFixed(3)}k (${ob.pct}%) ${ob.tfName} OB`, centerX, centerY);
     }
   });
@@ -5107,6 +5859,50 @@ function drawTradingViewChart() {
     const top = Math.round(getY(Math.max(c.o, c.c)));
     const bH = Math.max(2, Math.round(Math.abs(getY(c.o) - getY(c.c))));
     ctx.fillRect(Math.round(x - bodyW / 2), top, bodyW, bH);
+    // Below-candle buy/sell volume + win arrow (no overlap with body)
+    try {
+      const totV = Number(c.quoteVol) || Number(c.v) || Number(c.volume) || 0;
+      if (totV > 0 && bodyW >= 3) {
+        const upC = c.c >= c.o;
+        // Approximate split when no bid/ask: lean with candle direction
+        const buyShare = upC ? 0.58 : 0.42;
+        const buyTot = totV * buyShare;
+        const sellTot = totV * (1 - buyShare);
+        const fmt = function (v) {
+          v = Math.abs(v);
+          if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+          if (v >= 1000) return (v / 1000).toFixed(1) + 'k';
+          return String(Math.round(v));
+        };
+        const baseY = Math.min(h - 16, Math.max(topPad + chartH + 2, Math.max(yO, yC, yL) + 11));
+        // win arrow only
+        if (buyTot !== sellTot) {
+          ctx.fillStyle = buyTot > sellTot ? '#00e676' : '#ff5252';
+          ctx.beginPath();
+          if (buyTot > sellTot) {
+            ctx.moveTo(x, baseY - 9);
+            ctx.lineTo(x - 4, baseY - 2);
+            ctx.lineTo(x + 4, baseY - 2);
+          } else {
+            ctx.moveTo(x, baseY - 2);
+            ctx.lineTo(x - 4, baseY - 9);
+            ctx.lineTo(x + 4, baseY - 9);
+          }
+          ctx.closePath();
+          ctx.fill();
+        }
+        if (bodyW >= 8) {
+          ctx.font = 'bold 8px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillStyle = '#00e676';
+          ctx.fillText(fmt(buyTot), x - bodyW * 0.35, baseY);
+          ctx.fillStyle = '#ff5252';
+          ctx.fillText(fmt(sellTot), x + bodyW * 0.35, baseY);
+          ctx.textBaseline = 'alphabetic';
+        }
+      }
+    } catch (eV) {}
     const step = view.zoom > 1.3 ? 6 : 12;
     if (idx % step === 0 && c.time) {
       ctx.fillText(c.time, x, h - 6);
@@ -5336,10 +6132,13 @@ function openChartModal(asset) {
   closeAllSidePanels();
   triggerRealtimeRender();
   if (candleHistory.length > 0 && candlesMatchAsset(candleHistory, state.chartAsset)) {
+    try { scanAndStoreOrderBlocks(candleHistory); } catch (e) {}
+    try { executeTradingViewRayArchitecture(candleHistory); } catch (e) {}
     fetchRealCandles(state.tf_interval, false);
   } else {
     setTimeout(() => fetchRealCandles(state.tf_interval, true), 30);
   }
+  try { triggerRealtimeRender(); } catch (e) {}
 }
 
 function closeChartModal() {
@@ -5362,7 +6161,8 @@ let fpCandleWidthCustom = 52;
 const FP_GAP = 10;
 const FP_PRICE_W = 72;
 let fpZoom = 1.0;
-let fpFollowLive = true;
+let fpFollowLive = false; // never auto-reset zoom/pan on new candles
+let _fpUserViewLocked = false; // true after user pans/zooms — blocks autoCenter
 let fpTfMinutes = 5;
 let fpLivePrice = 0;
 let fpPanX = 0;
@@ -5378,7 +6178,7 @@ let fpLastPinchMidY = 0;
 let isDraggingPriceScale = false;
 let priceScaleStartY = 0;
 let priceScaleStartPixelsPerDollar = 55;
-let fpFooterHeight = 92;
+let fpFooterHeight = 100;
 
 const fpChartCanvas = document.getElementById('fpChartCanvas');
 const fpPriceCanvas = document.getElementById('fpPriceCanvas');
@@ -5401,26 +6201,219 @@ function FP_CANDLE_WIDTH() {
 }
 
 function adjustCandleWidth(multiplier) {
+  _fpUserViewLocked = true;
   fpCandleWidthCustom = Math.max(24, Math.min(160, Math.round(fpCandleWidthCustom * multiplier)));
 }
 
 function adjustFooterHeight(multiplier) {
-  fpFooterHeight = Math.max(50, Math.min(220, Math.round(fpFooterHeight * multiplier)));
-  const footerWrap = document.getElementById('fpFooterSummary');
-  if (footerWrap) {
-    footerWrap.style.height = fpFooterHeight + 'px';
-    footerWrap.style.minHeight = fpFooterHeight + 'px';
-  }
+  fpApplyFooterHeight(Math.max(70, Math.min(280, Math.round((fpFooterHeight || 100) * multiplier))));
   resizeFpCanvases();
+  try { drawFpTable(); } catch (e) {}
+}
+
+function fpApplyFooterHeight(px) {
+  const h = Math.max(70, Math.min(280, Math.round(px || fpFooterHeight || 100)));
+  fpFooterHeight = h;
+  return fpLayoutShell();
+}
+
+function fpRestoreFooterToModal() {
+  const root = document.querySelector('#footprintModal .modal-container')
+    || document.querySelector('.acv-fp-host .modal-container')
+    || document.querySelector('#acvEmbedFp .modal-container');
+  if (!root) return;
+  const footer = document.getElementById('fpFooterSummary');
+  const handle = document.getElementById('fpResizeHandle');
+  const gotoBtn = document.getElementById('fpGotoLive');
+  if (footer && footer.parentElement !== root) root.appendChild(footer);
+  if (handle && handle.parentElement !== root) root.appendChild(handle);
+  if (gotoBtn && gotoBtn.parentElement !== root) root.appendChild(gotoBtn);
+}
+
+/** Full modal: footer on body (fixed). Docked ACV: footer absolute inside host. */
+function fpLayoutShell() {
+  const docked = (typeof _acvFpDocked !== 'undefined' && _acvFpDocked);
+  // Smaller footer when docked so it fits the pane
+  const defaultH = docked ? 78 : 110;
+  const h = Math.max(docked ? 64 : 80, Math.min(280, Math.round(fpFooterHeight || defaultH)));
+  fpFooterHeight = h;
+  const headerH = docked ? 36 : 48;
+
+  const modal = document.getElementById('footprintModal');
+  const host = document.getElementById('acvEmbedFp');
+  const root = docked
+    ? (document.querySelector('#acvEmbedFp .modal-container') || document.querySelector('.acv-fp-host .modal-container'))
+    : (document.querySelector('#footprintModal .modal-container'));
+  if (!root) return h;
+
+  const footer = document.getElementById('fpFooterSummary');
+  const handle = document.getElementById('fpResizeHandle');
+  const gotoBtn = document.getElementById('fpGotoLive');
+  const vp = document.getElementById('fpViewport');
+
+  // Parenting
+  if (docked) {
+    // MUST be inside the ACV host container
+    if (footer && footer.parentElement !== root) root.appendChild(footer);
+    if (handle && handle.parentElement !== root) root.appendChild(handle);
+    if (gotoBtn && gotoBtn.parentElement !== root) root.appendChild(gotoBtn);
+  } else {
+    // Full screen: body mount so fixed works
+    if (footer && footer.parentElement !== document.body) document.body.appendChild(footer);
+    if (handle && handle.parentElement !== document.body) document.body.appendChild(handle);
+    if (gotoBtn && gotoBtn.parentElement !== document.body) document.body.appendChild(gotoBtn);
+  }
+
+  root.style.position = 'relative';
+  root.style.overflow = 'hidden';
+  root.style.display = 'block';
+  root.style.width = '100%';
+  root.style.height = '100%';
+  root.style.setProperty('--fp-footer-h', h + 'px');
+  if (host) host.style.setProperty('--fp-footer-h', h + 'px');
+
+  const header = root.querySelector('.fp-header');
+  if (header) {
+    header.style.position = 'absolute';
+    header.style.top = '0';
+    header.style.left = '0';
+    header.style.right = '0';
+    header.style.height = headerH + 'px';
+    header.style.minHeight = headerH + 'px';
+    header.style.zIndex = '20';
+  }
+
+  if (vp) {
+    vp.style.position = 'absolute';
+    vp.style.top = headerH + 'px';
+    vp.style.left = '0';
+    vp.style.right = '0';
+    vp.style.bottom = h + 'px';
+    vp.style.height = 'auto';
+    vp.style.zIndex = '1';
+    vp.style.overflow = 'hidden';
+    vp.style.display = 'grid';
+    vp.style.gridTemplateColumns = '1fr 72px';
+    vp.style.background = '#0a0b0e';
+  }
+
+  const boundEl = docked ? (host || root) : (modal || root);
+  const rect = boundEl.getBoundingClientRect();
+  const left = Math.round(rect.left);
+  const width = Math.max(40, Math.round(rect.width));
+  const bottomGap = Math.round(Math.max(0, window.innerHeight - rect.bottom));
+
+  if (docked) {
+    // Absolute inside host pane
+    if (handle) {
+      handle.style.cssText = 'position:absolute;left:0;right:0;bottom:' + h + 'px;height:12px;z-index:30;display:block;cursor:ns-resize;touch-action:none;';
+    }
+    if (footer) {
+      footer.style.cssText =
+        'position:absolute;left:0;right:0;bottom:0;top:auto;height:' + h + 'px;min-height:' + h + 'px;' +
+        'display:grid;grid-template-columns:1fr 72px;visibility:visible;opacity:1;z-index:25;' +
+        'background:#0b0d12;border-top:2px solid #3b82f6;pointer-events:auto;box-sizing:border-box;';
+    }
+    if (gotoBtn) {
+      gotoBtn.style.position = 'absolute';
+      gotoBtn.style.right = '8px';
+      gotoBtn.style.bottom = (h + 8) + 'px';
+      gotoBtn.style.zIndex = '35';
+      gotoBtn.style.left = 'auto';
+    }
+  } else {
+    // Fixed to viewport for full modal
+    if (handle) {
+      handle.style.position = 'fixed';
+      handle.style.left = left + 'px';
+      handle.style.width = width + 'px';
+      handle.style.bottom = (bottomGap + h - 6) + 'px';
+      handle.style.height = '14px';
+      handle.style.zIndex = '100060';
+      handle.style.display = 'block';
+      handle.style.cursor = 'ns-resize';
+      handle.style.touchAction = 'none';
+    }
+    if (footer) {
+      footer.style.position = 'fixed';
+      footer.style.left = left + 'px';
+      footer.style.width = width + 'px';
+      footer.style.right = 'auto';
+      footer.style.bottom = bottomGap + 'px';
+      footer.style.top = 'auto';
+      footer.style.height = h + 'px';
+      footer.style.minHeight = h + 'px';
+      footer.style.display = 'grid';
+      footer.style.gridTemplateColumns = '1fr 72px';
+      footer.style.visibility = 'visible';
+      footer.style.opacity = '1';
+      footer.style.zIndex = '100050';
+      footer.style.background = '#0b0d12';
+      footer.style.borderTop = '2px solid #3b82f6';
+      footer.style.pointerEvents = 'auto';
+      footer.style.boxSizing = 'border-box';
+    }
+    if (gotoBtn) {
+      gotoBtn.style.position = 'fixed';
+      gotoBtn.style.right = Math.max(12, Math.round(window.innerWidth - rect.right + 12)) + 'px';
+      gotoBtn.style.bottom = (bottomGap + h + 12) + 'px';
+      gotoBtn.style.left = 'auto';
+      gotoBtn.style.zIndex = '100070';
+    }
+  }
+
+  // Size table canvas
+  try {
+    const dpr = window.devicePixelRatio || 1;
+    const table = document.getElementById('fpTableCanvas');
+    if (table) {
+      const chartW = Math.max(40, (vp && vp.clientWidth ? vp.clientWidth : width) - 72);
+      table.width = Math.round(chartW * dpr);
+      table.height = Math.round(h * dpr);
+      table.style.width = '100%';
+      table.style.height = '100%';
+      if (typeof fpCtxTable !== 'undefined' && fpCtxTable) {
+        fpCtxTable.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+    }
+  } catch (e) {}
+
+  try { if (typeof drawFpTable === 'function') drawFpTable(); } catch (e) {}
+  try { if (typeof fpUpdateGotoLiveBtn === 'function') fpUpdateGotoLiveBtn(); } catch (e) {}
+  return h;
 }
 
 function resizeFpCanvases() {
   const vp = document.getElementById('fpViewport');
+  const footerWrap = document.getElementById('fpFooterSummary');
   if (!vp) return;
   const dpr = window.devicePixelRatio || 1;
-  const fullW = vp.clientWidth;
-  const h = vp.clientHeight;
-  if (fullW < 40 || h < 40) return;
+
+  // Pin footer height via CSS variable (absolute layout)
+  fpApplyFooterHeight(fpFooterHeight || 100);
+
+  const fullW = vp.clientWidth || (vp.parentElement && vp.parentElement.clientWidth) || 300;
+  let h = vp.clientHeight;
+  // If viewport ate all height, leave room for footer
+  if (h < 40) {
+    const parent = vp.parentElement;
+    const ph = parent ? parent.clientHeight : 0;
+    const hh = (document.querySelector('.fp-header') || {}).offsetHeight || 40;
+    const fh = fpFooterHeight || 92;
+    if (ph > hh + fh + 40) h = ph - hh - fh;
+  }
+  if (fullW < 40 || h < 40) {
+    // Still size footer table so bottom metrics can paint
+    try {
+      const fw = footerWrap ? (footerWrap.clientWidth || fullW || 300) : (fullW || 300);
+      const chartW0 = Math.max(40, fw - 72);
+      const footerH0 = Math.max(72, fpFooterHeight || 92);
+      fpTableCanvas.width = Math.round(chartW0 * dpr);
+      fpTableCanvas.height = Math.round(footerH0 * dpr);
+      fpCtxTable.setTransform(dpr, 0, 0, dpr, 0, 0);
+    } catch (e) {}
+    return;
+  }
   const chartW = Math.max(40, fullW - FP_PRICE_W);
   fpChartCanvas.width = Math.round(chartW * dpr);
   fpChartCanvas.height = Math.round(h * dpr);
@@ -5430,12 +6423,59 @@ function resizeFpCanvases() {
   fpPriceCanvas.height = Math.round(h * dpr);
   fpCtxPrice.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const footerH = fpFooterHeight;
+  const footerH = Math.max(84, fpFooterHeight || 96);
+  fpFooterHeight = footerH;
+  // CRITICAL: table width must equal chart canvas width so columns line up with candles
   fpTableCanvas.width = Math.round(chartW * dpr);
   fpTableCanvas.height = Math.round(footerH * dpr);
   fpCtxTable.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (!fpViewCenter) autoCenterFp();
+  try { drawFpTable(); } catch (e) {}
 }
+
+
+function fpInitFooterResize() {
+  const handle = document.getElementById('fpResizeHandle');
+  const container = document.querySelector('#footprintModal .modal-container');
+  if (!handle || handle._fpResizeBound) return;
+  handle._fpResizeBound = true;
+  let dragging = false;
+  let startY = 0;
+  let startH = 100;
+  const onMove = (clientY) => {
+    if (!dragging || !container) return;
+    const rect = container.getBoundingClientRect();
+    // Drag up → taller footer
+    const fromBottom = rect.bottom - clientY;
+    const maxH = Math.min(280, rect.height * 0.45);
+    fpApplyFooterHeight(Math.max(70, Math.min(maxH, fromBottom)));
+    try { resizeFpCanvases(); } catch (e) {}
+    try { drawFpTable(); } catch (e) {}
+  };
+  handle.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragging = true;
+    handle.classList.add('active');
+    startY = e.clientY;
+    startH = fpFooterHeight || 100;
+    try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  handle.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    onMove(e.clientY);
+  });
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('active');
+    try { resizeFpCanvases(); scheduleFpRedraw(); } catch (e) {}
+  };
+  handle.addEventListener('pointerup', end);
+  handle.addEventListener('pointercancel', end);
+}
+try { fpInitFooterResize(); } catch (e) {}
 
 function autoCenterFp() {
   const dpr = window.devicePixelRatio || 1;
@@ -5443,30 +6483,95 @@ function autoCenterFp() {
   const h = fpChartCanvas.height / dpr;
   if (w < 10 || h < 10 || fpCandles.length === 0) return;
 
-  // Center ONLY on footprint candles (OKX) — never interbank (causes $8 vertical gap)
+  // Center on recent footprint candles + live price so live stays inside the frame
   let minP = Infinity, maxP = -Infinity;
-  const start = Math.max(0, fpCandles.length - 20);
+  const start = Math.max(0, fpCandles.length - 14);
   for (let i = start; i < fpCandles.length; i++) {
     const c = fpCandles[i];
     if (c.low > 500 && c.low < minP) minP = c.low;
     if (c.high > 500 && c.high > maxP) maxP = c.high;
   }
+  const last = fpCandles[fpCandles.length - 1];
+  if (last && last.close > 500) fpLivePrice = last.close;
+  if (fpLivePrice > 500) {
+    minP = Math.min(minP, fpLivePrice);
+    maxP = Math.max(maxP, fpLivePrice);
+  }
   if (!(minP < maxP) || !isFinite(minP)) {
-    const last = fpCandles[fpCandles.length - 1];
     const mid = (last && last.close > 500) ? last.close : (fpLivePrice || 4000);
     minP = mid - 3;
     maxP = mid + 3;
   }
-  let range = Math.max(maxP - minP, 2.0);
-  range *= 1.35;
+  let range = Math.max(maxP - minP, 1.5);
+  range *= 1.35; // pad so live OHLC has room top + bottom inside chart
 
-  fpPixelsPerDollar = (h * 0.72) / range;
-  fpPixelsPerDollar = Math.max(8, Math.min(160, fpPixelsPerDollar));
-  fpViewCenter = (minP + maxP) / 2;
-  const last = fpCandles[fpCandles.length - 1];
-  if (last && last.close > 500) fpLivePrice = last.close;
-  fpPanX = w - (fpCandles.length * (FP_CANDLE_WIDTH() + FP_GAP)) - 40;
+  fpPixelsPerDollar = (h * 0.78) / range;
+  fpPixelsPerDollar = Math.max(10, Math.min(180, fpPixelsPerDollar));
+  // Prefer live price as vertical center so it sits mid-frame
+  fpViewCenter = (fpLivePrice > 500) ? fpLivePrice : ((minP + maxP) / 2);
+
+  // Horizontal: pin LIVE candle to the right edge (inside chart)
+  const n = fpCandles.length;
+  const cw = FP_CANDLE_WIDTH();
+  const step = cw + FP_GAP;
+  // Right-align last (live) candle with small margin
+  fpPanX = w - ((n - 1) * step) - cw - 28;
+  // If too few bars, avoid huge left void but still keep live near right when possible
+  if (fpPanX > 8 && n * step < w * 0.55) {
+    fpPanX = Math.max(8, w - n * step - 28);
+  }
   fpPanY = h / 2;
+  // Final clamp: live price Y must stay inside chart (top+bottom margin)
+  try { fpClampLivePriceVertical(h); } catch (e) {}
+}
+
+/** Keep live price Y inside the visible chart area (both top and bottom). */
+function fpClampLivePriceVertical(hOpt) {
+  if (!(fpLivePrice > 500)) return;
+  const dpr = window.devicePixelRatio || 1;
+  const h = (hOpt != null) ? hOpt : (fpChartCanvas.height / dpr);
+  if (h < 20) return;
+  const margin = Math.max(18, Math.min(48, h * 0.12));
+  let y = fpPriceToY(fpLivePrice);
+  if (y < margin) {
+    // price is too high on screen → shift view center up (show higher prices)
+    const pxPerD = Math.max(1, (fpPixelsPerDollar || 55) * (fpZoom || 1));
+    // fpPriceToY: y = fpPanY - (p - center) * pxPerD
+    // Increase center so y moves down toward middle
+    const need = margin - y;
+    fpViewCenter = fpViewCenter + (need / pxPerD);
+  } else if (y > h - margin) {
+    const pxPerD = Math.max(1, (fpPixelsPerDollar || 55) * (fpZoom || 1));
+    const need = y - (h - margin);
+    fpViewCenter = fpViewCenter - (need / pxPerD);
+  }
+}
+
+/** Pin live candle into the visible frame (horizontal + vertical). */
+function fpSnapToLiveCandle() {
+  _fpViewingHistory = false;
+  _fpUserViewLocked = false;
+  try {
+    const dpr = window.devicePixelRatio || 1;
+    const w = fpChartCanvas.width / dpr;
+    const h = fpChartCanvas.height / dpr;
+    if (w < 10 || h < 10) return;
+    if (fpCandles && fpCandles.length) {
+      const last = fpCandles[fpCandles.length - 1];
+      if (last && last.close > 500) fpLivePrice = last.close;
+    }
+    // Horizontal: live candle fully inside right side of chart
+    const cw = FP_CANDLE_WIDTH();
+    const step = cw + FP_GAP;
+    const n = (fpCandles && fpCandles.length) ? fpCandles.length : 1;
+    fpPanX = w - ((n - 1) * step) - cw - 28;
+    // Vertical: center on live, then clamp inside margins
+    if (fpLivePrice > 500) {
+      fpViewCenter = fpLivePrice;
+      fpPanY = h / 2;
+      fpClampLivePriceVertical(h);
+    }
+  } catch (e) {}
 }
 
 function fpPriceToY(p) {
@@ -5474,31 +6579,91 @@ function fpPriceToY(p) {
   return Math.round(fpPanY - ((p - center) * fpPixelsPerDollar * fpZoom));
 }
 
-function ensureLivePriceVisible() {
-  if (!fpFollowLive || fpIsDragging || fpPinching || isDraggingPriceScale) return;
-  if (!(fpLivePrice > 500)) return;
+// When true, user is looking at history — never force pan back to live candle
+let _fpViewingHistory = false;
+
+function fpIsLiveInView() {
+  if (!fpCandles || !fpCandles.length || !fpChartCanvas) return true;
   const dpr = window.devicePixelRatio || 1;
-  const h = fpChartCanvas.height / dpr;
   const w = fpChartCanvas.width / dpr;
-  if (h < 40) return;
+  if (w < 40) return true;
+  const cw = FP_CANDLE_WIDTH();
+  const step = cw + FP_GAP;
+  const liveX = fpPanX + (fpCandles.length - 1) * step;
+  // Live is "in view" if any part of the live candle is in the right 55% of chart
+  return (liveX + cw > w * 0.45) && (liveX < w + 20);
+}
 
-  // Only shift view when live price is near the TOP or BOTTOM edge (not every tick)
-  const liveY = fpPriceToY(fpLivePrice);
-  const margin = h * 0.18;
-  if (liveY < margin) {
-    // price near top – nudge view up slowly
-    fpViewCenter += (fpLivePrice - fpViewCenter) * 0.08;
-  } else if (liveY > h - margin) {
-    // price near bottom – nudge view down slowly
-    fpViewCenter += (fpLivePrice - fpViewCenter) * 0.08;
+function fpUpdateGotoLiveBtn() {
+  const btn = document.getElementById('fpGotoLive');
+  if (!btn) return;
+  const show = !!( _fpViewingHistory || !fpIsLiveInView() );
+  btn.classList.toggle('show', show);
+  // Inline display — class alone was not enough after style.cssText writes
+  btn.style.display = show ? 'flex' : 'none';
+}
+
+function fpJumpToLive() {
+  // Explicit user action: leave history mode and snap live candle into frame
+  try { fpSnapToLiveCandle(); } catch (e) {
+    _fpViewingHistory = false;
+    try {
+      const dpr = window.devicePixelRatio || 1;
+      const w = fpChartCanvas.width / dpr;
+      const h = fpChartCanvas.height / dpr;
+      const cw = FP_CANDLE_WIDTH();
+      const step = cw + FP_GAP;
+      fpPanX = w - ((fpCandles.length - 1) * step) - cw - 28;
+      if (fpLivePrice > 500) {
+        fpViewCenter = fpLivePrice;
+        fpPanY = h / 2;
+        fpClampLivePriceVertical(h);
+      }
+    } catch (e2) {}
+  }
+  try { fpUpdateGotoLiveBtn(); } catch (e) {}
+  try { scheduleFpRedraw(); } catch (e) {}
+  try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
+}
+
+function ensureLivePriceVisible() {
+  // NEVER force the chart back to the live candle while user is browsing history.
+  // Only show the ▶ LIVE arrow so they can jump when ready.
+  if (fpIsDragging || fpPinching || isDraggingPriceScale) return;
+  if (!fpCandles || !fpCandles.length) return;
+
+  // Do NOT auto-set _fpViewingHistory here — that caused TF-change to jump to history
+  // after OKX bars loaded (live briefly off-screen before snap). Only user pan sets it.
+  try { fpUpdateGotoLiveBtn(); } catch (e) {}
+
+  // While viewing history (user panned): do not move panX / zoom / width at all
+  if (_fpViewingHistory) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const w = fpChartCanvas.width / dpr;
+  const h = fpChartCanvas.height / dpr;
+  if (w < 40 || h < 20) return;
+  const cw = FP_CANDLE_WIDTH();
+  const step = cw + FP_GAP;
+  const liveX = fpPanX + (fpCandles.length - 1) * step;
+  const rightLimit = w - 28;
+
+  // User has manually adjusted: only prevent live candle from clipping off the RIGHT
+  // when a brand-new bar is appended — never yank pan/zoom/vertical back.
+  if (_fpUserViewLocked) {
+    if (liveX + cw > rightLimit + 8) {
+      fpPanX -= (liveX + cw - rightLimit);
+    }
+    return;
   }
 
-  // Keep latest candle visible on the right
-  const liveX = fpPanX + (fpCandles.length - 1) * (FP_CANDLE_WIDTH() + FP_GAP);
-  const targetX = w - FP_CANDLE_WIDTH() - 35;
-  if (Math.abs(liveX - targetX) > 30) {
-    fpPanX += (targetX - liveX) * 0.2;
+  // Auto-follow mode (not locked): keep live fully inside frame
+  if (liveX + cw > rightLimit + 4) {
+    fpPanX -= (liveX + cw - rightLimit);
+  } else if (liveX < w * 0.35) {
+    fpPanX = w - ((fpCandles.length - 1) * step) - cw - 28;
   }
+  try { fpClampLivePriceVertical(h); } catch (e) {}
 }
 
 function toggleFpFollow() {
@@ -5513,8 +6678,8 @@ function toggleFpFollow() {
 
 function fpZoomIn() {
   fpZoom = Math.min(3.5, +(fpZoom * 1.2).toFixed(2));
-  // User zoom → leave follow so view is not yanked back
   fpFollowLive = false;
+  _fpUserViewLocked = true;
   try {
     const btn = document.getElementById('fpFollowBtn');
     if (btn) { btn.classList.remove('active'); btn.textContent = 'Free'; }
@@ -5525,10 +6690,6 @@ function fpZoomIn() {
 function fpZoomOut() {
   fpZoom = Math.max(0.3, +(fpZoom * 0.83).toFixed(2));
   fpFollowLive = false;
-  try {
-    const btn = document.getElementById('fpFollowBtn');
-    if (btn) { btn.classList.remove('active'); btn.textContent = 'Free'; }
-  } catch (e) {}
   try { scheduleFpRedraw(); } catch (e) {}
 }
 
@@ -5536,11 +6697,18 @@ function fpZoomOut() {
 function renderFpFrame() {
   // ONLY place that draws the Footprint chart canvases — no other agent/path may plot here
   const modal = document.getElementById('footprintModal');
-  if (modal && modal.style.display === 'flex') {
+  const docked = (typeof _acvFpDocked !== 'undefined' && _acvFpDocked);
+  const fullOpen = modal && modal.style.display === 'flex';
+  if (fullOpen || docked) {
     try {
+      // Keep footer geometry pinned (desktop WebView can drop absolute layout)
+      if (!window._fpShellTick) window._fpShellTick = 0;
+      window._fpShellTick++;
+      if (window._fpShellTick % 30 === 1) fpLayoutShell();
       drawFpChart();
       drawFpPriceLadder();
       drawFpTable();
+      fpUpdateGotoLiveBtn();
     } catch (e) {}
   }
   requestAnimationFrame(renderFpFrame);
@@ -5556,6 +6724,8 @@ function drawFpChart() {
   const w = fpChartCanvas.width / dpr;
   const h = fpChartCanvas.height / dpr;
   if (w < 10 || h < 10) return;
+  // Keep last frame visible if candles briefly empty (new-bar race)
+  if (!fpCandles || !fpCandles.length) return;
   fpCtxChart.clearRect(0, 0, w, h);
   fpCtxChart.strokeStyle = '#141822';
   fpCtxChart.lineWidth = 1;
@@ -5668,12 +6838,22 @@ function drawFpChart() {
         }
       }
     }
-    // Keep cells inside candle high-low (with small pad)
+    // Keep cells inside body ± maxSpan (not full extreme wick) — stops tall misfire columns
     const _hi = _hi0;
     const _lo = _lo0;
-    const pad = Math.max(0.15, (_hi - _lo) * 0.02);
+    const bodyLo0 = Math.min(Number(c.open) || _lo, Number(c.close) || _lo);
+    const bodyHi0 = Math.max(Number(c.open) || _hi, Number(c.close) || _hi);
+    const tfM = fpTfMinutes || 5;
+    const maxSpan = (tfM >= 60) ? 12 : (tfM >= 15) ? 6 : (tfM >= 5) ? 4.5 : 2.5;
+    const midB = (bodyLo0 + bodyHi0) / 2;
+    let cellLo = Math.max(_lo, midB - maxSpan / 2);
+    let cellHi = Math.min(_hi, midB + maxSpan / 2);
+    // Always allow at least body
+    cellLo = Math.min(cellLo, bodyLo0);
+    cellHi = Math.max(cellHi, bodyHi0);
+    const pad = Math.max(0.1, (cellHi - cellLo) * 0.02);
     const rowsIn = rows.filter(function (r) {
-      return r.p >= _lo - pad && r.p <= _hi + pad;
+      return r.p >= cellLo - pad && r.p <= cellHi + pad;
     });
     // If ALL filtered out but we had rows → remap proportionally into candle range
     if (!rowsIn.length && rows.length && _hi > _lo) {
@@ -5713,8 +6893,8 @@ function drawFpChart() {
     }
     const displayPrices = rows.map(r => r.p);
 
-    // Skip empty candles (no volume at all)
-    if (!displayPrices.length) continue;
+    // Do NOT synthesize fake 0.5/0.5 volume cells — that is what looked like "skipping" junk bars.
+    // Gap-fill / empty bars keep wick+body only (no orange 0.5 boxes).
 
     const fmtVol = (n) => {
       if (!(n > 0)) return '0';
@@ -5792,14 +6972,16 @@ function drawFpChart() {
         fpCtxChart.textBaseline = 'middle';
         const textY = cellTop + ch / 2;
         if (isPoc) {
-          fpCtxChart.fillStyle = '#fde68a';
+          // POC: still sell left (warm) / buy right (warm-green)
+          fpCtxChart.fillStyle = '#fca5a5';
           fpCtxChart.fillText(fmtVol(lvl.bid), cx + halfW * 0.5, textY);
-          fpCtxChart.fillStyle = '#fef3c7';
+          fpCtxChart.fillStyle = '#86efac';
           fpCtxChart.fillText(fmtVol(lvl.ask), cx + halfW * 1.5, textY);
         } else {
-          fpCtxChart.fillStyle = sellImbalance ? '#fecaca' : '#cbd5e1';
+          // LEFT = Sell (bid/red), RIGHT = Buy (ask/green)
+          fpCtxChart.fillStyle = sellImbalance ? '#fecaca' : '#f87171';
           fpCtxChart.fillText(fmtVol(lvl.bid), cx + halfW * 0.5, textY);
-          fpCtxChart.fillStyle = buyImbalance ? '#bbf7d0' : '#e2e8f0';
+          fpCtxChart.fillStyle = buyImbalance ? '#bbf7d0' : '#34d399';
           fpCtxChart.fillText(fmtVol(lvl.ask), cx + halfW * 1.5, textY);
         }
         fpCtxChart.textBaseline = 'alphabetic';
@@ -5849,6 +7031,70 @@ function drawFpChart() {
       fpCtxChart.fillText(tag, midX, tagY + boxH / 2);
       fpCtxChart.textBaseline = 'alphabetic';
     }
+
+    // ── Below-candle buy / sell totals + win-side arrow ─────────────────
+    // Does not overlap footprint cells: placed at bottom of wick or canvas floor
+    try {
+      let buyTot = 0, sellTot = 0;
+      if (c.levels && c.levels.size) {
+        c.levels.forEach(function (lvl) {
+          const b = Number(lvl._b != null ? lvl._b : lvl.bid) || 0;
+          const a = Number(lvl._a != null ? lvl._a : lvl.ask) || 0;
+          sellTot += b; // bid = passive sell / hit bid
+          buyTot  += a; // ask = passive buy / hit ask
+        });
+      }
+      if (buyTot <= 0 && sellTot <= 0) {
+        const tot = Number(c._v) || Number(c.volume) || 0;
+        const dlt = Number(c._d) || Number(c.delta) || 0;
+        if (tot > 0) {
+          buyTot  = Math.max(0, (tot + dlt) / 2);
+          sellTot = Math.max(0, (tot - dlt) / 2);
+        }
+      }
+      if (buyTot > 0 || sellTot > 0) {
+        const fmt = (typeof fmtVol === 'function') ? fmtVol : function (v) {
+          v = Math.abs(v);
+          if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+          if (v >= 1000) return (v / 1000).toFixed(1) + 'k';
+          return String(Math.round(v));
+        };
+        const midX = cx + FP_CANDLE_WIDTH() / 2;
+        const lowY = fpPriceToY(dL);
+        // Sit just under the wick, but never above canvas bottom margin
+        let baseY = Math.min(h - 28, lowY + 14);
+        if (baseY < 20) baseY = Math.min(h - 28, 20);
+        const winBuy = buyTot > sellTot;
+        const winSell = sellTot > buyTot;
+        // Arrow for winning side only
+        if (winBuy || winSell) {
+          fpCtxChart.fillStyle = winBuy ? '#00e676' : '#ff5252';
+          fpCtxChart.beginPath();
+          if (winBuy) {
+            // up arrow
+            fpCtxChart.moveTo(midX, baseY - 10);
+            fpCtxChart.lineTo(midX - 5, baseY - 2);
+            fpCtxChart.lineTo(midX + 5, baseY - 2);
+          } else {
+            // down arrow
+            fpCtxChart.moveTo(midX, baseY - 2);
+            fpCtxChart.lineTo(midX - 5, baseY - 10);
+            fpCtxChart.lineTo(midX + 5, baseY - 10);
+          }
+          fpCtxChart.closePath();
+          fpCtxChart.fill();
+        }
+        // Match footprint cells: LEFT = Sell (red / bid), RIGHT = Buy (green / ask)
+        fpCtxChart.font = 'bold 9px monospace';
+        fpCtxChart.textAlign = 'center';
+        fpCtxChart.textBaseline = 'top';
+        fpCtxChart.fillStyle = '#ff5252';
+        fpCtxChart.fillText(fmt(sellTot), midX - FP_CANDLE_WIDTH() * 0.28, baseY);
+        fpCtxChart.fillStyle = '#00e676';
+        fpCtxChart.fillText(fmt(buyTot), midX + FP_CANDLE_WIDTH() * 0.28, baseY);
+        fpCtxChart.textBaseline = 'alphabetic';
+      }
+    } catch (eVol) {}
   }
 
   // Live price dashed line only (no LIVE text on scale — label is on candle)
@@ -5939,8 +7185,15 @@ function drawFpPriceLadder() {
 function drawFpTable() {
   const dpr = window.devicePixelRatio || 1;
   const w = fpTableCanvas.width / dpr;
-  const h = fpFooterHeight;
-  if (w < 10) return;
+  const h = fpFooterHeight || 96;
+  if (w < 10 || h < 10) return;
+  // Sync live bar metrics before paint
+  try {
+    if (fpCandles.length) {
+      const last = fpCandles[fpCandles.length - 1];
+      if (last && last.isLive) rfFinal(last);
+    }
+  } catch (e) {}
   fpCtxTable.clearRect(0, 0, w, h);
   fpCtxTable.font = '10.5px monospace';
   fpCtxTable.textAlign = 'center';
@@ -5949,20 +7202,28 @@ function drawFpTable() {
   const rowY3 = Math.round(h * 0.63);
   const rowY4 = Math.round(h * 0.85);
 
+  // Same panX + candle width as chart → columns under candles (labels are absolute overlay)
   for (let idx = 0; idx < fpCandles.length; idx++) {
     const c = fpCandles[idx];
     const cx = fpPanX + idx * (FP_CANDLE_WIDTH() + FP_GAP);
     if (cx + FP_CANDLE_WIDTH() < -40 || cx > w + 40) continue;
+    // Skip drawing under the fixed label gutter so values don't collide with "Delta" etc.
+    if (cx + FP_CANDLE_WIDTH() < 58) continue;
     const midX = cx + FP_CANDLE_WIDTH() / 2;
-    const isPos = c.delta >= 0;
+    // Prefer live OKX fields; fall back to rfFinal aliases
+    const dlt = (c._d != null ? c._d : c.delta) || 0;
+    const vol = (c._v != null ? c._v : c.volume) || 0;
+    const cvd = (c._cvd != null ? c._cvd : c.sessionCVD) || 0;
+    const pct = vol ? Math.round((dlt / vol) * 100) : (c.deltaPct || 0);
+    const isPos = dlt >= 0;
     fpCtxTable.fillStyle = isPos ? '#089981' : '#f23645';
-    fpCtxTable.fillText((isPos ? '+' : '') + Math.round(c.delta), midX, rowY1);
+    fpCtxTable.fillText((isPos ? '+' : '') + Math.round(dlt), midX, rowY1);
     fpCtxTable.fillStyle = isPos ? '#34d399' : '#f87171';
-    fpCtxTable.fillText(c.deltaPct + '%', midX, rowY2);
+    fpCtxTable.fillText(pct + '%', midX, rowY2);
     fpCtxTable.fillStyle = '#38bdf8';
-    fpCtxTable.fillText(String(Math.round(c.sessionCVD)), midX, rowY3);
+    fpCtxTable.fillText(String(Math.round(cvd)), midX, rowY3);
     fpCtxTable.fillStyle = '#94a3b8';
-    fpCtxTable.fillText(String(Math.round(c.volume)), midX, rowY4);
+    fpCtxTable.fillText(String(Math.round(vol)), midX, rowY4);
     fpCtxTable.fillStyle = '#1c202b';
     fpCtxTable.fillRect(cx + FP_CANDLE_WIDTH() + 5, 0, 1, h);
   }
@@ -6019,6 +7280,7 @@ function fpTouchMid(t0, t1) {
 
 fpChartCanvas.addEventListener('mousedown', (e) => {
   fpFollowLive = false;
+  _fpUserViewLocked = true; // user is exploring — don't auto-center over them
   try {
     const btn = document.getElementById('fpFollowBtn');
     if (btn) { btn.classList.remove('active'); btn.textContent = 'Free'; }
@@ -6035,15 +7297,21 @@ window.addEventListener('mousemove', (e) => {
   if (!fpIsDragging || fpPinching) return;
   e.preventDefault();
   fpPanX = e.clientX - fpStartX;
+  try { if (!fpIsLiveInView()) { _fpViewingHistory = true; fpUpdateGotoLiveBtn(); } } catch (e) {}
   fpPanY = e.clientY - fpStartY;
 });
 
 window.addEventListener('mouseup', () => {
   fpIsDragging = false;
+  try {
+    if (!fpIsLiveInView()) _fpViewingHistory = true;
+    fpUpdateGotoLiveBtn();
+  } catch (e) {}
   fpPinching = false;
 });
 
 fpChartCanvas.addEventListener('touchstart', (e) => {
+  _fpUserViewLocked = true;
   e.preventDefault();
   if (e.touches.length === 1) {
     fpIsDragging = true;
@@ -6089,6 +7357,10 @@ function fpEndTouch(e) {
   if (!e.touches || e.touches.length === 0) {
     fpIsDragging = false;
     fpPinching = false;
+    try {
+      if (!fpIsLiveInView()) _fpViewingHistory = true;
+      fpUpdateGotoLiveBtn();
+    } catch (err) {}
   } else if (e.touches.length === 1) {
     fpPinching = false;
     fpIsDragging = true;
@@ -6336,8 +7608,13 @@ function paintLiveUI() {
     recalculateMetricsInstant();
     updateLiveButtonStatus();
     updateMarketClosedBanner();
-    // CRITICAL: keep Footprint price in lock-step with main interbank feed
-    syncLivePriceToFootprint();
+    // Footprint = OKX only. Sync only when footprint is visible; never push interbank.
+    try {
+      const modal = document.getElementById('footprintModal');
+      const fpOpen = modal && modal.style.display === 'flex';
+      const docked = (typeof _acvFpDocked !== 'undefined' && _acvFpDocked);
+      if (fpOpen || docked) syncLivePriceToFootprint();
+    } catch (e2) {}
   } catch (e) {}
 }
 
@@ -6894,6 +8171,134 @@ function rfHistoryLimit(tfMin) {
   return 90;                   // 90 minutes of 1m
 }
 
+/**
+ * Fill missing TF slots so history is continuous (no skipped candles).
+ * Synthetic bars use neighbor OHLC bridge so the chart never has holes.
+ */
+function fpFillBarGaps(bars, tfMin) {
+  if (!bars || bars.length < 2) return bars || [];
+  const ms = (tfMin || fpTfMinutes || 5) * 60000;
+  const sorted = bars.slice().sort(function (a, b) {
+    return (a.barSlot || a.time || 0) - (b.barSlot || b.time || 0);
+  });
+  // Dedupe same slot (keep richer / real volume)
+  const bySlot = new Map();
+  for (let i = 0; i < sorted.length; i++) {
+    const c = sorted[i];
+    const s = c.barSlot || c.time;
+    if (!(s > 0)) continue;
+    // Drop pure fake gap-fill shells if a real bar exists later
+    if (c._gapFill && (Number(c._v) || 0) <= 1) {
+      // keep only if nothing better yet
+    }
+    const prev = bySlot.get(s);
+    if (!prev || ((c._v || 0) > (prev._v || 0)) || ((c.levels && c.levels.size) > (prev.levels && prev.levels.size || 0))) {
+      bySlot.set(s, c);
+    }
+  }
+  const keys = [...bySlot.keys()].sort(function (a, b) { return a - b; });
+  if (keys.length < 2) return keys.map(function (k) { return bySlot.get(k); });
+
+  const out = [];
+  let cvd = 0;
+  const MAX_GAP_BARS = 2; // only bridge tiny holes — never invent long fake history
+  for (let i = 0; i < keys.length; i++) {
+    const s = keys[i];
+    const cur = bySlot.get(s);
+    if (i > 0) {
+      const prevS = keys[i - 1];
+      const missing = Math.round((s - prevS) / ms) - 1;
+      // Only fill if 1–2 bars missing (network hiccup). Larger gaps = real missing data — leave hole.
+      if (missing > 0 && missing <= MAX_GAP_BARS) {
+        for (let gap = prevS + ms; gap < s; gap += ms) {
+          if (bySlot.has(gap)) continue;
+          const left = bySlot.get(prevS);
+          const right = cur;
+          const px = (right && right.open > 500) ? right.open
+            : (left && left.close > 500 ? left.close : 0);
+          if (!(px > 500)) continue;
+          // Bridge OHLC only — NO fake volume cells (those showed as 0.5/0.5 boxes)
+          out.push({
+            time: gap, barSlot: gap, closeTime: gap + ms,
+            open: px, high: px, low: px, close: px,
+            levels: new Map(), pocPrice: 0,
+            _d: 0, _v: 0, _cvd: cvd,
+            volume: 0, delta: 0, isLive: false,
+            _gapFill: true
+          });
+        }
+      }
+    }
+    // Skip pure fake shells that have no real volume when a real series exists
+    if (cur._gapFill && (Number(cur._v) || 0) <= 1 && !cur.isLive) {
+      // still include for continuity of time axis only if tiny gap — already handled
+      // if this key itself is a stale fake from older build, drop it when neighbors are real
+      const hasRealNeighbors = keys.some(function (k) {
+        const b = bySlot.get(k);
+        return b && !b._gapFill && (Number(b._v) || 0) > 1;
+      });
+      if (hasRealNeighbors) {
+        // drop this fake slot from display
+        continue;
+      }
+    }
+    cvd = (cur._cvd != null) ? cur._cvd : (cvd + (cur._d || 0));
+    cur._cvd = cvd;
+    out.push(cur);
+  }
+  return out;
+}
+
+/** Merge candle series by barSlot — never drop richer OKX history for a thin rebuild. */
+function fpMergeCandles(existing, incoming, tfMin) {
+  const by = new Map();
+  function richer(a, b) {
+    if (!a) return b;
+    if (!b) return a;
+    const av = Number(a._v) || 0, bv = Number(b._v) || 0;
+    const al = (a.levels && a.levels.size) || 0;
+    const bl = (b.levels && b.levels.size) || 0;
+    // Prefer real OKX / trade-backed over gap-fill shells
+    const aReal = !a._gapFill && (av > 1 || al > 0 || a._okxVol > 0 || a._okxReal);
+    const bReal = !b._gapFill && (bv > 1 || bl > 0 || b._okxVol > 0 || b._okxReal);
+    if (aReal && !bReal) return a;
+    if (bReal && !aReal) return b;
+    if (al !== bl) return al >= bl ? a : b;
+    if (av !== bv) return av >= bv ? a : b;
+    // Prefer wider OHLC range (more complete bar)
+    const ar = Math.abs((a.high || 0) - (a.low || 0));
+    const br = Math.abs((b.high || 0) - (b.low || 0));
+    if (ar !== br) return ar >= br ? a : b;
+    return b; // newer wins on tie
+  }
+  function add(list) {
+    if (!list) return;
+    for (let i = 0; i < list.length; i++) {
+      const c = list[i];
+      if (!c) continue;
+      const s = c.barSlot || c.time;
+      if (!(s > 0)) continue;
+      by.set(s, richer(by.get(s), c));
+    }
+  }
+  add(existing);
+  add(incoming);
+  let out = [...by.values()].sort(function (a, b) {
+    return (a.barSlot || 0) - (b.barSlot || 0);
+  });
+  try { out = fpFillBarGaps(out, tfMin || fpTfMinutes || 5) || out; } catch (e) {}
+  // Recompute CVD sequentially
+  let cvd = 0;
+  for (let i = 0; i < out.length; i++) {
+    cvd += Number(out[i]._d) || 0;
+    out[i]._cvd = cvd;
+  }
+  // Cap depth
+  if (out.length > 120) out = out.slice(-120);
+  return out;
+}
+
+
 const RF_BASE = 10;
 const RF_KEEP_MS = 24 * 3600000;
 const rfStore = new Map();
@@ -7105,59 +8510,13 @@ function fpClearFreezeTF(tf) {
   }
 }
 
-// Fetch real OHLC history for the footprint timeframe (SAME API as main gold chart)
+// Footprint does NOT use interbank OHLC. Kept as no-op so callers don't break.
+// All footprint candles come from OKX (fpLoadOkxFootprint / rfStore trades).
 async function fetchFpRealHistory(minutes) {
-  if (fpRealLoading) return;
-  fpRealLoading = true;
-  const interval = minutes + 'm';
-  try {
-    // Identical interbank source + limit style as main chart
-    const data = await fetchJson(`https://biquote.io/api/XAUUSD/ohlc?interval=${interval}&limit=200`);
-    let bars = (data && data.bars) ? data.bars.slice() : [];
-    if (bars.length > 1 && new Date(bars[0].openTime) > new Date(bars[bars.length - 1].openTime)) bars.reverse();
-    const ms = minutes * 60000;
-    const nowSlot = Math.floor(Date.now() / ms) * ms;
-    fpRealHistory = bars.map(b => {
-      const t = new Date(b.openTime || b.time || b.t).getTime();
-      const slot = Math.floor(t / ms) * ms;
-      return {
-        barSlot: slot,
-        openTime: slot,
-        closeTime: slot + ms,
-        o: +b.open || +b.o,
-        h: +b.high || +b.h,
-        l: +b.low || +b.l,
-        c: +b.close || +b.c
-      };
-    }).filter(b => b.o > 500 && b.barSlot > 0);
-    if (fpRealHistory.length > 150) fpRealHistory = fpRealHistory.slice(-150);
-
-    // Soft-seed OHLC only — never force-wipe volume levels
-    for (let i = 0; i < fpRealHistory.length; i++) {
-      const rc = fpRealHistory[i];
-      if (rc.barSlot < nowSlot) {
-        const existing = fpGetFrozen(minutes, rc.barSlot);
-        if (!existing) {
-          fpFreezeBar(minutes, rc.barSlot, rc.o, rc.h, rc.l, rc.c, false);
-        } else if (!(existing.o > 500)) {
-          fpFreezeBar(minutes, rc.barSlot, rc.o, rc.h, rc.l, rc.c, true);
-        }
-      }
-    }
-  } catch (e) {
-    // fallback: main chart history (same interbank OHLC)
-    if (typeof candleHistory !== 'undefined' && candleHistory.length) {
-      const ms = minutes * 60000;
-      fpRealHistory = candleHistory.slice(-80).map(b => ({
-        barSlot: b.barSlot || Math.floor((b.openTime || 0) / ms) * ms,
-        openTime: b.barSlot || b.openTime,
-        closeTime: (b.barSlot || b.openTime) + ms,
-        o: +b.o, h: +b.h, l: +b.l, c: +b.c
-      })).filter(b => b.o > 500);
-    }
-  } finally {
-    fpRealLoading = false;
-  }
+  // Intentionally empty — interbank freeze was overplotting OKX prices ($ flash).
+  fpRealHistory = [];
+  fpRealLoading = false;
+  return;
 }
 
 fpCandles = [];
@@ -7313,12 +8672,15 @@ function rfBuild(min) {
     volBySlot.get(t).push(rfStore.get(s));
   }
 
-  // Also accept OKX bars previously written by fpLoadOkxFootprint (_okxReal)
-  // Prefer store OHLC when present
+  // Only REAL store slots (+ live). Do NOT invent empty continuous bars
+  // (that produced walls of 0.5/0.5 fake cells on the chart).
   const allSlots = new Set([...volBySlot.keys()]);
   const nowSlot = Math.floor(Date.now() / ms) * ms;
   allSlots.add(nowSlot);
-  const gKeys = [...allSlots].sort((a, b) => a - b);
+  let gKeys = [...allSlots].sort((a, b) => a - b);
+  // Keep last N real bars only
+  const maxBars = (min >= 60) ? 60 : (min >= 15) ? 80 : (min >= 5) ? 96 : 120;
+  if (gKeys.length > maxBars) gKeys = gKeys.slice(-maxBars);
 
   let cvd = 0;
   const out = [];
@@ -7374,7 +8736,17 @@ function rfBuild(min) {
       }
     }
 
-    if (!(o > 500) || !(c_ > 500)) continue;
+    // No OHLC in store for this slot → bridge from previous out bar (no skip holes)
+    if (!(o > 500) || !(c_ > 500)) {
+      if (out.length && out[out.length - 1].close > 500) {
+        const px = out[out.length - 1].close;
+        o = c_ = h = l = px;
+      } else if (fpLivePrice > 500 && isLast) {
+        o = c_ = h = l = fpLivePrice;
+      } else {
+        continue; // nothing to bridge yet
+      }
+    }
     h = Math.max(h || o, o, c_);
     l = Math.min(l || o, o, c_);
 
@@ -7412,6 +8784,8 @@ function rfBuild(min) {
       }
     }
 
+    // Leave levels empty when no real volume — chart draws wick/body only (no fake 0.5 cells)
+
     cvd += c._d;
     c._cvd = cvd;
     try { rfFinal(c); } catch (e) {}
@@ -7432,12 +8806,13 @@ function rfBuild(min) {
     out.push(c);
   }
 
-  return out.slice(-90);
+  return out.slice(-120);
 }
 
 function rfAnchor() {
-  if (!fpFollowLive || fpIsDragging) return;
-  fpPanX = fpChartCanvas.width / (window.devicePixelRatio || 1) - fpCandles.length * (FP_CANDLE_WIDTH() + FP_GAP) - 40;
+  // Deprecated follow-yank: keep user pan/zoom. Only ensure newest candle stays in frame.
+  if (fpIsDragging) return;
+  try { ensureLivePriceVisible(); } catch (e) {}
 }
 
 
@@ -7470,7 +8845,7 @@ async function fpLoadOkxFootprint(tfMin, limit) {
 
   // OKX returns newest first — reverse to oldest→newest
   const bars = rows.slice().reverse();
-  const out = [];
+  let out = [];
   let cvd = 0;
 
   for (let i = 0; i < bars.length; i++) {
@@ -7519,13 +8894,22 @@ async function fpLoadOkxFootprint(tfMin, limit) {
             if (Array.isArray(v)) { sell = Number(v[0]) || 0; buy = Number(v[1]) || 0; }
             else if (v) { sell = Number(v._b || v.bid || 0); buy = Number(v._a || v.ask || 0); }
             if (sell + buy <= 0) return;
-            // Map into this candle's high-low
+            // Map into candle range, but clamp to body±maxSpan (avoid tall wick columns)
             let px = pk;
             if (okxHi > okxLo + 0.01 && (pk < l - 0.5 || pk > h + 0.5)) {
               const t = Math.max(0, Math.min(1, (pk - okxLo) / (okxHi - okxLo)));
               px = l + t * (h - l);
             }
             px = Math.max(l, Math.min(h, px));
+            {
+              const bodyLo = Math.min(o, c), bodyHi = Math.max(o, c);
+              const maxSpan = (tfMin >= 60) ? 12 : (tfMin >= 15) ? 6 : (tfMin >= 5) ? 4.5 : 2.5;
+              const mid = (bodyLo + bodyHi) / 2;
+              const loB = Math.max(l, mid - maxSpan / 2);
+              const hiB = Math.min(h, mid + maxSpan / 2);
+              if (px < loB) px = loB;
+              if (px > hiB) px = hiB;
+            }
             const k = (typeof rfKey === 'function') ? rfKey(px) : +px.toFixed(2);
             const cell = levels.get(k) || levels.set(k, { _b: 0, _a: 0, bid: 0, ask: 0 }).get(k);
             cell._b += sell; cell._a += buy; cell.bid = cell._b; cell.ask = cell._a;
@@ -7538,10 +8922,29 @@ async function fpLoadOkxFootprint(tfMin, limit) {
       }
     } catch (e) {}
 
-    // No real trades → distribute OKX candle volume across high-low (REAL total volume)
+    // No real trades → distribute volume across BODY (± pad), not full wick.
+    // Full-wick fill created tall "misfire" columns when OKX had a long spike.
     if (!levels.size && vol > 0) {
-      const steps = Math.max(6, Math.min(20, Math.round(range / (FP_TICK_SIZE || 0.2)) + 1));
-      const closeBias = (c - l) / Math.max(range, 0.01);
+      const bodyLo = Math.min(o, c);
+      const bodyHi = Math.max(o, c);
+      const bodyRange = Math.max(bodyHi - bodyLo, FP_TICK_SIZE || 0.2);
+      // Cap vertical cell span so one bar never paints a giant column
+      const maxSpan = (tfMin >= 60) ? 12 : (tfMin >= 15) ? 6 : (tfMin >= 5) ? 4 : 2.5;
+      const pad = Math.min(bodyRange * 0.35, maxSpan * 0.25);
+      let distLo = bodyLo - pad;
+      let distHi = bodyHi + pad;
+      // Keep inside actual OHLC
+      distLo = Math.max(l, distLo);
+      distHi = Math.min(h, distHi);
+      // If wick still huge, compress to centered maxSpan
+      if (distHi - distLo > maxSpan) {
+        const mid = (bodyLo + bodyHi) / 2;
+        distLo = Math.max(l, mid - maxSpan / 2);
+        distHi = Math.min(h, mid + maxSpan / 2);
+      }
+      const distRange = Math.max(distHi - distLo, FP_TICK_SIZE || 0.2);
+      const steps = Math.max(4, Math.min(14, Math.round(distRange / (FP_TICK_SIZE || 0.2)) + 1));
+      const closeBias = (c - distLo) / Math.max(distRange, 0.01);
       let wSum = 0;
       const weights = [];
       for (let s = 0; s < steps; s++) {
@@ -7551,7 +8954,7 @@ async function fpLoadOkxFootprint(tfMin, limit) {
         wSum += w;
       }
       for (let s = 0; s < steps; s++) {
-        const px = l + range * (s / Math.max(1, steps - 1));
+        const px = distLo + distRange * (s / Math.max(1, steps - 1));
         const part = vol * (weights[s] / wSum);
         const k = (typeof rfKey === 'function') ? rfKey(px) : +px.toFixed(2);
         levels.set(k, {
@@ -7580,12 +8983,18 @@ async function fpLoadOkxFootprint(tfMin, limit) {
       _d = vol * (2 * buyShare - 1);
       poc = mid;
     }
-    // NEVER skip a valid OHLC bar without footprint data — minimal cells if vol was 0
+    // NEVER skip a valid OHLC bar — minimal cells near BODY only (not full wick)
     if (!levels.size) {
-      const steps = Math.max(4, Math.min(10, Math.round(range / (FP_TICK_SIZE || 0.2)) + 1));
-      const fallbackVol = Math.max(vol, 1); // at least 1 so cells render
+      const bodyLo = Math.min(o, c), bodyHi = Math.max(o, c);
+      const maxSpan = (tfMin >= 60) ? 12 : (tfMin >= 15) ? 6 : (tfMin >= 5) ? 4 : 2.5;
+      const mid = (bodyLo + bodyHi) / 2;
+      const dLo = Math.max(l, mid - maxSpan / 2);
+      const dHi = Math.min(h, mid + maxSpan / 2);
+      const dRange = Math.max(dHi - dLo, FP_TICK_SIZE || 0.2);
+      const steps = Math.max(3, Math.min(8, Math.round(dRange / (FP_TICK_SIZE || 0.2)) + 1));
+      const fallbackVol = Math.max(vol, 1);
       for (let s = 0; s < steps; s++) {
-        const px = l + range * (s / Math.max(1, steps - 1));
+        const px = dLo + dRange * (s / Math.max(1, steps - 1));
         const part = fallbackVol / steps;
         const k = (typeof rfKey === 'function') ? rfKey(px) : +px.toFixed(2);
         levels.set(k, {
@@ -7597,7 +9006,7 @@ async function fpLoadOkxFootprint(tfMin, limit) {
       }
       _v = fallbackVol;
       _d = fallbackVol * (2 * buyShare - 1);
-      poc = (typeof rfKey === 'function') ? rfKey((h + l) / 2) : +((h + l) / 2).toFixed(2);
+      poc = (typeof rfKey === 'function') ? rfKey(mid) : +mid.toFixed(2);
     }
 
     cvd += _d;
@@ -7610,6 +9019,7 @@ async function fpLoadOkxFootprint(tfMin, limit) {
       volume: _v, delta: _d,
       isLive: isLive,
       _okxVol: vol,
+      _okxReal: true,
       _fromTrades: fromTrades
     };
     // Keep pure OKX prices — do NOT inject interbank (causes vertical gap vs cells)
@@ -7631,13 +9041,92 @@ async function fpLoadOkxFootprint(tfMin, limit) {
 
   if (!out.length) return 0;
 
-  fpCandles = out;
+  // Fill any skipped OKX slots so history is continuous on chart
+  try {
+    const filled = fpFillBarGaps(out, tfMin);
+    if (filled && filled.length) out = filled;
+  } catch (e) {}
+
+  // Avoid blank flash: only replace if we have real bars
+  if (out && out.length) {
+    // Preserve live mid-bar ticks if same TF and same live slot
+    try {
+      const msL = tfMin * 60000;
+      const liveS = Math.floor(Date.now() / msL) * msL;
+      const prevLive = (fpCandles || []).find(function (c) { return c && c.barSlot === liveS && c.levels && c.levels.size; });
+      if (prevLive) {
+        for (let i = 0; i < out.length; i++) {
+          if (out[i].barSlot === liveS) {
+            if (!out[i].levels || out[i].levels.size === 0 || (prevLive._v || 0) > (out[i]._v || 0)) {
+              out[i].levels = prevLive.levels;
+              out[i]._d = prevLive._d; out[i]._v = prevLive._v; out[i]._cvd = prevLive._cvd;
+              out[i].pocPrice = prevLive.pocPrice || out[i].pocPrice;
+              out[i].isLive = true;
+            }
+            break;
+          }
+        }
+      }
+    } catch (e) {}
+    // Ensure live slot exists at the end
+    try {
+      const msL = tfMin * 60000;
+      const liveS = Math.floor(Date.now() / msL) * msL;
+      const last = out[out.length - 1];
+      if (!last || last.barSlot < liveS) {
+        const px = (fpLivePrice > 500) ? fpLivePrice : (last && last.close > 500 ? last.close : 0);
+        if (px > 500) {
+          out.push({
+            time: liveS, barSlot: liveS, closeTime: liveS + msL,
+            open: px, high: px, low: px, close: px,
+            levels: new Map(), pocPrice: 0,
+            _d: 0, _v: 0, _cvd: last ? (last._cvd || 0) : 0,
+            volume: 0, delta: 0, isLive: true
+          });
+        }
+      } else if (last.barSlot === liveS) {
+        last.isLive = true;
+      }
+    } catch (e) {}
+    try {
+      // Prefer pure OKX series; drop previous fake gap-fill shells
+      const prev = (fpCandles && fpCandles.length && fpTfMinutes === tfMin)
+        ? fpCandles.filter(function (c) {
+            return c && !c._gapFill && ((Number(c._v) || 0) > 1 || (c.levels && c.levels.size > 1) || c._okxReal || c.isLive);
+          })
+        : [];
+      fpCandles = fpMergeCandles(prev, out, tfMin);
+      // Final pass: remove any remaining 0.5-volume fakes if we have real bars
+      const realCount = fpCandles.filter(function (c) {
+        return c && ((Number(c._v) || 0) > 1 || c._okxVol > 0 || c._okxReal);
+      }).length;
+      if (realCount >= 3) {
+        fpCandles = fpCandles.filter(function (c) {
+          if (!c) return false;
+          if (c.isLive) return true;
+          if (c._gapFill && (Number(c._v) || 0) <= 1) return false;
+          return true;
+        });
+      }
+    } catch (e) {
+      fpCandles = out;
+    }
+  }
   fpTfMinutes = tfMin;
-  if (out.length) fpLivePrice = out[out.length - 1].close;
+  if (fpCandles.length) fpLivePrice = fpCandles[fpCandles.length - 1].close;
 
   try { if (rfWait) rfWait.style.display = 'none'; } catch (e) {}
   try { resizeFpCanvases(); } catch (e) {}
-  try { autoCenterFp(); } catch (e) {}
+  // After OKX history arrives: always pin live unless user has manually panned this session
+  try {
+    if (_fpUserViewLocked && _fpViewingHistory) {
+      ensureLivePriceVisible();
+    } else {
+      _fpViewingHistory = false;
+      autoCenterFp();
+      fpSnapToLiveCandle();
+    }
+  } catch (e) {}
   try { rfAnchor(); } catch (e) {}
   try { scheduleFpRedraw(); } catch (e) {}
   try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
@@ -7648,6 +9137,15 @@ async function fpLoadOkxFootprint(tfMin, limit) {
   try {
     rfStatus('OKX LIVE', '#10b981',
       out.length + ' bars · last vol ' + (lastVol >= 1000 ? (Math.round(lastVol / 1000) + 'k') : lastVol));
+  } catch (e) {}
+  // Drop any stale interbank-only freezes so OKX prices stay authoritative
+  try {
+    const prefix = tfMin + '_';
+    for (const k of [...fpFrozenOHLC.keys()]) {
+      if (!k.startsWith(prefix)) continue;
+      const fr = fpFrozenOHLC.get(k);
+      if (fr && !fr.fromLiveClose && !(fr._v > 1)) fpFrozenOHLC.delete(k);
+    }
   } catch (e) {}
   console.log('[FP] OKX footprint loaded', out.length, 'bars TF', tfMin + 'm');
   try { fpUpdateGapBadge(); } catch (e) {}
@@ -7663,17 +9161,24 @@ function fpSeedInstantCandles() {
     const ms = min * 60000;
     const nowSlot = Math.floor(Date.now() / ms) * ms;
     const built = rfBuild(min);
+    const prev = (fpCandles && fpCandles.length) ? fpCandles.slice() : [];
     if (built && built.length) {
-      fpCandles = built;
+      try {
+        fpCandles = fpMergeCandles(prev, built, min);
+      } catch (e) {
+        fpCandles = built;
+      }
       const last = fpCandles[fpCandles.length - 1];
       if (last && last.close > 500) fpLivePrice = last.close;
-    } else if (fpLivePrice > 500) {
+    } else if (fpLivePrice > 500 && !prev.length) {
       // empty store — single live shell at OKX price so canvas is not blank
       fpCandles = [{
         time: nowSlot, barSlot: nowSlot, closeTime: nowSlot + ms,
         open: fpLivePrice, high: fpLivePrice, low: fpLivePrice, close: fpLivePrice,
         levels: new Map(), pocPrice: 0, _d: 0, _v: 0, _cvd: 0, isLive: true
       }];
+    } else if (prev.length) {
+      fpCandles = prev; // keep what we already had
     }
     try {
       if (rfWait) {
@@ -7726,24 +9231,17 @@ async function fpSeedOkxCandleVolume(tfMin, nBars) {
       let cVol = volContracts > 0 ? volContracts : volCcy;
       if (!(cVol > 0) || !(o > 500)) continue;
 
-      // Interbank OHLC if frozen / history available, else OKX OHLC
-      const fr = fpGetFrozen(tfMin, slot);
-      let lo = (fr && fr.l > 500) ? +fr.l : Math.min(o, h, l, c);
-      let hi = (fr && fr.h > 500) ? +fr.h : Math.max(o, h, l, c);
-      let open = (fr && fr.o > 500) ? +fr.o : o;
-      let close = (fr && fr.c > 500) ? +fr.c : c;
-      // Also prefer interbank from fpRealHistory
+      // OKX OHLC ONLY — never prefer interbank freeze / fpRealHistory (causes $ flash)
+      let lo = Math.min(o, h, l, c);
+      let hi = Math.max(o, h, l, c);
+      let open = o;
+      let close = c;
+      // Only restore levels from a bar that was closed while LIVE on footprint (OKX trades)
       try {
-        if (fpRealHistory && fpRealHistory.length) {
-          for (let r = 0; r < fpRealHistory.length; r++) {
-            if (fpRealHistory[r].barSlot === slot && +fpRealHistory[r].o > 500) {
-              open = +fpRealHistory[r].o;
-              hi = +fpRealHistory[r].h;
-              lo = +fpRealHistory[r].l;
-              close = +fpRealHistory[r].c;
-              break;
-            }
-          }
+        const fr = fpGetFrozen(tfMin, slot);
+        if (fr && fr.fromLiveClose && fr.o > 500) {
+          // Keep OKX shape from live close, not interbank
+          open = +fr.o; hi = +fr.h; lo = +fr.l; close = +fr.c;
         }
       } catch (e) {}
 
@@ -7846,6 +9344,68 @@ async function fpSeedOkxCandleVolume(tfMin, nBars) {
 }
 
 
+
+/** Append new live bar without wiping existing footprint (prevents blank flash). */
+function rfSoftRollNewBar() {
+  const ms = (fpTfMinutes || 5) * 60000;
+  const nowSlot = Math.floor(Date.now() / ms) * ms;
+  if (!fpCandles || !fpCandles.length) {
+    try { rfRebuild(); } catch (e) {}
+    return;
+  }
+  let last = fpCandles[fpCandles.length - 1];
+  if (last && last.barSlot === nowSlot) return;
+
+  // Freeze closed bar volume so rebuilds can restore it
+  if (last && last.barSlot && last.barSlot < nowSlot) {
+    try {
+      if (last.levels && last.levels.size > 0) {
+        fpFreezeBar(fpTfMinutes, last.barSlot, last.open, last.high, last.low, last.close,
+          true, last.levels, last.pocPrice, last._d, last._v, last._cvd);
+      }
+    } catch (e) {}
+    last.isLive = false;
+  }
+
+  const px = (fpLivePrice > 500) ? fpLivePrice
+    : (last && last.close > 500 ? last.close : 0);
+  if (!(px > 500)) return;
+
+  // If only 1 bar was skipped, add a silent OHLC bridge (no fake volume cells).
+  // Larger skips: leave hole — real OKX history will fill on next load/refresh.
+  if (last && last.barSlot && last.barSlot + ms < nowSlot) {
+    const missing = Math.round((nowSlot - last.barSlot) / ms) - 1;
+    if (missing > 0 && missing <= 2) {
+      for (let gap = last.barSlot + ms; gap < nowSlot; gap += ms) {
+        const bridgePx = last.close > 500 ? last.close : px;
+        fpCandles.push({
+          time: gap, barSlot: gap, closeTime: gap + ms,
+          open: bridgePx, high: bridgePx, low: bridgePx, close: bridgePx,
+          levels: new Map(), pocPrice: 0,
+          _d: 0, _v: 0, _cvd: last._cvd || 0,
+          volume: 0, delta: 0, isLive: false, _gapFill: true
+        });
+      }
+    }
+  }
+
+  const shell = {
+    time: nowSlot, barSlot: nowSlot, closeTime: nowSlot + ms,
+    open: px, high: px, low: px, close: px,
+    levels: new Map(), pocPrice: 0,
+    _d: 0, _v: 0, _cvd: last ? (last._cvd || 0) : 0,
+    volume: 0, delta: 0, isLive: true
+  };
+  try { rfFinal(shell); } catch (e) {}
+  fpCandles.push(shell);
+  // Keep more history so skips are less likely when scrolling back
+  if (fpCandles.length > 120) fpCandles = fpCandles.slice(-120);
+
+  // Keep newest candle in frame only — do NOT autoCenter / reset zoom
+  try { ensureLivePriceVisible(); } catch (e) {}
+  try { scheduleFpRedraw(); } catch (e) {}
+}
+
 function rfRebuild() {
   // SIMPLE rebuild: interbank OHLC + OKX volume from store. No hard lock on live bar.
   const nowMs = fpTfMinutes * 60000;
@@ -7870,7 +9430,30 @@ function rfRebuild() {
     }
   }
 
-  fpCandles = rfBuild(fpTfMinutes);
+  const prevSnap = fpCandles && fpCandles.length ? fpCandles.slice() : [];
+  let built = [];
+  try { built = rfBuild(fpTfMinutes) || []; } catch (e) { built = []; }
+
+  // Never blank the chart: if rebuild is empty/thin, keep previous candles and soft-roll live bar
+  if (!built.length || (prevSnap.length >= 3 && built.length < Math.max(2, prevSnap.length * 0.4))) {
+    if (prevSnap.length) {
+      fpCandles = prevSnap;
+      try { rfSoftRollNewBar(); } catch (e) {}
+      try { rfWait.style.display = 'none'; } catch (e) {}
+      try { scheduleFpRedraw(); } catch (e) {}
+      return;
+    }
+  }
+  // Continuous history — fill holes, then MERGE with existing so OKX history is not wiped
+  try {
+    const filled = fpFillBarGaps(built, fpTfMinutes);
+    if (filled && filled.length) built = filled;
+  } catch (e) {}
+  try {
+    fpCandles = fpMergeCandles(prevSnap, built, fpTfMinutes);
+  } catch (e) {
+    fpCandles = (built && built.length) ? built : prevSnap;
+  }
   try { rfWait.style.display = fpCandles.length ? 'none' : 'flex'; } catch (e) {}
   if (!fpCandles.length) {
     try { scheduleFpRedraw(); } catch (e) {}
@@ -7904,27 +9487,28 @@ function rfRebuild() {
     }
     c.isLive = false;
     const fr = fpGetFrozen(fpTfMinutes, c.barSlot);
-    if (fr) {
+    // ONLY apply freeze when bar was closed from LIVE OKX footprint — never interbank-only freeze
+    if (fr && fr.fromLiveClose) {
       if (fr.o > 500) { c.open = fr.o; c.high = fr.h; c.low = fr.l; c.close = fr.c; }
-      // Closed-from-live: ALWAYS restore exact levels that were on the live candle
-      if (fr.fromLiveClose && fr.levels && fr.levels.size > 0) {
+      if (fr.levels && fr.levels.size > 0) {
         c.levels = fpCloneLevels(fr.levels);
         c.pocPrice = fr.pocPrice || 0;
         c._d = fr._d || 0;
         c._v = fr._v || 0;
         c._cvd = fr._cvd || 0;
         rfFinal(c);
-      } else if ((!c.levels || c.levels.size === 0 || !(c._v > 0)) && fr.levels && fr.levels.size > 0) {
-        c.levels = fpCloneLevels(fr.levels);
-        c.pocPrice = fr.pocPrice || 0;
-        c._d = fr._d || 0;
-        c._v = fr._v || 0;
-        c._cvd = fr._cvd || 0;
-        rfFinal(c);
-      } else if (c.levels && c.levels.size > 0 && (c._v || 0) > 0 && !fr.fromLiveClose) {
-        fpFreezeBar(fpTfMinutes, c.barSlot, c.open, c.high, c.low, c.close,
-          false, c.levels, c.pocPrice, c._d, c._v, c._cvd);
       }
+    } else if (fr && (!c.levels || c.levels.size === 0 || !(c._v > 0)) && fr.levels && fr.levels.size > 0 && (fr._v || 0) > 1) {
+      // Levels-only restore (volume), keep current OKX OHLC shape
+      c.levels = fpCloneLevels(fr.levels);
+      c.pocPrice = fr.pocPrice || 0;
+      c._d = fr._d || 0;
+      c._v = fr._v || 0;
+      c._cvd = fr._cvd || 0;
+      rfFinal(c);
+    } else if (c.levels && c.levels.size > 0 && (c._v || 0) > 0) {
+      fpFreezeBar(fpTfMinutes, c.barSlot, c.open, c.high, c.low, c.close,
+        false, c.levels, c.pocPrice, c._d, c._v, c._cvd);
     }
   }
   // Keep live price + view in sync (OKX only)
@@ -7932,7 +9516,9 @@ function rfRebuild() {
     const last = fpCandles[fpCandles.length - 1];
     if (last && last.close > 500) fpLivePrice = last.close;
   }
-  if (!fpViewCenter) autoCenterFp();
+  // Only auto-center if user has not adjusted the view
+  if (!fpViewCenter && !_fpUserViewLocked && !_fpViewingHistory) autoCenterFp();
+  else try { ensureLivePriceVisible(); } catch (e) {}
   try { rfAnchor(); } catch (e) {}
   try { scheduleFpRedraw(); } catch (e) {}
 }
@@ -7945,7 +9531,9 @@ function scheduleFpRedraw() {
     window._fpRedrawPending = false;
     try {
       const modal = document.getElementById('footprintModal');
-      if (modal && modal.style.display === 'flex') {
+      const fullOpen = modal && modal.style.display === 'flex';
+      const docked = (typeof _acvFpDocked !== 'undefined' && _acvFpDocked);
+      if (fullOpen || docked) {
         drawFpChart();
         drawFpPriceLadder();
         drawFpTable();
@@ -8106,11 +9694,25 @@ function rfIngest(p, q, buy, ts, id) {
   }
   _rfLastBarSlot = nowSlot;
 
-  // Ensure live candle exists for current slot
+  // Ensure live candle exists for current slot — soft-roll, do NOT wipe history
   let a = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
   if (!a || a.barSlot !== nowSlot) {
-    rfRebuild();
+    try { rfSoftRollNewBar(); } catch (e) {
+      try { rfRebuild(); } catch (e2) {}
+    }
     a = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
+    // If soft-roll still missed the slot, append a shell without rebuilding history
+    if ((!a || a.barSlot !== nowSlot) && fpLivePrice > 500) {
+      const shell = {
+        time: nowSlot, barSlot: nowSlot, closeTime: nowSlot + ms,
+        open: fpLivePrice, high: fpLivePrice, low: fpLivePrice, close: fpLivePrice,
+        levels: new Map(), pocPrice: 0, _d: 0, _v: 0,
+        _cvd: a ? (a._cvd || 0) : 0, volume: 0, delta: 0, isLive: true
+      };
+      if (a && a.barSlot < nowSlot) a.isLive = false;
+      fpCandles.push(shell);
+      a = shell;
+    }
   }
   // Force current slot candle live (rebuild can occasionally leave isLive false)
   if (a && a.barSlot === nowSlot) {
@@ -8369,13 +9971,16 @@ async function rfFetchOkx(url) {
       return null;
     }
   }
-  // 1) Direct OKX (works — verified CORS)
-  var d = await tryUrl(url, 4000);
+  // 1) Direct OKX (works — verified CORS). Longer timeout for mobile networks.
+  var d = await tryUrl(url, 12000);
   if (d && d.length) return d;
-  // 2) One proxy fallback only
-  d = await tryUrl('https://corsproxy.io/?' + encodeURIComponent(url), 4000);
+  // retry direct once
+  d = await tryUrl(url, 12000);
   if (d && d.length) return d;
-  d = await tryUrl('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), 4000);
+  // 2) Proxy fallbacks
+  d = await tryUrl('https://corsproxy.io/?' + encodeURIComponent(url), 12000);
+  if (d && d.length) return d;
+  d = await tryUrl('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), 12000);
   if (d && d.length) return d;
   return [];
 }
@@ -8748,7 +10353,7 @@ async function rfDeepFillFootprint(hours) {
       if (r && r.count) cnt += r.count;
     } catch (e1) {}
 
-    // 3) Attach OKX candle VOLUME onto INTERBANK bars only (never OKX prices for shape)
+    // 3) DISABLED: interbank shape + OKX volume caused price flash. Use OKX OHLC only via fpLoadOkxFootprint.
     try {
       const url = (RF_SOURCE.restCandles || 'https://www.okx.com/api/v5/market/history-candles?instId=XAU-USDT-SWAP')
         + '&bar=' + tfMin + 'm&limit=' + Math.min(20, needBars + 2);
@@ -8764,7 +10369,7 @@ async function rfDeepFillFootprint(hours) {
         }
         ibList.sort(function (a, b) { return a.barSlot - b.barSlot; });
       }
-      if (rows && rows.length && ibList.length) {
+      if (false && rows && rows.length && ibList.length) { // interbank path disabled
         for (let i = 0; i < rows.length; i++) {
           const r = rows[i];
           const rawTs = parseInt(r[0], 10) || 0;
@@ -9129,12 +10734,12 @@ setInterval(async () => {
         rfIngest(p, q, buy, ts, id);
       }
       rfStatus('LIVE · REST', '#10b981', 'OKX poll');
-      // Only rebuild if live candle missing (avoids wiping tick-by-tick prints every 1.5s)
+      // Soft-roll new bar only — never full rebuild (avoids blank flash)
       try {
         const ms = fpTfMinutes * 60000;
         const nowSlot = Math.floor(Date.now() / ms) * ms;
         const last = fpCandles.length ? fpCandles[fpCandles.length - 1] : null;
-        if (!last || last.barSlot !== nowSlot) rfRebuild();
+        if (!last || last.barSlot !== nowSlot) rfSoftRollNewBar();
       } catch (e) {}
       try { avRefreshFootprintGauge(true); } catch (e) {}
       try { scheduleFpRedraw(); } catch (e) {}
@@ -9159,9 +10764,20 @@ function fpUpdateGapBadge() {
     if (!badge) return;
     if (okx > 500) {
       const n = (fpCandles && fpCandles.length) ? fpCandles.length : 0;
-      badge.textContent = 'OKX ' + okx.toFixed(2) + ' · ' + n + ' bars · no interbank';
+      // $ Diff = |OKX last − interbank gold| (informational only; chart stays OKX)
+      let ib = 0;
+      try {
+        if (typeof state !== 'undefined' && state && state.gold_price > 500) ib = state.gold_price;
+      } catch (e) {}
+      let diffStr = '';
+      if (ib > 500) {
+        const d = okx - ib;
+        const sign = d >= 0 ? '+' : '';
+        diffStr = ' · $ Diff ' + sign + d.toFixed(2);
+      }
+      badge.textContent = 'OKX ' + okx.toFixed(2) + ' · ' + n + ' bars' + diffStr;
       badge.className = 'fp-gap-badge tight';
-      badge.title = 'Footprint uses OKX XAU-USDT-SWAP only (OHLC + volume). Interbank is not used here.';
+      badge.title = 'OKX XAU-USDT-SWAP only. $ Diff = OKX last minus interbank gold.';
     } else {
       badge.textContent = 'Loading OKX…';
       badge.className = 'fp-gap-badge';
@@ -9187,17 +10803,20 @@ function syncLivePriceToFootprint() {
     let last = fpCandles[fpCandles.length - 1];
     // Do NOT full-rebuild here (wipes OKX volume). Only append empty live shell if needed.
     if (!last || last.barSlot !== liveSlot) {
-      if (last && last.isLive) last.isLive = false;
-      const shell = {
-        time: liveSlot, barSlot: liveSlot, closeTime: liveSlot + ms,
-        open: g, high: g, low: g, close: g,
-        levels: new Map(), pocPrice: 0, _d: 0, _v: 0, _cvd: last ? last._cvd : 0,
-        volume: 0, delta: 0, isLive: true
-      };
-      try { rfFinal(shell); } catch (e) {}
-      fpCandles.push(shell);
-      if (fpCandles.length > 40) fpCandles = fpCandles.slice(-40);
-      last = shell;
+      // Soft roll — keep history visible (no blank)
+      try { rfSoftRollNewBar(); } catch (e) {
+        if (last && last.isLive) last.isLive = false;
+        const shell = {
+          time: liveSlot, barSlot: liveSlot, closeTime: liveSlot + ms,
+          open: g, high: g, low: g, close: g,
+          levels: new Map(), pocPrice: 0, _d: 0, _v: 0, _cvd: last ? last._cvd : 0,
+          volume: 0, delta: 0, isLive: true
+        };
+        try { rfFinal(shell); } catch (e2) {}
+        fpCandles.push(shell);
+        if (fpCandles.length > 90) fpCandles = fpCandles.slice(-90);
+      }
+      last = fpCandles[fpCandles.length - 1];
     }
     if (last && last.barSlot === liveSlot) {
       last.isLive = true;
@@ -9245,33 +10864,69 @@ async function changeFpTF(m) {
     if (b) b.classList.toggle('active', x === m);
   });
 
-  // 1) INSTANT plot — no network wait
+  // TF change ALWAYS jumps to LIVE candle (leave history mode)
+  _fpViewingHistory = false;
+  _fpUserViewLocked = false;
   fpCandles = [];
   _rfLastBarSlot = 0;
   fpViewCenter = 0;
+  fpPanX = 0;
+  fpPanY = 0;
+
+  // 1) Instant: only live shell (avoid sparse rebuild → fake 0.5 bars). Real history from OKX next.
   try { startAllTickFeed(); } catch (e) {}
-  try { fpSeedInstantCandles(); } catch (e) {}
-  try { rfRebuild(); } catch (e) {}
+  try {
+    const ms = m * 60000;
+    const nowSlot = Math.floor(Date.now() / ms) * ms;
+    const px = (fpLivePrice > 500) ? fpLivePrice : 0;
+    if (px > 500) {
+      fpCandles = [{
+        time: nowSlot, barSlot: nowSlot, closeTime: nowSlot + ms,
+        open: px, high: px, low: px, close: px,
+        levels: new Map(), pocPrice: 0, _d: 0, _v: 0, _cvd: 0, isLive: true
+      }];
+    }
+    try { if (rfWait && fpCandles.length) rfWait.style.display = 'none'; } catch (e2) {}
+  } catch (e) {}
   try { resizeFpCanvases(); } catch (e) {}
   try { autoCenterFp(); } catch (e) {}
-  try { syncLivePriceToFootprint(); } catch (e) {}
+  try { fpSnapToLiveCandle(); } catch (e) {}
   try { scheduleFpRedraw(); } catch (e) {}
   try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
-  try { rfBackfill(); } catch (e) {}
+  try { fpUpdateGotoLiveBtn(); } catch (e) {}
 
-  // 2) Load this TF from OKX (OHLC + real volume) — matches every timeframe
+  // 2) Load this TF from OKX (OHLC + real volume) — then snap to LIVE again
   (async function () {
     if (fpTfMinutes !== m) return;
     try {
       await Promise.race([
         fpLoadOkxFootprint(m, (typeof rfHistoryLimit === "function" ? rfHistoryLimit(m) : 72)),
-        new Promise(function (r) { setTimeout(function () { r(0); }, 8000); })
+        new Promise(function (r) { setTimeout(function () { r(0); }, 25000); })
       ]);
     } catch (e) {}
     if (fpTfMinutes !== m) return;
-    try { autoCenterFp(); syncLivePriceToFootprint(); scheduleFpRedraw(); } catch (e) {}
-    try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
-    try { avRefreshFootprintGauge(true); rfPersistStore(); } catch (e) {}
+    // After history loads: FORCE live view (bar count jumped — old panX would show history)
+    function _fpForceLive() {
+      _fpViewingHistory = false;
+      _fpUserViewLocked = false;
+      try { autoCenterFp(); } catch (e) {}
+      try { fpSnapToLiveCandle(); } catch (e) {}
+      try { syncLivePriceToFootprint(); } catch (e) {}
+      try { scheduleFpRedraw(); } catch (e) {}
+      try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
+      try { fpUpdateGotoLiveBtn(); } catch (e) {}
+    }
+    _fpForceLive();
+    // Re-snap after layout settles (canvas size / candle width ready)
+    setTimeout(function () {
+      if (fpTfMinutes !== m) return;
+      _fpForceLive();
+    }, 80);
+    setTimeout(function () {
+      if (fpTfMinutes !== m) return;
+      _fpForceLive();
+      try { avRefreshFootprintGauge(true); rfPersistStore(); } catch (e) {}
+    }, 350);
   })();
 }
 
@@ -9286,6 +10941,7 @@ async function refreshFootprintChart() {
   try {
     _rfLastBarSlot = 0;
     fpViewCenter = 0;
+    _fpUserViewLocked = false; // manual refresh → re-center once
     FP_TICK_SIZE = RF_TICKS[tf] || 0.2;
     try { startAllTickFeed(); } catch (e) {}
 
@@ -9294,7 +10950,7 @@ async function refreshFootprintChart() {
     try {
       n = await Promise.race([
         fpLoadOkxFootprint(tf, (typeof rfHistoryLimit === "function" ? rfHistoryLimit(tf) : 72)),
-        new Promise(function (r) { setTimeout(function () { r(0); }, 8000); })
+        new Promise(function (r) { setTimeout(function () { r(0); }, 25000); })
       ]);
     } catch (e) { console.warn('[FP] load', e); }
 
@@ -9305,7 +10961,12 @@ async function refreshFootprintChart() {
       try { rfRebuild(); } catch (e) {}
     }
 
-    try { resizeFpCanvases(); autoCenterFp(); syncLivePriceToFootprint(); } catch (e) {}
+    try {
+      resizeFpCanvases();
+      if (!_fpUserViewLocked) autoCenterFp();
+      else ensureLivePriceVisible();
+      syncLivePriceToFootprint();
+    } catch (e) {}
     try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
 
     // Background: top up live trades into current bar
@@ -11160,24 +12821,66 @@ function avComputeSenses() {
                            Math.abs(fxBasket) >= 0.06 ? 0.70 :
                            Math.abs(fxBasket) >= 0.03 ? 0.52 : 0.35;
 
-  // News risk
+  // News risk — risk% for top 3 USD high-impact events.
+  // VETO only inside [event−5m … event+5m]. Outside that window news cannot veto.
   let newsScore = 0.72;
   let newsLabel = 'no red event near';
+  let newsItems3 = [];
+  let newsCanVeto = false;
   try {
-    if (typeof nextRedEvent !== 'undefined' && nextRedEvent && nextRedEvent.timestamp) {
-      const mins = (nextRedEvent.timestamp - Date.now()) / 60000;
-      if (mins > 0 && mins < 25) {
-        newsScore = 0.18;
-        newsLabel = 'HIGH RISK · ' + Math.round(mins) + 'm to ' + (nextRedEvent.title || 'event');
-      } else if (mins > 0 && mins < 90) {
-        newsScore = 0.42;
-        newsLabel = Math.round(mins) + 'm to ' + (nextRedEvent.title || 'event');
-      } else if (mins <= 0 && mins > -8) {
-        newsScore = 0.12;
-        newsLabel = 'LIVE / JUST RELEASED';
-      } else {
-        newsLabel = (document.getElementById('drawerNewsTitle') || {}).textContent || 'calendar synced';
+    const now = Date.now();
+    const src = (typeof redFolderEvents !== 'undefined' && Array.isArray(redFolderEvents))
+      ? redFolderEvents : [];
+    const ranked = src
+      .filter(function (ev) { return ev && ev.timestamp; })
+      .map(function (ev) {
+        const mins = (ev.timestamp - now) / 60000;
+        let riskPct = 0;
+        const abs = Math.abs(mins);
+        if (abs <= 5) riskPct = 100;
+        else if (abs <= 15) riskPct = Math.round(85 - (abs - 5) * 2.5);
+        else if (abs <= 30) riskPct = Math.round(60 - (abs - 15) * 1.5);
+        else if (abs <= 60) riskPct = Math.round(35 - (abs - 30) * 0.5);
+        else if (abs <= 120) riskPct = Math.round(18 - (abs - 60) * 0.1);
+        else riskPct = Math.max(0, Math.round(10 - abs / 60));
+        riskPct = Math.max(0, Math.min(100, riskPct));
+        const canVeto = (mins <= 5 && mins >= -5);
+        return {
+          title: String(ev.title || 'event').slice(0, 42),
+          currency: ev.currency || 'USD',
+          mins: mins,
+          riskPct: riskPct,
+          canVeto: canVeto,
+          timeIST: ev.timeIST || ''
+        };
+      })
+      .filter(function (x) { return x.mins > -30; })
+      .sort(function (a, b) { return a.mins - b.mins; });
+
+    const upcoming = ranked.filter(function (x) { return x.mins >= -5; }).slice(0, 3);
+    newsItems3 = upcoming.length ? upcoming : ranked.slice(0, 3);
+    newsCanVeto = newsItems3.some(function (x) { return x.canVeto; });
+
+    if (newsCanVeto) {
+      const peak = newsItems3.reduce(function (m, x) { return Math.max(m, x.riskPct); }, 0);
+      newsScore = peak >= 90 ? 0.12 : 0.22;
+      const live = newsItems3.find(function (x) { return x.canVeto; });
+      if (live) {
+        if (live.mins > 0) {
+          newsLabel = 'VETO · ' + live.riskPct + '% · ' + Math.round(live.mins) + 'm to ' + live.title;
+        } else {
+          newsLabel = 'VETO · LIVE · ' + live.riskPct + '% · ' + live.title;
+        }
       }
+    } else if (newsItems3.length) {
+      const top = newsItems3.slice().sort(function (a, b) { return b.riskPct - a.riskPct; })[0];
+      newsScore = top.riskPct >= 50 ? 0.48 : (top.riskPct >= 25 ? 0.62 : 0.78);
+      newsLabel = newsItems3.map(function (x) {
+        const t = x.mins >= 0 ? (Math.round(x.mins) + 'm') : ('+' + Math.round(-x.mins) + 'm ago');
+        return x.riskPct + '% ' + x.title.slice(0, 18) + ' (' + t + ')';
+      }).join(' · ');
+    } else {
+      newsLabel = (document.getElementById('drawerNewsTitle') || {}).textContent || 'calendar synced';
     }
   } catch (e) {}
 
@@ -11362,8 +13065,11 @@ function avComputeSenses() {
     news: {
       score: newsScore,
       meta: newsLabel,
-      thesis: 'News risk: ' + newsLabel + ' · gate ' + (gNews ? 'PASS' : 'FAIL') + '.',
-      dot: newsScore < 0.35 ? 'red' : (newsScore < 0.55 ? 'amber' : 'green')
+      thesis: 'News risk: ' + newsLabel + ' · gate ' + (gNews ? 'PASS' : 'FAIL') +
+        (newsCanVeto ? ' · VETO WINDOW ±5m' : ' · no veto outside ±5m') + '.',
+      dot: newsScore < 0.35 ? 'red' : (newsScore < 0.55 ? 'amber' : 'green'),
+      items: newsItems3,
+      canVeto: newsCanVeto
     },
     aiView: {
       score: aiViewSense,
@@ -11434,15 +13140,16 @@ function avPaint() {
     else sessSub.textContent = 'waiting for interbank gold feed…';
   }
 
-  // News panel — glow + symbols on high impact
+  // News panel — risk% for top 3 events; LOCKOUT only in ±5m veto window
   const newsState = document.getElementById('avNewsState');
   const newsSub = document.getElementById('avNewsSub');
   const newsBox = newsState ? newsState.closest('.av-status-box') : null;
   if (newsState) {
     const ns = d.news.score;
+    const canVeto = !!(d.news && d.news.canVeto);
     if (newsBox) newsBox.classList.remove('news-hot');
-    if (ns < 0.35) {
-      newsState.textContent = '⚠ LOCKOUT RISK';
+    if (canVeto || ns < 0.35) {
+      newsState.textContent = '⚠ VETO ±5m';
       newsState.className = 'av-status-state av-state-alert';
       if (newsBox) newsBox.classList.add('news-hot');
     } else if (ns < 0.55) {
@@ -11453,7 +13160,17 @@ function avPaint() {
       newsState.className = 'av-status-state av-state-open';
     }
   }
-  if (newsSub) newsSub.textContent = d.news.meta;
+  if (newsSub) {
+    const items = (d.news && d.news.items) || [];
+    if (items.length) {
+      newsSub.textContent = items.map(function (x) {
+        const t = x.mins >= 0 ? (Math.round(x.mins) + 'm') : ('+' + Math.round(-x.mins) + 'm');
+        return x.riskPct + '% ' + (x.title || '').slice(0, 16) + ' (' + t + ')';
+      }).join(' · ');
+    } else {
+      newsSub.textContent = d.news.meta || 'calendar feed';
+    }
+  }
 
   // Ticker
   const setTxt = (id, t, cls) => {
@@ -11581,11 +13298,20 @@ function avPaint() {
     (d.footprint && d.footprint.meta) || '1H',
     gf.gFp ? 'PASS' : 'FAIL',
     gf.gFp ? 'sync' : 'idle');
-  // G3 News
-  setGate('avGateNews', 'avBadgeNews',
-    (d.news && d.news.meta) || 'news',
-    gf.gNews ? 'PASS' : 'FAIL',
-    gf.gNews ? 'sync' : 'idle');
+  // G3 News — veto only ±5m; show top-3 risk %
+  {
+    let newsStatus = (d.news && d.news.meta) || 'news';
+    const items = (d.news && d.news.items) || [];
+    if (items.length) {
+      newsStatus = items.map(function (x) {
+        return x.riskPct + '%';
+      }).join(' · ') + (d.news.canVeto ? ' · VETO ON' : ' · no veto');
+    }
+    setGate('avGateNews', 'avBadgeNews',
+      newsStatus,
+      gf.gNews ? 'PASS' : 'FAIL',
+      gf.gNews ? 'sync' : 'idle');
+  }
   // G4 AI View
   setGate('avGateAiView', 'avBadgeAiView',
     (d.aiView && d.aiView.meta) || 'AI',
@@ -11907,22 +13633,46 @@ function closeAllSidePanels() { closeSideDrawer(); }
 
 async function openFootprintModal() {
   closeAllSidePanels();
+  // If chart is docked inside All Chart View, put it back into the modal shell first
+  try {
+    if (typeof _acvFpDocked !== 'undefined' && _acvFpDocked) {
+      acvUndockFootprint();
+    }
+  } catch (e) {}
   const sr = document.getElementById('sideFab');
   if (sr) sr.style.display = 'none';
   FP_TICK_SIZE = RF_TICKS[fpTfMinutes] || 0.2;
   const modal = document.getElementById('footprintModal');
+  modal.classList.remove('acv-docked');
   modal.style.display = 'flex';
   document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
   document.body.style.touchAction = 'none';
-  const fb = document.getElementById('fpFollowBtn');
-  if (fb) {
-    fb.classList.toggle('active', fpFollowLive);
-    fb.textContent = fpFollowLive ? 'Follow' : 'Free';
-  }
-  fpFollowLive = true;
-  fpViewCenter = 0;
-  fpZoom = 1;
+  fpFollowLive = false; // never auto-follow; user zoom/pan stay put
+  // Initial center only when view has never been set
+  if (!fpViewCenter) fpViewCenter = 0;
+  // Force bottom metrics strip visible (desktop + mobile)
+  try {
+    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+    const isDesk = window.matchMedia('(min-width: 768px)').matches;
+    fpFooterHeight = isDesk ? 112 : 96;
+    try { fpLayoutShell(); } catch (e) {}
+    try { fpInitFooterResize(); } catch (e) {}
+    try { fpUpdateGotoLiveBtn(); } catch (e) {}
+    // Multiple layout passes — desktop WebView often needs delayed measure
+    requestAnimationFrame(function () {
+      try { fpLayoutShell(); resizeFpCanvases(); drawFpTable(); scheduleFpRedraw(); } catch (e) {}
+      requestAnimationFrame(function () {
+        try { fpLayoutShell(); resizeFpCanvases(); drawFpTable(); drawFpChart(); drawFpPriceLadder(); } catch (e) {}
+      });
+    });
+    setTimeout(function () {
+      try { fpLayoutShell(); resizeFpCanvases(); drawFpTable(); scheduleFpRedraw(); } catch (e) {}
+    }, 120);
+    setTimeout(function () {
+      try { fpLayoutShell(); resizeFpCanvases(); drawFpTable(); scheduleFpRedraw(); } catch (e) {}
+    }, 400);
+  } catch (e) {}
 
   // Hide wait overlay so chart is visible
   try { if (rfWait) { rfWait.style.display = 'none'; } } catch (e) {}
@@ -11934,7 +13684,10 @@ async function openFootprintModal() {
   requestAnimationFrame(function () {
     requestAnimationFrame(function () {
       try { resizeFpCanvases(); } catch (e) {}
-      try { autoCenterFp(); } catch (e) {}
+      try {
+        if (!_fpUserViewLocked) autoCenterFp();
+        else ensureLivePriceVisible();
+      } catch (e) {}
       try { syncLivePriceToFootprint(); } catch (e) {}
       try { scheduleFpRedraw(); } catch (e) {}
       try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
@@ -11945,18 +13698,29 @@ async function openFootprintModal() {
   // Load OKX footprint for current TF (real OHLC + real volume)
   try {
     fpLoadOkxFootprint(fpTfMinutes || 5, 40).then(function () {
-      try { resizeFpCanvases(); autoCenterFp(); syncLivePriceToFootprint(); } catch (e) {}
+      try {
+        resizeFpCanvases();
+        if (!_fpUserViewLocked) autoCenterFp();
+        else ensureLivePriceVisible();
+        syncLivePriceToFootprint();
+      } catch (e) {}
       try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
     });
   } catch (e) {}
 
   setTimeout(function () {
-    try { resizeFpCanvases(); autoCenterFp(); syncLivePriceToFootprint(); } catch (e) {}
+    try {
+      resizeFpCanvases();
+      if (!_fpUserViewLocked) autoCenterFp();
+      else ensureLivePriceVisible();
+      syncLivePriceToFootprint();
+    } catch (e) {}
     try { drawFpChart(); drawFpPriceLadder(); drawFpTable(); } catch (e) {}
   }, 400);
 }
 
 function closeFootprintModal() {
+  try { fpRestoreFooterToModal(); } catch (e) {}
   document.getElementById('footprintModal').style.display = 'none';
   document.documentElement.style.overflow = '';
   document.body.style.overflow = '';
@@ -11994,6 +13758,975 @@ const mvPanes = {
 };
 let _mvOpen = false;
 let _mvSplit = 0.5; // left fraction 0.2..0.8
+
+
+
+/* ===== ALL CHART VIEW — 4-pane workspace ===== */
+const acvPanes = {
+  gold: {
+    asset: 'gold', tf: '15m', sec: 900,
+    candles: [], offsetX: 0, candleW: 6, priceScale: 1, priceMid: null,
+    dragging: false, scaleDrag: false, startX: 0, startY: 0, startOff: 0, startScale: 1,
+    loading: false, demand: [], supply: [], rays: [], open: true
+  },
+  dxy: {
+    asset: 'dxy', tf: '15m', sec: 900,
+    candles: [], offsetX: 0, candleW: 6, priceScale: 1, priceMid: null,
+    dragging: false, scaleDrag: false, startX: 0, startY: 0, startOff: 0, startScale: 1,
+    loading: false, demand: [], supply: [], rays: [], open: true
+  },
+  av: { open: true },
+  fp: { open: true }
+};
+let _acvOpen = false;
+let _acvCol = 0.5;   // left column width fraction
+let _acvRowL = 0.5;  // left column: gold height fraction (independent)
+let _acvRowR = 0.5;  // right column: dxy height fraction (independent)
+let _acvRow = 0.5;   // legacy alias
+
+function openAllChartView() {
+  const el = document.getElementById('allChartViewOverlay');
+  if (!el) return;
+  el.classList.add('show');
+  _acvOpen = true;
+  try { startAllTickFeed(); } catch (e) {}
+  try { if (typeof rfBackfill === 'function' && !_fp1hReady) rfBackfill(); } catch (e) {}
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+  const sr = document.getElementById('sideFab');
+  if (sr) sr.style.display = 'none';
+  closeAllSidePanels();
+  try { closeMultiView(); } catch (e) {}
+  try { closeChartModal(); } catch (e) {}
+  // Reset panes open
+  ['gold','dxy','av','fp'].forEach(k => {
+    acvPanes[k].open = true;
+    const pane = document.getElementById('acvPane' + (k === 'gold' ? 'Gold' : k === 'dxy' ? 'Dxy' : k === 'av' ? 'Av' : 'Fp'));
+    if (pane) pane.classList.remove('closed');
+  });
+  acvApplyLayout();
+  acvInitSplitters();
+  acvFetch('gold');
+  acvFetch('dxy');
+  acvBindGestures();
+  acvPaintAv();
+  // Real AI Footprint chart (sidebar) docks into FP pane — separate from AI Visual 1H
+  if (acvPanes.fp.open) {
+    try { acvDockFootprint(); } catch (e) {}
+  }
+  setTimeout(() => {
+    acvDraw('gold'); acvDraw('dxy'); acvPaintAv();
+    try { acvRefreshDockedFp(); } catch (e) {}
+  }, 120);
+}
+
+function closeAllChartView() {
+  try { acvUndockFootprint(); } catch (e) {}
+  const el = document.getElementById('allChartViewOverlay');
+  if (el) el.classList.remove('show');
+  _acvOpen = false;
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+  const sr = document.getElementById('sideFab');
+  if (sr) sr.style.display = '';
+}
+
+function acvPaneId(key) {
+  return 'acvPane' + (key === 'gold' ? 'Gold' : key === 'dxy' ? 'Dxy' : key === 'av' ? 'Av' : 'Fp');
+}
+
+function acvClosePane(key) {
+  if (!acvPanes[key]) return;
+  if (key === 'fp') {
+    try { acvUndockFootprint(); } catch (e) {}
+  }
+  acvPanes[key].open = false;
+  const pane = document.getElementById(acvPaneId(key));
+  if (pane) pane.classList.add('closed');
+  acvApplyLayout();
+  acvUpdateRestoreBar();
+}
+
+function acvRestorePane(key) {
+  if (!acvPanes[key]) return;
+  acvPanes[key].open = true;
+  const pane = document.getElementById(acvPaneId(key));
+  if (pane) pane.classList.remove('closed');
+  acvApplyLayout();
+  acvUpdateRestoreBar();
+  if (key === 'gold' || key === 'dxy') {
+    if (!(acvPanes[key].candles && acvPanes[key].candles.length)) acvFetch(key);
+    else acvDraw(key);
+  }
+  if (key === 'av') acvPaintAv();
+  if (key === 'fp') {
+    try { acvDockFootprint(); } catch (e) {}
+  }
+}
+
+function acvUpdateRestoreBar() {
+  const bar = document.getElementById('acvRestoreBar');
+  if (!bar) return;
+  const closed = ['gold','dxy','av','fp'].filter(k => !acvPanes[k].open);
+  if (!closed.length) {
+    bar.classList.remove('show');
+    bar.innerHTML = '';
+    return;
+  }
+  bar.classList.add('show');
+  const labels = { gold: 'Gold', dxy: 'DXY', av: 'AI Visual', fp: 'Footprint' };
+  bar.innerHTML = closed.map(k =>
+    '<button type="button" onclick="acvRestorePane(\'' + k + '\')">+ ' + labels[k] + '</button>'
+  ).join('');
+}
+
+function acvApplyLayout() {
+  const body = document.getElementById('acvBody');
+  if (!body) return;
+  const GAP = 3; // px gap between panes
+  const open = {
+    gold: !!(acvPanes.gold && acvPanes.gold.open),
+    dxy:  !!(acvPanes.dxy && acvPanes.dxy.open),
+    av:   !!(acvPanes.av && acvPanes.av.open),
+    fp:   !!(acvPanes.fp && acvPanes.fp.open)
+  };
+  const n = ['gold','dxy','av','fp'].filter(k => open[k]).length;
+  const mobile = window.matchMedia('(max-width: 700px)').matches;
+  const W = body.clientWidth || 1;
+  const H = body.clientHeight || 1;
+
+  const place = (key, left, top, width, height) => {
+    const el = document.getElementById(acvPaneId(key));
+    if (!el) return;
+    if (!open[key] || width < 8 || height < 8) {
+      el.style.display = open[key] ? 'none' : 'none';
+      return;
+    }
+    el.style.display = 'flex';
+    el.style.left = Math.round(left) + 'px';
+    el.style.top = Math.round(top) + 'px';
+    el.style.width = Math.round(width) + 'px';
+    el.style.height = Math.round(height) + 'px';
+  };
+
+  // Hide all first
+  ['gold','dxy','av','fp'].forEach(k => {
+    const el = document.getElementById(acvPaneId(k));
+    if (el && !open[k]) {
+      el.style.display = 'none';
+    }
+  });
+
+  const splitV = document.getElementById('acvSplitV');
+  const splitHL = document.getElementById('acvSplitHL');
+  const splitHR = document.getElementById('acvSplitHR');
+  const hideSplits = () => {
+    if (splitV) splitV.style.display = 'none';
+    if (splitHL) splitHL.style.display = 'none';
+    if (splitHR) splitHR.style.display = 'none';
+  };
+
+  if (n === 0) { hideSplits(); return; }
+
+  // Mobile / single pane: stack full width
+  if (mobile || n === 1) {
+    hideSplits();
+    const keys = ['gold','dxy','av','fp'].filter(k => open[k]);
+    const hEach = (H - GAP * (keys.length - 1)) / keys.length;
+    keys.forEach((k, i) => {
+      place(k, 0, i * (hEach + GAP), W, hEach);
+    });
+  } else {
+    // Independent 2-column layout:
+    // Left col width = _acvCol, right = 1-_acvCol
+    // Left heights: gold=_acvRowL, av=1-_acvRowL  (independent)
+    // Right heights: dxy=_acvRowR, fp=1-_acvRowR  (independent)
+    // Closed panes expand their sibling to fill the column/row.
+
+    let col = Math.max(0.18, Math.min(0.82, _acvCol));
+    let rowL = Math.max(0.18, Math.min(0.82, _acvRowL));
+    let rowR = Math.max(0.18, Math.min(0.82, _acvRowR));
+
+    const leftOpen = open.gold || open.av;
+    const rightOpen = open.dxy || open.fp;
+
+    // If one side fully closed, other takes full width
+    if (!leftOpen && rightOpen) col = 0;
+    if (leftOpen && !rightOpen) col = 1;
+
+    const leftW = leftOpen ? (rightOpen ? col * W - GAP / 2 : W) : 0;
+    const rightW = rightOpen ? (leftOpen ? (1 - col) * W - GAP / 2 : W) : 0;
+    const leftX = 0;
+    const rightX = leftOpen && rightOpen ? col * W + GAP / 2 : 0;
+
+    // LEFT column panes
+    if (open.gold && open.av) {
+      const gH = rowL * H - GAP / 2;
+      const aH = (1 - rowL) * H - GAP / 2;
+      place('gold', leftX, 0, leftW, gH);
+      place('av', leftX, rowL * H + GAP / 2, leftW, aH);
+    } else if (open.gold) {
+      place('gold', leftX, 0, leftW, H);
+    } else if (open.av) {
+      place('av', leftX, 0, leftW, H);
+    }
+
+    // RIGHT column panes
+    if (open.dxy && open.fp) {
+      const dH = rowR * H - GAP / 2;
+      const fH = (1 - rowR) * H - GAP / 2;
+      place('dxy', rightX, 0, rightW, dH);
+      place('fp', rightX, rowR * H + GAP / 2, rightW, fH);
+    } else if (open.dxy) {
+      place('dxy', rightX, 0, rightW, H);
+    } else if (open.fp) {
+      place('fp', rightX, 0, rightW, H);
+    }
+
+    // Splitters — only when both sides of that split are open
+    if (splitV) {
+      if (leftOpen && rightOpen && !mobile) {
+        splitV.style.display = 'block';
+        splitV.style.left = (col * W) + 'px';
+        splitV.style.top = '0';
+        splitV.style.height = H + 'px';
+      } else {
+        splitV.style.display = 'none';
+      }
+    }
+    if (splitHL) {
+      if (open.gold && open.av && leftOpen && !mobile) {
+        splitHL.style.display = 'block';
+        splitHL.style.left = leftX + 'px';
+        splitHL.style.width = leftW + 'px';
+        splitHL.style.top = (rowL * H) + 'px';
+      } else {
+        splitHL.style.display = 'none';
+      }
+    }
+    if (splitHR) {
+      if (open.dxy && open.fp && rightOpen && !mobile) {
+        splitHR.style.display = 'block';
+        splitHR.style.left = rightX + 'px';
+        splitHR.style.width = rightW + 'px';
+        splitHR.style.top = (rowR * H) + 'px';
+      } else {
+        splitHR.style.display = 'none';
+      }
+    }
+  }
+
+  // Redraw charts after layout
+  try {
+    if (open.gold) acvDraw('gold');
+    if (open.dxy) acvDraw('dxy');
+    if (open.fp && typeof acvRefreshDockedFp === 'function') acvRefreshDockedFp(true);
+  } catch (e) {}
+}
+
+function acvInitSplitters() {
+  const body = document.getElementById('acvBody');
+  if (!body) return;
+
+  function bindSplit(el, mode) {
+    // mode: 'col' | 'rowL' | 'rowR'
+    if (!el || el._acvBound) return;
+    el._acvBound = true;
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.add('active');
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      const move = (ev) => {
+        const rect = body.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        if (mode === 'col') {
+          _acvCol = Math.max(0.18, Math.min(0.82, (ev.clientX - rect.left) / rect.width));
+        } else if (mode === 'rowL') {
+          _acvRowL = Math.max(0.18, Math.min(0.82, (ev.clientY - rect.top) / rect.height));
+        } else if (mode === 'rowR') {
+          _acvRowR = Math.max(0.18, Math.min(0.82, (ev.clientY - rect.top) / rect.height));
+        }
+        acvApplyLayout();
+      };
+      const up = () => {
+        el.classList.remove('active');
+        el.removeEventListener('pointermove', move);
+        el.removeEventListener('pointerup', up);
+        el.removeEventListener('pointercancel', up);
+        // Final redraw after resize settles
+        try {
+          if (acvPanes.gold.open) acvDraw('gold');
+          if (acvPanes.dxy.open) acvDraw('dxy');
+          if (acvPanes.fp.open && typeof acvRefreshDockedFp === 'function') acvRefreshDockedFp(true);
+        } catch (err) {}
+      };
+      el.addEventListener('pointermove', move);
+      el.addEventListener('pointerup', up);
+      el.addEventListener('pointercancel', up);
+    });
+  }
+  bindSplit(document.getElementById('acvSplitV'), 'col');
+  bindSplit(document.getElementById('acvSplitHL'), 'rowL');
+  bindSplit(document.getElementById('acvSplitHR'), 'rowR');
+}
+
+function acvOpenFull(asset) {
+  closeAllChartView();
+  openChartModal(asset === 'dxy' ? 'dxy' : 'gold');
+}
+
+/** Sync candles from main/multi-view store when possible */
+function acvTrySync(key) {
+  const p = acvPanes[key];
+  if (!p) return false;
+  try {
+    if ((state.chartAsset || 'gold') === p.asset &&
+        (state.tf_interval || '15m') === p.tf &&
+        typeof candleHistory !== 'undefined' &&
+        candleHistory.length >= 20 &&
+        typeof candlesMatchAsset === 'function' &&
+        candlesMatchAsset(candleHistory, p.asset)) {
+      p.candles = candleHistory.map(c => ({ ...c }));
+      try {
+        p.demand = (storedDemandOBs || []).slice();
+        p.supply = (storedSupplyOBs || []).slice();
+        p.rays = (multiHorizonTrendlines || []).slice();
+      } catch (e) {}
+      return true;
+    }
+    const s = chartStore[p.asset] && chartStore[p.asset][p.tf];
+    if (s && s.candles && s.candles.length >= 20 &&
+        typeof candlesMatchAsset === 'function' &&
+        candlesMatchAsset(s.candles, p.asset)) {
+      p.candles = s.candles.map(c => ({ ...c }));
+      p.demand = (s.demand || []).slice();
+      p.supply = (s.supply || []).slice();
+      p.rays = (s.rays || []).slice();
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+function acvSetTf(key, tf, sec, btn) {
+  const p = acvPanes[key];
+  if (!p) return;
+  if (p.tf === tf && p.sec === sec) return;
+  p.tf = tf;
+  p.sec = sec;
+  p.candles = [];
+  p.offsetX = 0;
+  p.priceMid = null;
+  // highlight active button in this pane's TF row
+  const row = document.getElementById(key === 'gold' ? 'acvTfGold' : 'acvTfDxy');
+  if (row) {
+    row.querySelectorAll('.acv-tf').forEach(b => b.classList.remove('active'));
+  }
+  if (btn) btn.classList.add('active');
+  else if (row) {
+    const match = row.querySelector('.acv-tf[data-tf="' + tf + '"]');
+    if (match) match.classList.add('active');
+  }
+  acvFetch(key);
+}
+
+async function acvFetch(key) {
+  const p = acvPanes[key];
+  if (!p || p.loading) return;
+  p.loading = true;
+  const empty = document.getElementById(key === 'gold' ? 'acvEmptyGold' : 'acvEmptyDxy');
+  if (empty) { empty.style.display = 'flex'; empty.textContent = 'Loading ' + p.asset.toUpperCase() + '…'; }
+
+  if (acvTrySync(key)) {
+    try { acvComputeIndicators(key); } catch (e) {}
+    acvTickLive(key);
+    if (empty) empty.style.display = p.candles.length ? 'none' : 'flex';
+    acvDraw(key);
+  }
+
+  try {
+    // Reuse multi-view fetch path when available
+    if (typeof mvFetch === 'function' && typeof mvPanes !== 'undefined') {
+      const pane = key === 'gold' ? 'L' : 'R';
+      // Ensure mv pane matches
+      if (mvPanes[pane].asset !== p.asset || mvPanes[pane].tf !== p.tf) {
+        mvPanes[pane].asset = p.asset;
+        mvPanes[pane].tf = p.tf;
+        mvPanes[pane].sec = p.sec;
+        mvPanes[pane].candles = [];
+      }
+      await mvFetch(pane);
+      if (mvPanes[pane].candles && mvPanes[pane].candles.length) {
+        p.candles = mvPanes[pane].candles.map(c => ({ ...c }));
+        p.demand = (mvPanes[pane].demand || []).slice();
+        p.supply = (mvPanes[pane].supply || []).slice();
+        p.rays = (mvPanes[pane].rays || []).slice();
+      }
+    } else {
+      // Direct fetch fallback
+      const symbol = p.asset === 'dxy' ? 'DXY' : 'XAUUSD';
+      const interval = p.tf || '15m';
+      const data = await fetchJson('https://biquote.io/api/' + symbol + '/ohlc?interval=' + encodeURIComponent(interval) + '&limit=350');
+      let bars = (data && data.bars) ? data.bars.slice() : [];
+      if (bars.length > 1) {
+        const t0 = new Date(bars[0].openTime || bars[0].t || 0).getTime();
+        const t1 = new Date(bars[bars.length - 1].openTime || bars[bars.length - 1].t || 0).getTime();
+        if (t0 > t1) bars.reverse();
+      }
+      if (typeof mvNormalizeBars === 'function') {
+        p.candles = mvNormalizeBars(bars, p.tf, p.sec).slice(-300);
+      }
+    }
+    if (empty) empty.style.display = (p.candles && p.candles.length) ? 'none' : 'flex';
+    // Compute order blocks + rays for THIS pane's candles (isolated from main chart globals)
+    try { acvComputeIndicators(key); } catch (eInd) {}
+    acvTickLive(key);
+    acvDraw(key);
+  } catch (e) {
+    if (empty && !(p.candles && p.candles.length)) {
+      empty.style.display = 'flex';
+      empty.textContent = 'Load failed';
+    }
+  } finally {
+    p.loading = false;
+  }
+}
+
+function acvComputeIndicators(key) {
+  const p = acvPanes[key];
+  if (!p || !p.candles || p.candles.length < 15) {
+    if (p) { p.demand = []; p.supply = []; p.rays = []; }
+    return;
+  }
+  const bak = {
+    asset: state.chartAsset,
+    tf: state.tf_interval,
+    dem: (typeof storedDemandOBs !== 'undefined') ? storedDemandOBs.slice() : [],
+    sup: (typeof storedSupplyOBs !== 'undefined') ? storedSupplyOBs.slice() : [],
+    allD: (typeof allCandidateDemandOBs !== 'undefined') ? allCandidateDemandOBs.slice() : [],
+    allS: (typeof allCandidateSupplyOBs !== 'undefined') ? allCandidateSupplyOBs.slice() : [],
+    rays: (typeof multiHorizonTrendlines !== 'undefined') ? multiHorizonTrendlines.slice() : []
+  };
+  try {
+    state.chartAsset = p.asset;
+    state.tf_interval = p.tf;
+    if (typeof scanAndStoreOrderBlocks === 'function') scanAndStoreOrderBlocks(p.candles);
+    if (typeof executeTradingViewRayArchitecture === 'function') executeTradingViewRayArchitecture(p.candles);
+    p.demand = (storedDemandOBs || []).slice();
+    p.supply = (storedSupplyOBs || []).slice();
+    p.rays = (multiHorizonTrendlines || []).slice();
+  } catch (e) {
+    p.demand = []; p.supply = []; p.rays = [];
+  } finally {
+    state.chartAsset = bak.asset;
+    state.tf_interval = bak.tf;
+    storedDemandOBs = bak.dem;
+    storedSupplyOBs = bak.sup;
+    allCandidateDemandOBs = bak.allD;
+    allCandidateSupplyOBs = bak.allS;
+    multiHorizonTrendlines = bak.rays;
+  }
+}
+
+function acvTickLive(key) {
+  const p = acvPanes[key];
+  if (!p || !p.candles || !p.candles.length) return;
+  const live = p.asset === 'dxy' ? (state.dxy_price || 0) : (state.gold_price || 0);
+  if (!(live > 0)) return;
+  if (p.asset === 'dxy' && (live < 50 || live > 200)) return;
+  if (p.asset === 'gold' && live < 500) return;
+  const stepMs = (p.sec || 900) * 1000;
+  const currentSlot = Math.floor(Date.now() / stepMs) * stepMs;
+  let last = p.candles[p.candles.length - 1];
+  if (!last.barSlot) last.barSlot = currentSlot;
+  if (last.barSlot < currentSlot) {
+    const d = new Date(currentSlot);
+    const timeStr = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    p.candles.push({ o: live, h: live, l: live, c: live, v: 0, quoteVol: 0, time: timeStr, barSlot: currentSlot, closeTime: currentSlot + stepMs });
+    if (p.candles.length > 300) p.candles = p.candles.slice(-300);
+  } else {
+    last.c = live;
+    if (live > last.h) last.h = live;
+    if (live < last.l) last.l = live;
+  }
+}
+
+function acvDraw(key) {
+  const p = acvPanes[key];
+  const canvas = document.getElementById(key === 'gold' ? 'acvCanvasGold' : 'acvCanvasDxy');
+  const wrap = document.getElementById(key === 'gold' ? 'acvWrapGold' : 'acvWrapDxy');
+  if (!p || !canvas || !wrap || !p.open) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = wrap.clientWidth || 300;
+  const h = wrap.clientHeight || 200;
+  if (w < 10 || h < 10) return;
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#080a0f';
+  ctx.fillRect(0, 0, w, h);
+  const data = p.candles || [];
+  if (data.length < 2) return;
+
+  const padR = (w < 420) ? 64 : 58;
+  const padT = 8, padB = 16, padL = 4;
+  const chartW = w - padL - padR;
+  const chartH = h - padT - padB;
+  const isDxy = p.asset === 'dxy';
+  const live = isDxy ? (state.dxy_price || 0) : (state.gold_price || 0);
+  const candleW = Math.max(2, p.candleW || 6);
+  const bodyW = Math.max(1.5, Math.min(candleW * 0.74, candleW - 0.5));
+  const visible = Math.max(8, Math.floor(chartW / candleW));
+  const maxOff = Math.max(0, data.length - visible);
+  let off = Math.max(0, Math.min(maxOff, Math.round(p.offsetX || 0)));
+  p.offsetX = off;
+  const start = Math.max(0, data.length - visible - off);
+  const end = Math.min(data.length, start + visible);
+  const slice = data.slice(start, end);
+  if (!slice.length) return;
+
+  let minP = Infinity, maxP = -Infinity;
+  slice.forEach(c => { if (c.l < minP) minP = c.l; if (c.h > maxP) maxP = c.h; });
+  if (live > 0) { minP = Math.min(minP, live); maxP = Math.max(maxP, live); }
+  let pad = Math.max((maxP - minP) * 0.08, isDxy ? 0.02 : 0.8);
+  minP -= pad; maxP += pad;
+  const sc = Math.max(0.25, Math.min(6, p.priceScale || 1));
+  const mid = (p.priceMid != null) ? p.priceMid : ((minP + maxP) / 2);
+  const half = ((maxP - minP) / 2) / sc;
+  minP = mid - half; maxP = mid + half;
+  const range = Math.max(maxP - minP, isDxy ? 0.05 : 1);
+  const getY = (price) => padT + ((maxP - price) / range) * chartH;
+  const getX = (globalIdx) => padL + (globalIdx - start) * candleW + candleW / 2;
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (chartH * i / 4);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + chartW, y); ctx.stroke();
+  }
+
+  // Order blocks (demand green / supply red) — always extend to right edge
+  const drawOB = (ob, isDemand) => {
+    if (ob == null || ob.top == null || ob.bottom == null) return;
+    const xStart = Math.max(padL, getX(ob.startIndex != null ? ob.startIndex : 0) - candleW / 2);
+    const yTop = getY(ob.top);
+    const yBot = getY(ob.bottom);
+    const top = Math.min(yTop, yBot);
+    const bot = Math.max(yTop, yBot);
+    const obH = Math.max(8, bot - top);
+    const obW = (padL + chartW) - xStart;
+    if (obW <= 2 || top > padT + chartH || bot < padT) return;
+    ctx.fillStyle = isDemand ? 'rgba(40,195,170,0.28)' : 'rgba(255,75,95,0.26)';
+    ctx.fillRect(xStart, top, obW, obH);
+    ctx.strokeStyle = isDemand ? 'rgba(40,195,170,0.9)' : 'rgba(255,75,95,0.9)';
+    ctx.lineWidth = 1.25;
+    ctx.strokeRect(xStart, top, obW, obH);
+    // Label centered in middle of block height (visible like front-page chart)
+    if (obH >= 12 && obW >= 40) {
+      ctx.fillStyle = isDemand ? '#5ef0d2' : '#ff8a99';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const lab = (ob.volume != null ? Number(ob.volume).toFixed(1) + 'k ' : '') +
+        (ob.pct != null ? '(' + ob.pct + '%) ' : '') +
+        ((ob.tfName || p.tf || '').toString().toUpperCase()) + ' OB';
+      const midX = xStart + obW / 2;
+      const midY = top + obH / 2;
+      const tw = ctx.measureText(lab).width;
+      ctx.fillStyle = 'rgba(8,10,15,0.55)';
+      ctx.fillRect(midX - tw / 2 - 3, midY - 7, tw + 6, 14);
+      ctx.fillStyle = isDemand ? '#5ef0d2' : '#ff8a99';
+      ctx.fillText(lab, midX, midY);
+      ctx.textBaseline = 'alphabetic';
+      ctx.textAlign = 'left';
+    }
+  };
+  (p.supply || []).forEach(ob => drawOB(ob, false));
+  (p.demand || []).forEach(ob => drawOB(ob, true));
+
+  // Rays
+  (p.rays || []).forEach(l => {
+    const x1 = getX(l.x1), y1 = getY(l.y1);
+    const x2 = getX(l.x2), y2 = getY(l.y2);
+    if (x2 === x1) return;
+    let lineColor = '#f87171';
+    if (l.type === 'sup') lineColor = '#2dd4bf';
+    if (l.type === 'base') lineColor = '#3b82f6';
+    const slope = (y2 - y1) / (x2 - x1);
+    const xA = padL, yA = y1 + slope * (xA - x1);
+    const xB = padL + chartW, yB = y1 + slope * (xB - x1);
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash(l.type === 'base' ? [6, 4] : []);
+    ctx.beginPath(); ctx.moveTo(xA, yA); ctx.lineTo(xB, yB); ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  slice.forEach((c, i) => {
+    const x = padL + i * candleW + candleW / 2;
+    const yO = getY(c.o), yC = getY(c.c), yH = getY(c.h), yL = getY(c.l);
+    const up = c.c >= c.o;
+    const col = up ? '#00f59b' : '#ff2a44';
+    ctx.strokeStyle = col; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
+    const top = Math.min(yO, yC), bot = Math.max(yO, yC);
+    ctx.fillStyle = col;
+    ctx.fillRect(x - bodyW / 2, top, bodyW, Math.max(1, bot - top));
+    // Below-candle buy/sell volume + win-side arrow
+    try {
+      const totV = Number(c.quoteVol) || Number(c.v) || Number(c.volume) || Number(c._v) || 0;
+      if (totV > 0 && candleW >= 4) {
+        const buyShare = up ? 0.58 : 0.42;
+        const buyTot = totV * buyShare, sellTot = totV * (1 - buyShare);
+        const fmt = function (v) {
+          v = Math.abs(v);
+          if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+          if (v >= 1000) return (v / 1000).toFixed(1) + 'k';
+          return String(Math.round(v));
+        };
+        const baseY = Math.min(h - 14, Math.max(padT + chartH + 1, Math.max(yO, yC, yL) + 10));
+        if (buyTot !== sellTot) {
+          ctx.fillStyle = buyTot > sellTot ? '#00e676' : '#ff5252';
+          ctx.beginPath();
+          if (buyTot > sellTot) {
+            ctx.moveTo(x, baseY - 8); ctx.lineTo(x - 3.5, baseY - 2); ctx.lineTo(x + 3.5, baseY - 2);
+          } else {
+            ctx.moveTo(x, baseY - 2); ctx.lineTo(x - 3.5, baseY - 8); ctx.lineTo(x + 3.5, baseY - 8);
+          }
+          ctx.closePath(); ctx.fill();
+        }
+        if (candleW >= 9) {
+          ctx.font = 'bold 8px monospace';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+          ctx.fillStyle = '#00e676'; ctx.fillText(fmt(buyTot), x - bodyW * 0.35, baseY);
+          ctx.fillStyle = '#ff5252'; ctx.fillText(fmt(sellTot), x + bodyW * 0.35, baseY);
+          ctx.textBaseline = 'alphabetic';
+        }
+      }
+    } catch (eV) {}
+  });
+
+  // Price labels
+  const digS = isDxy ? 3 : 2;
+  ctx.fillStyle = '#6b7280';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'left';
+  for (let i = 0; i <= 4; i++) {
+    const price = maxP - (range * i / 4);
+    const y = padT + (chartH * i / 4);
+    ctx.fillText(price.toFixed(digS), padL + chartW + 4, y + 3);
+  }
+
+  if (live > 0) {
+    const y = getY(live);
+    ctx.strokeStyle = 'rgba(0,245,155,0.7)';
+    ctx.setLineDash([4, 3]);
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + chartW, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 11px system-ui,sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(live.toFixed(digS), padL + chartW + 4, y + 4);
+  }
+
+  ctx.fillStyle = 'rgba(15,18,26,0.85)';
+  ctx.fillRect(padL + 4, padT + 4, 72, 15);
+  ctx.fillStyle = '#8e95a5';
+  ctx.font = 'bold 10px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText((isDxy ? 'DXY' : 'XAU') + ' · ' + (p.tf || '15m').toUpperCase(), padL + 8, padT + 14);
+}
+
+function acvBindGestures() {
+  ['gold', 'dxy'].forEach(key => {
+    const wrap = document.getElementById(key === 'gold' ? 'acvWrapGold' : 'acvWrapDxy');
+    if (!wrap || wrap._acvBound) return;
+    wrap._acvBound = true;
+    const p = acvPanes[key];
+    let touchStartDist = 0;
+    wrap.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        const rect = wrap.getBoundingClientRect();
+        if (t.clientX - rect.left > rect.width - 56) {
+          p.scaleDrag = true; p.dragging = false;
+          p.startY = t.clientY; p.startScale = p.priceScale || 1;
+          const live = key === 'dxy' ? state.dxy_price : state.gold_price;
+          p.priceMid = (live > 0) ? live : null;
+        } else {
+          p.dragging = true; p.scaleDrag = false;
+          p.startX = t.clientX; p.startOff = p.offsetX || 0;
+        }
+        touchStartDist = 0;
+      } else if (e.touches.length === 2) {
+        p.dragging = false; p.scaleDrag = false;
+        touchStartDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+      }
+    }, { passive: true });
+    wrap.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && touchStartDist > 0) {
+        e.preventDefault();
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        if (dist < 10 || touchStartDist < 10) { touchStartDist = dist; return; }
+        let factor = Math.max(0.85, Math.min(1.18, dist / touchStartDist));
+        p.candleW = Math.max(2, Math.min(28, (p.candleW || 6) * factor));
+        p.priceScale = Math.max(0.25, Math.min(5, (p.priceScale || 1) * Math.pow(factor, 0.3)));
+        touchStartDist = dist;
+        acvDraw(key);
+      } else if (e.touches.length === 1 && p.scaleDrag) {
+        e.preventDefault();
+        const dy = e.touches[0].clientY - p.startY;
+        p.priceScale = Math.max(0.25, Math.min(6, p.startScale * Math.exp(-dy / 140)));
+        acvDraw(key);
+      } else if (e.touches.length === 1 && p.dragging) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - p.startX;
+        const cw = Math.max(2, p.candleW || 6);
+        p.offsetX = Math.max(0, p.startOff + Math.round(dx / cw));
+        acvDraw(key);
+      }
+    }, { passive: false });
+    wrap.addEventListener('touchend', () => { p.dragging = false; p.scaleDrag = false; touchStartDist = 0; });
+    wrap.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch') return;
+      const rect = wrap.getBoundingClientRect();
+      if (e.clientX - rect.left > rect.width - 56) {
+        p.scaleDrag = true; p.dragging = false;
+        p.startY = e.clientY; p.startScale = p.priceScale || 1;
+        const live = key === 'dxy' ? state.dxy_price : state.gold_price;
+        p.priceMid = (live > 0) ? live : null;
+      } else {
+        p.dragging = true; p.scaleDrag = false;
+        p.startX = e.clientX; p.startOff = p.offsetX || 0;
+      }
+      try { wrap.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    wrap.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'touch') return;
+      if (p.scaleDrag) {
+        const dy = e.clientY - p.startY;
+        p.priceScale = Math.max(0.25, Math.min(6, p.startScale * Math.exp(-dy / 140)));
+        acvDraw(key);
+      } else if (p.dragging) {
+        const dx = e.clientX - p.startX;
+        const cw = Math.max(2, p.candleW || 6);
+        p.offsetX = Math.max(0, p.startOff + Math.round(dx / cw));
+        acvDraw(key);
+      }
+    });
+    wrap.addEventListener('pointerup', () => { p.dragging = false; p.scaleDrag = false; });
+    wrap.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = wrap.getBoundingClientRect();
+      const f = e.deltaY < 0 ? 1.12 : 0.88;
+      if (e.clientX - rect.left > rect.width - 56) {
+        p.priceScale = Math.max(0.25, Math.min(6, (p.priceScale || 1) * f));
+      } else {
+        p.candleW = Math.max(2, Math.min(28, (p.candleW || 6) * f));
+      }
+      acvDraw(key);
+    }, { passive: false });
+  });
+}
+
+function acvPaintAv() {
+  if (!_acvOpen || !acvPanes.av.open) return;
+  try {
+    if (typeof avComputeSenses !== 'function') return;
+    const d = avComputeSenses();
+    const scoreEl = document.getElementById('acvAvScore');
+    const sigEl = document.getElementById('acvAvSig');
+    const gatesEl = document.getElementById('acvAvGates');
+    const thesisEl = document.getElementById('acvAvThesis');
+    if (scoreEl) {
+      const c = d.core || 0;
+      scoreEl.textContent = (c >= 0 ? '+' : '') + c.toFixed(2);
+      scoreEl.className = 'acv-av-score' + (c >= 0.15 ? ' buy' : (c <= -0.15 ? ' sell' : ''));
+    }
+    // Front-page correlation (composite) score — second header score
+    const corrEl = document.getElementById('acvCorrScore');
+    if (corrEl) {
+      const sc = (typeof state !== 'undefined' && state.smoothed_score != null)
+        ? Number(state.smoothed_score) : 0;
+      corrEl.textContent = (sc >= 0 ? '+' : '') + sc.toFixed(1);
+      corrEl.className = 'acv-av-score corr' + (sc >= 8 ? ' buy' : (sc <= -8 ? ' sell' : ''));
+    }
+    if (sigEl) sigEl.textContent = (d.finalSignal || 'NEUTRAL') + (d.finalStrength ? ' · ' + d.finalStrength : '');
+    if (gatesEl) gatesEl.textContent = (d.gatesCleared != null ? d.gatesCleared : 0) + '/4 gates · edge ' + (d.edge != null ? d.edge : 0);
+    if (thesisEl) thesisEl.textContent = d.thesis || '—';
+    const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text || '—'; };
+    set('acvAvStruct', d.structure && d.structure.meta);
+    set('acvAvNews', d.news && d.news.meta);
+    set('acvAvView', d.aiView && d.aiView.meta);
+    const gf = d.gateFlags || {};
+    set('acvAvGateFlags',
+      (gf.gStruct ? 'S✓' : 'S✗') + ' ' +
+      (gf.gFp ? 'FP✓' : 'FP✗') + ' ' +
+      (gf.gNews ? 'N✓' : 'N✗') + ' ' +
+      (gf.gAiView ? 'AI✓' : 'AI✗'));
+    // 1H Footprint mini inside AI Visual only
+    const fpMeta = (d.footprint && d.footprint.meta) || '—';
+    set('acvAvFp', fpMeta);
+    try {
+      let fp = d.fpPress || null;
+      if (!fp && typeof avGetFootprint1h === 'function') fp = avGetFootprint1h();
+      const fmt = (typeof avFmtVol === 'function') ? avFmtVol : (v) => String(Math.round(v || 0));
+      const buyEl = document.getElementById('acvAvFpBuy');
+      const sellEl = document.getElementById('acvAvFpSell');
+      if (buyEl) buyEl.textContent = 'Buy ' + (fp ? fmt(fp.buy) : '—');
+      if (sellEl) sellEl.textContent = 'Sell ' + (fp ? fmt(fp.sell) : '—');
+      const sideEl = document.getElementById('acvAvFp');
+      if (sideEl && fp) {
+        sideEl.textContent = (fp.side || 'FLAT') + ' · ' + fmt(fp.vol) + (fp.live ? ' · LIVE' : '');
+        sideEl.style.color = fp.side === 'BUY' ? '#00e676' : (fp.side === 'SELL' ? '#ff5252' : '#e2e8f0');
+      }
+    } catch (e2) {}
+  } catch (e) {}
+}
+
+let _acvFpDocked = false;
+
+/** Dock the real sidebar AI Footprint chart into All Chart View FP pane */
+function acvDockFootprint() {
+  const host = document.getElementById('acvEmbedFp');
+  const modal = document.getElementById('footprintModal');
+  if (!host || !modal) return;
+  const container = modal.querySelector('.modal-container');
+  if (!container) return;
+  if (container.parentElement === host) {
+    _acvFpDocked = true;
+    modal.classList.add('acv-docked');
+    acvRefreshDockedFp();
+    return;
+  }
+  // Hide placeholder
+  const ph = document.getElementById('acvFpPlaceholder');
+  if (ph) ph.style.display = 'none';
+  host.appendChild(container);
+  modal.classList.add('acv-docked');
+  modal.style.display = 'none';
+  _acvFpDocked = true;
+  // Same init path as openFootprintModal (without taking over full screen)
+  try {
+    FP_TICK_SIZE = (typeof RF_TICKS !== 'undefined' && RF_TICKS[fpTfMinutes]) ? RF_TICKS[fpTfMinutes] : (FP_TICK_SIZE || 0.2);
+  } catch (e) {}
+  try { fpFollowLive = false; /* keep user zoom/pan; center only if unset */ if (!fpViewCenter) fpViewCenter = 0; } catch (e) {}
+  try { if (typeof rfRestoreStore === 'function') rfRestoreStore(); } catch (e) {}
+  try { if (typeof fpSeedInstantCandles === 'function') fpSeedInstantCandles(); } catch (e) {}
+  try { if (typeof startAllTickFeed === 'function') startAllTickFeed(); } catch (e) {}
+  try {
+    if (typeof fpLoadOkxFootprint === 'function') {
+      fpLoadOkxFootprint(fpTfMinutes || 5, 40).then(function () {
+        acvRefreshDockedFp();
+      });
+    }
+  } catch (e) {}
+  _acvFpSizedOnce = false;
+  // Footer must live inside docked host and be visible
+  try {
+    fpFooterHeight = 78;
+    fpRestoreFooterToModal();
+    fpLayoutShell();
+  } catch (e) {}
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      try { fpLayoutShell(); } catch (e) {}
+      acvRefreshDockedFp(true);
+    });
+  });
+  setTimeout(function () {
+    try { fpLayoutShell(); } catch (e) {}
+    acvRefreshDockedFp(true);
+  }, 300);
+  setTimeout(function () {
+    try { fpLayoutShell(); drawFpTable(); } catch (e) {}
+    acvRefreshDockedFp(true);
+  }, 700);
+}
+
+let _acvFpSizedOnce = false;
+
+function acvRefreshDockedFp(forceLayout) {
+  if (!_acvFpDocked) return;
+  try { fpLayoutShell(); } catch (e) {}
+  if (forceLayout || !_acvFpSizedOnce) {
+    try { if (typeof resizeFpCanvases === 'function') resizeFpCanvases(); } catch (e) {}
+    if (!_acvFpSizedOnce && !_fpUserViewLocked) {
+      try { if (typeof autoCenterFp === 'function') autoCenterFp(); } catch (e) {}
+    }
+    _acvFpSizedOnce = true;
+  }
+  try { if (typeof ensureLivePriceVisible === 'function') ensureLivePriceVisible(); } catch (e) {}
+  try { if (typeof syncLivePriceToFootprint === 'function') syncLivePriceToFootprint(); } catch (e) {}
+  try { if (typeof drawFpTable === 'function') drawFpTable(); } catch (e) {}
+  try { if (typeof scheduleFpRedraw === 'function') scheduleFpRedraw(); } catch (e) {}
+}
+
+/** Return footprint chart DOM to the original full-screen modal shell */
+function acvUndockFootprint() {
+  const modal = document.getElementById('footprintModal');
+  const host = document.getElementById('acvEmbedFp');
+  if (!modal) return;
+  const container = host ? host.querySelector('.modal-container') : null;
+  if (container) {
+    modal.appendChild(container);
+  }
+  modal.classList.remove('acv-docked');
+  _acvFpDocked = false;
+  _acvFpSizedOnce = false;
+  try { fpFooterHeight = 110; fpLayoutShell(); } catch (e) {}
+  // Keep modal closed unless user opens it from sidebar
+  if (modal.style.display === 'flex') {
+    // was full-screen — leave as is
+  } else {
+    modal.style.display = 'none';
+  }
+  const ph = document.getElementById('acvFpPlaceholder');
+  if (ph) ph.style.display = '';
+}
+
+/** Pop footprint out of ACV into full-screen modal */
+function acvPopoutFootprint() {
+  acvUndockFootprint();
+  try { openFootprintModal(); } catch (e) {}
+}
+
+/** AI Visual pane only — 1H footprint pressure (not the chart) */
+function acvPaintFp() {
+  // No-op for FP chart pane; docking handles the real chart.
+  // 1H pressure lives inside AI Visual (acvPaintAv / avComputeSenses).
+  if (_acvFpDocked && acvPanes.fp && acvPanes.fp.open) {
+    try { acvRefreshDockedFp(); } catch (e) {}
+  }
+}
+
+// Live refresh while All Chart View is open
+setInterval(() => {
+  if (!_acvOpen) return;
+  try {
+    if (acvPanes.gold.open) { acvTickLive('gold'); acvDraw('gold'); }
+    if (acvPanes.dxy.open) { acvTickLive('dxy'); acvDraw('dxy'); }
+    acvPaintAv();
+    // Footprint: rAF loop draws when docked; only soft follow — never hard recenter
+    if (_acvFpDocked && acvPanes.fp && acvPanes.fp.open) {
+      try { acvRefreshDockedFp(false); } catch (e2) {}
+    }
+  } catch (e) {}
+}, 1000);
+
+window.addEventListener('resize', () => {
+  if (!_acvOpen) return;
+  acvApplyLayout();
+});
 
 
 function openMultiView() {
@@ -12927,7 +15660,7 @@ function mvDraw(pane) {
     }
   });
 
-  // candles
+  // candles + below-candle buy/sell volume + win arrow
   slice.forEach((c, i) => {
     const x = padL + i * candleW + candleW / 2;
     const yO = getY(c.o), yC = getY(c.c), yH = getY(c.h), yL = getY(c.l);
@@ -12943,6 +15676,47 @@ function mvDraw(pane) {
     const bot = Math.max(yO, yC);
     ctx.fillStyle = col;
     ctx.fillRect(x - bodyW / 2, top, bodyW, Math.max(1, bot - top));
+    // Below candle volume (green buy / red sell) + win-side arrow only
+    try {
+      const totV = Number(c.quoteVol) || Number(c.v) || Number(c.volume) || Number(c._v) || 0;
+      if (totV > 0 && candleW >= 4) {
+        const buyShare = up ? 0.58 : 0.42;
+        const buyTot = totV * buyShare;
+        const sellTot = totV * (1 - buyShare);
+        const fmt = function (v) {
+          v = Math.abs(v);
+          if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+          if (v >= 1000) return (v / 1000).toFixed(1) + 'k';
+          return String(Math.round(v));
+        };
+        const baseY = Math.min(h - 14, Math.max(padT + chartH + 1, Math.max(yO, yC, yL) + 10));
+        if (buyTot !== sellTot) {
+          ctx.fillStyle = buyTot > sellTot ? '#00e676' : '#ff5252';
+          ctx.beginPath();
+          if (buyTot > sellTot) {
+            ctx.moveTo(x, baseY - 8);
+            ctx.lineTo(x - 3.5, baseY - 2);
+            ctx.lineTo(x + 3.5, baseY - 2);
+          } else {
+            ctx.moveTo(x, baseY - 2);
+            ctx.lineTo(x - 3.5, baseY - 8);
+            ctx.lineTo(x + 3.5, baseY - 8);
+          }
+          ctx.closePath();
+          ctx.fill();
+        }
+        if (candleW >= 9) {
+          ctx.font = 'bold 8px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillStyle = '#00e676';
+          ctx.fillText(fmt(buyTot), x - bodyW * 0.35, baseY);
+          ctx.fillStyle = '#ff5252';
+          ctx.fillText(fmt(sellTot), x + bodyW * 0.35, baseY);
+          ctx.textBaseline = 'alphabetic';
+        }
+      }
+    } catch (eV) {}
   });
 
   // price scale labels (skip near live so badge stays readable)
