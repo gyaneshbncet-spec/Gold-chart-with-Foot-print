@@ -1623,6 +1623,9 @@ h1 { font-size: 17.5px; font-weight: 700; color: #ffffff; }
 .algo-tf-live-pnl .pnl-label{font-size:9px;font-weight:800;color:#93c5fd;flex:0 0 auto}
 .algo-tf-live-pnl .pnl-empty{font-size:9px;color:#94a3b8}
 .algo-tf-live-pnl .pnl-chip{font-size:9px;font-weight:800;padding:2px 5px;border-radius:4px;border:1px solid currentColor;flex:0 0 auto}
+.algo-tf-live-pnl .pnl-close{display:inline-block;margin-left:4px;cursor:pointer;opacity:.75;font-size:8px;font-weight:900}
+.algo-tf-live-pnl .pnl-close:hover{opacity:1}
+.algo-tf-live-pnl .pnl-close-locked{cursor:default;opacity:.55}
 @media(max-width:600px){.tv-tf-bar{gap:4px;padding:4px 5px}.tv-tf-group{flex:1 1 auto}.tv-tf{padding:3px 5px;font-size:9px}.algo-tf-live-pnl{max-width:42%;gap:3px}.algo-tf-live-pnl .pnl-label,.algo-tf-live-pnl .pnl-empty,.algo-tf-live-pnl .pnl-chip{font-size:8px}.tv-tf-bar>.tv-reset-btn{font-size:8px;padding:3px 5px}}
 
 .tv-reset-btn { border: 1px solid #1f2430; background: #131722; border-radius: 4px; padding: 3px 7px; font-size: 10px; font-weight: 600; color: #3b82f6; cursor: pointer; }
@@ -16212,12 +16215,32 @@ function algoUpdateMssState(tf, struct, barIndex, price, barClosed) {
     if (is1mTf && choppy && !brokenBuy && !brokenSell) {
       // skip all MSS triggers in pure noise
     } else {
-    // BUY structure FAIL → MSS toward SELL (needs real brokenBuy on 1m)
+    // BUY structure FAIL → MSS toward SELL
+    // 1m HARD: brokenBuy is ONLY true after demand ZONE BREAK (not retracement).
     if ((structureFail === 'BUY' || brokenBuy) && (validSide === 'BUY' || prevDir === 'BUY' || allowedSide === 'BUY' || (lastMss && lastMss.side === 'BUY'))) {
       if (is1mTf && !brokenBuy) {
-        try { console.log('[GP Algo] MSS 1m REJECTED soft BUY-fail — need real brokenBuy'); } catch (e) {}
-      } else if (!lastMss || lastMss.side !== 'SELL' || allowedSide === 'BUY') {
-        mss = makeMss('SELL', 'BUY', 'REAL · BUY structure FAILED (closed)');
+        try { console.log('[GP Algo] MSS 1m REJECTED — no demand ZONE BREAK (retracement ≠ MSS)'); } catch (e) {}
+      } else if (is1mTf && buyStructIntact) {
+        try { console.log('[GP Algo] MSS 1m REJECTED BUY→SELL — HH/HL or rising still intact'); } catch (e) {}
+      } else if (is1mTf && !(lh && ll)) {
+        // 1m: must also have formed LH+LL after the zone break
+        try { console.log('[GP Algo] MSS 1m REJECTED BUY→SELL — need LH+LL after zone break'); } catch (e) {}
+      } else if (trendRising && (alignedBuy || (hh && hl)) && !trendFalling) {
+        try { console.log('[GP Algo] MSS', tf, 'REJECTED fake BUY→SELL · still RISING'); } catch (e) {}
+      } else if (hl && lh) {
+        try { console.log('[GP Algo] MSS', tf, 'REJECTED BUY→SELL · HL+LH compression'); } catch (e) {}
+      } else if (trendFalling || (dir === 'SELL' && (alignedSell || (lh && ll))) || (lh && ll && !hh)) {
+        if (!lastMss || lastMss.side !== 'SELL' || allowedSide === 'BUY') {
+          mss = makeMss('SELL', 'BUY', is1mTf
+            ? 'REAL · demand ZONE BROKEN + LH/LL (closed)'
+            : 'REAL · BUY failed + SELL structure (closed)');
+        }
+      } else if (isMicroTf && !is1mTf && dir === 'SELL' && !trendRising && brokenBuy) {
+        if (!lastMss || lastMss.side !== 'SELL' || allowedSide === 'BUY') {
+          mss = makeMss('SELL', 'BUY', 'REAL · micro buy structure broken + dir flip (closed)');
+        }
+      } else {
+        try { console.log('[GP Algo] MSS', tf, 'REJECTED BUY→SELL · no confirmed SELL structure yet'); } catch (e) {}
       }
     }
     // SELL structure FAIL → MSS toward BUY
@@ -16239,9 +16262,13 @@ function algoUpdateMssState(tf, struct, barIndex, price, barClosed) {
         if (!lastMss || lastMss.side !== 'BUY' || allowedSide === 'SELL') {
           mss = makeMss('BUY', 'SELL', 'REAL · SELL failed + BUY structure (closed)');
         }
-      } else if (isMicroTf && dir === 'BUY' && !trendFalling) {
+      } else if (isMicroTf && dir === 'BUY' && (hl && lh)) {
+        // COMPRESSION, not a flip: a higher low AND a lower low simultaneously is a
+        // converging/triangle signature, not a confirmed directional reversal.
+        try { console.log('[GP Algo] MSS', tf, 'REJECTED SELL→BUY · HL+LH compression, not a clean flip'); } catch (e) {}
+      } else if (isMicroTf && dir === 'BUY' && !trendFalling && brokenSell) {
         if (!lastMss || lastMss.side !== 'BUY' || allowedSide === 'SELL') {
-          mss = makeMss('BUY', 'SELL', 'REAL · micro SELL→BUY dir flip (closed)');
+          mss = makeMss('BUY', 'SELL', 'REAL · micro sell structure broken + dir flip (closed)');
         }
       } else {
         try { console.log('[GP Algo] MSS', tf, 'REJECTED SELL→BUY · no confirmed BUY structure yet'); } catch (e) {}
@@ -16344,10 +16371,11 @@ function algoUpdateMssState(tf, struct, barIndex, price, barClosed) {
       // Practical unlock after BUY→SELL — do not stay stuck on WAIT
       // Accept: aligned SELL, or LH+LL, or falling + any bearish lean
       const sellReady =
+        !structSideways && (
         (alignedSell && !brokenSell) ||
         (lh && ll && !brokenSell) ||
         (trendFalling && (lh || ll || dir === 'SELL' || alignedSell)) ||
-        (dir === 'SELL' && !alignedBuy && !brokenSell);
+        (dir === 'SELL' && !alignedBuy && !brokenSell));
       if (sellReady) {
         waitStructure = false;
         allowedSide = 'SELL';
@@ -16418,84 +16446,94 @@ function algoUpdateMssState(tf, struct, barIndex, price, barClosed) {
     detail: struct.detail || '',
     updatedAt: Date.now()
   };
-  // If a prior fake SELL→BUY is active while chart is still FALLING, clear it
-  if (st.mssActive && st.lastMss && st.lastMss.side === 'BUY' && trendFalling && !trendRising) {
-    st.waitStructure = false;
-    st.allowedSide = null;
-    st.mssActive = false;
-    st.armedForBreak = true;
-    try { console.log('[GP Algo] MSS', tf, 'cleared stale SELL→BUY — market still FALLING'); } catch (e) {}
+  // ═══════════════════════════════════════════════════════════════════
+  // HARD CONSISTENCY — structure + zone aligned MSS only
+  // ═══════════════════════════════════════════════════════════════════
+  function pushCorrectedEvent(side, from, why) {
+    const ev = {
+      side: side, from: from, tf: tf,
+      reason: 'MSS ' + tf.toUpperCase() + ' ' + from + '→' + side + ' · ' + why,
+      at: Date.now(), barIndex: barIndex, price: price,
+      id: tf + '-mss-fix-' + Date.now()
+    };
+    st.lastMss = ev;
+    st.events = (st.events || []).concat([ev]).slice(-16);
+    return ev;
   }
-  // Stale SELL → BUY only after REAL sell structure break (not bounce / not 1m RISING alone).
-  // Chart bug: "MSS 1M SELL→BUY" while still under red sell structure was caused by
-  // auto-clear on trendRising without brokenSell.
-  if (st.lastMss && st.lastMss.side === 'SELL' && brokenSell && !trendFalling && hh && hl) {
-    st.mssActive = true;
+
+  const sellStillIntact = !!(alignedSell || (lh && ll) || (trendFalling && !trendRising) || dir === 'SELL');
+  const buyStillIntact  = !!(alignedBuy  || (hh && hl) || (trendRising  && !trendFalling) || dir === 'BUY');
+
+  // FAKE BUY→SELL while buy structure intact → clear to BUY (or release)
+  if (st.lastMss && String(st.lastMss.side).toUpperCase() === 'SELL' && !brokenBuy && buyStillIntact) {
     st.waitStructure = false;
-    st.allowedSide = 'BUY';
+    st.allowedSide = buyStillIntact ? 'BUY' : null;
     st.validSide = 'BUY';
+    st.mssActive = !!buyStillIntact;
     st.armedForBreak = true;
-    try {
-      const fix = {
-        side: 'BUY', from: 'SELL', tf: tf,
-        reason: 'MSS ' + tf.toUpperCase() + ' SELL→BUY · sell structure BROKEN + HH/HL',
-        at: Date.now(), barIndex: barIndex, price: price,
-        id: tf + '-mss-fixbreak-' + Date.now()
-      };
-      st.lastMss = fix;
-      st.events = (st.events || []).concat([fix]).slice(-16);
-    } catch (eFix) {}
-    try { console.log('[GP Algo] MSS', tf, 'SELL→BUY after brokenSell + HH/HL'); } catch (e) {}
+    pushCorrectedEvent('BUY', 'SELL', 'CANCEL fake BUY→SELL · buy structure intact');
+    try { console.log('[GP Algo] MSS', tf, 'reconcile: fake BUY→SELL cancelled'); } catch (e) {}
   }
-  // If 1m shows SELL→BUY wait but sell structure still intact → cancel fake MSS
-  if (tf === '1m' && st.lastMss && st.lastMss.side === 'BUY' && !brokenSell &&
-      (alignedSell || (lh && ll) || trendFalling || dir === 'SELL')) {
+  // FAKE SELL→BUY while sell structure intact
+  if (st.lastMss && String(st.lastMss.side).toUpperCase() === 'BUY' && !brokenSell && sellStillIntact) {
     st.waitStructure = false;
     st.allowedSide = 'SELL';
     st.validSide = 'SELL';
     st.mssActive = true;
-    st.lastMss = {
-      side: 'SELL', from: 'BUY', tf: '1m',
-      reason: 'MSS 1M fake SELL→BUY cancelled · sell structure intact',
-      at: Date.now(), barIndex: barIndex, price: price,
-      id: '1m-mss-cancel-' + Date.now()
-    };
-    try { console.log('[GP Algo] MSS 1m cancelled fake SELL→BUY — sell structure intact'); } catch (e) {}
+    st.armedForBreak = true;
+    pushCorrectedEvent('SELL', 'BUY', 'CANCEL fake SELL→BUY · sell structure intact');
   }
-  // Timeout: WAIT too long without confirmed structure → release lock so TF can trade again
-  // BUG FIX (1m/3m): 45 minutes was ~45 bars of deadlock on 1m / ~15 on 3m, so the
-  // scalper could never take another trade after a noisy MSS. Use TF-relative timeout
-  // (~20 bars) while keeping a longer wall for higher timeframes.
+
+  // Real breaks only on closed bars
+  if (closedOk && brokenSell && !trendFalling && hh && hl) {
+    st.mssActive = true; st.waitStructure = false; st.allowedSide = 'BUY'; st.validSide = 'BUY';
+    st.armedForBreak = true;
+    pushCorrectedEvent('BUY', 'SELL', 'REAL · sell BROKEN + HH/HL');
+  }
+  if (closedOk && brokenBuy && !trendRising && lh && ll) {
+    st.mssActive = true; st.waitStructure = false; st.allowedSide = 'SELL'; st.validSide = 'SELL';
+    st.armedForBreak = true;
+    pushCorrectedEvent('SELL', 'BUY', 'REAL · buy BROKEN + LH/LL');
+  }
+
+  // Sync label to lock
+  if (st.mssActive && !st.waitStructure && st.allowedSide && st.lastMss) {
+    const lock = String(st.allowedSide).toUpperCase();
+    if (String(st.lastMss.side || '').toUpperCase() !== lock) {
+      pushCorrectedEvent(lock, lock === 'BUY' ? 'SELL' : 'BUY', 'SYNC label to lock');
+    }
+  }
+
+  // 1m hard: SELL lock without brokenBuy + LH/LL → release
+  if (tf === '1m' && st.allowedSide === 'SELL' && !brokenBuy && (hh && hl) && !trendFalling) {
+    st.mssActive = false;
+    st.waitStructure = false;
+    st.allowedSide = null;
+    st.armedForBreak = true;
+    try { console.log('[GP Algo] MSS 1m RELEASE SELL — HH/HL intact, no real break'); } catch (e) {}
+  }
+
   try {
     if (st.mssActive && st.waitStructure && st.lastMss && st.lastMss.at) {
       const ageMs = Date.now() - Number(st.lastMss.at);
       const sec = (typeof ALGO_TF_SECONDS !== 'undefined' && ALGO_TF_SECONDS[tf]) ? ALGO_TF_SECONDS[tf] : 900;
       const isMicroTo = (tf === '1m' || tf === '3m');
-      const maxWaitMs = isMicroTo
-        ? Math.max(8 * 60 * 1000, sec * 20 * 1000)   // ~20 bars, min 8 min
-        : 45 * 60 * 1000;                             // higher TFs unchanged
+      const maxWaitMs = isMicroTo ? Math.max(8 * 60 * 1000, sec * 20 * 1000) : 45 * 60 * 1000;
       if (ageMs > maxWaitMs) {
-        st.mssActive = false;
-        st.waitStructure = false;
-        st.allowedSide = null;
-        st.armedForBreak = true;
-        try { console.log('[GP Algo] MSS', tf, 'WAIT timeout — released after', Math.round(ageMs/1000) + 's'); } catch (e) {}
+        st.mssActive = false; st.waitStructure = false; st.allowedSide = null; st.armedForBreak = true;
       }
     }
   } catch (eTo) {}
+
   window.__algoMssState[tf] = st;
-  // Persist sticky lastMss so BUY→SELL (or SELL→BUY) lock survives page reload
   try {
     if (st.lastMss && (st.lastMss.side === 'BUY' || st.lastMss.side === 'SELL')) {
       localStorage.setItem('gp_mss_last_' + tf, JSON.stringify({
-        side: st.lastMss.side,
-        from: st.lastMss.from || '',
-        reason: st.lastMss.reason || '',
-        at: st.lastMss.at || Date.now(),
-        barIndex: st.lastMss.barIndex,
-        price: st.lastMss.price,
-        tf: tf
+        side: st.lastMss.side, from: st.lastMss.from || '', reason: st.lastMss.reason || '',
+        at: st.lastMss.at || Date.now(), barIndex: st.lastMss.barIndex, price: st.lastMss.price, tf: tf
       }));
+    } else {
+      try { localStorage.removeItem('gp_mss_last_' + tf); } catch (eR) {}
     }
   } catch (ePersist) {}
   return st;
@@ -16583,16 +16621,74 @@ function algoUpdateScalpStructLock(tf, struct, sideWanted) {
   return algoUpdateTfStructLock(tf, struct, sideWanted);
 }
 
-/** Max concurrent OPEN trades across ALL timeframes (live + paper). */
+/** Max concurrent OPEN live/MT5 trades across ALL timeframes.
+ * HARD CAP = 4 at any condition. BACKTEST never consumes these slots. */
 const ALGO_MAX_OPEN_TRADES = 4;
+const ALGO_MAX_OPEN_PER_TF = 1;
+
+/** Broker open gold positions from MT5 STATUS (authoritative for live risk). */
+function algoCountMt5BrokerOpen() {
+  try {
+    const d = (typeof MT5_BRIDGE !== 'undefined' && MT5_BRIDGE && MT5_BRIDGE.lastStatus)
+      ? MT5_BRIDGE.lastStatus : null;
+    const positions = (d && Array.isArray(d.positions)) ? d.positions : [];
+    const sym = String((typeof MT5_BRIDGE !== 'undefined' && MT5_BRIDGE && MT5_BRIDGE.symbol) || '').toUpperCase();
+    let n = 0;
+    for (let i = 0; i < positions.length; i++) {
+      const p = positions[i];
+      if (!p) continue;
+      const ps = String(p.symbol || '').toUpperCase();
+      // Count gold-family symbols; if bridge symbol set, prefer exact match, else count all reported
+      if (sym && ps && ps !== sym && ps.indexOf('XAU') < 0 && ps.indexOf('GOLD') < 0) continue;
+      n++;
+    }
+    return n;
+  } catch (e) { return 0; }
+}
+
+/** Count OPEN live/paper/MT5 trades only — BACKTEST history never consumes live slots.
+ * Uses max(local open non-BT, MT5 broker positions) so broker is source of truth for the 4-cap. */
 function algoCountOpenTrades(log) {
   const list = log || (typeof algoLoadTrades === 'function' ? algoLoadTrades() : []);
   let n = 0;
+  const tickets = new Set();
   for (let i = 0; i < list.length; i++) {
     const t = list[i];
     if (!t) continue;
-    if (t.outcome === 'TP' || t.outcome === 'SL' || t.status === 'TP' || t.status === 'SL') continue;
+    if (!algoIsOpenTrade(t)) continue;
+    if (String(t.source || '').toUpperCase() === 'BACKTEST') continue;
     n++;
+    if (t.mt5Ticket) tickets.add(String(t.mt5Ticket));
+  }
+  // Merge broker positions not already represented in the log
+  try {
+    const d = (typeof MT5_BRIDGE !== 'undefined' && MT5_BRIDGE && MT5_BRIDGE.lastStatus)
+      ? MT5_BRIDGE.lastStatus : null;
+    const positions = (d && Array.isArray(d.positions)) ? d.positions : [];
+    const sym = String((typeof MT5_BRIDGE !== 'undefined' && MT5_BRIDGE && MT5_BRIDGE.symbol) || '').toUpperCase();
+    for (let i = 0; i < positions.length; i++) {
+      const p = positions[i];
+      if (!p) continue;
+      const ps = String(p.symbol || '').toUpperCase();
+      if (sym && ps && ps !== sym && ps.indexOf('XAU') < 0 && ps.indexOf('GOLD') < 0) continue;
+      const tk = String(p.ticket || p.identifier || '');
+      if (tk && tickets.has(tk)) continue;
+      // Untracked broker position still counts toward the hard 4-cap
+      n++;
+      if (tk) tickets.add(tk);
+    }
+  } catch (eM) {}
+  return n;
+}
+function algoCountOpenTradesOnTf(tf, log) {
+  const list = log || (typeof algoLoadTrades === 'function' ? algoLoadTrades() : []);
+  const tfK = String(tf || '').toLowerCase();
+  let n = 0;
+  for (let i = 0; i < list.length; i++) {
+    const t = list[i];
+    if (!t || !algoIsOpenTrade(t)) continue;
+    if (String(t.source || '').toUpperCase() === 'BACKTEST') continue;
+    if (String(t.tf || '').toLowerCase() === tfK) n++;
   }
   return n;
 }
@@ -16612,21 +16708,21 @@ function algoTfStructure(data, i, tf) {
   const tfKey = String(tf || '').toLowerCase();
   const is1m = (tfKey === '1m');
   const isScalp = (tfKey === '1m' || tfKey === '3m' || tfKey === '5m');
-  // 1m GOLD only: stricter pivots — tiny $0.5–1.5 swings are noise, not structure/MSS.
+  // 1m GOLD: FULL SWING pivots — ignore few-candle micro zones for structure/MSS.
   // 3m/5m keep prior scalp settings. HTF unchanged.
-  const L = is1m ? 4 : (isScalp ? 3 : (tfKey === '15m' ? 4 : 5));
+  const L = is1m ? 6 : (isScalp ? 3 : (tfKey === '15m' ? 4 : 5));
   const highs = [];
   const lows = [];
   const end = Math.max(L, i - L);
-  const deepCap = isScalp ? 220 : (tfKey === '15m' ? 280 : 360);
+  const deepCap = is1m ? 320 : (isScalp ? 280 : (tfKey === '15m' ? 280 : 360));
   const mapFrom = Math.max(L, i - Math.min(deepCap, i - L));
   let atrPre = 0;
   const apPre = Math.min(14, i);
   for (let k = i - apPre + 1; k <= i; k++) atrPre += Math.max(0.01, Number(data[k].h) - Number(data[k].l));
   atrPre = Math.max(0.35, atrPre / apPre);
-  // 1m: min pivot gap ≥ max(1.15×ATR, $1.40) so micro zones never count as HH/HL structure
+  // 1m FULL SWING: only large pivots count — few-candle wiggles never form HH/HL/MSS
   const minSwing = is1m
-    ? Math.max(atrPre * 1.15, 1.40)
+    ? Math.max(atrPre * 2.20, 3.00)
     : (atrPre * (isScalp ? 0.55 : 0.45));
   const highsRaw = [], lowsRaw = [];
   for (let k = mapFrom; k <= end; k++) {
@@ -16642,11 +16738,13 @@ function algoTfStructure(data, i, tf) {
   function filterStrongPivots(arr) {
     if (!arr || !arr.length) return [];
     const outP = [arr[0]];
+    // 1m: require wider bar gap between pivots so full swings form, not 3–5 bar noise
+    const minGapBars = is1m ? Math.max(L * 2, 10) : L;
     for (let pi = 1; pi < arr.length; pi++) {
       const prev = outP[outP.length - 1];
       const cur = arr[pi];
       if (Math.abs(cur.p - prev.p) < minSwing) continue; // tiny zone — not structure
-      if ((cur.i - prev.i) < L) continue;
+      if ((cur.i - prev.i) < minGapBars) continue;
       outP.push(cur);
     }
     return outP;
@@ -16658,7 +16756,7 @@ function algoTfStructure(data, i, tf) {
   for (let k = i - ap + 1; k <= i; k++) atrSum += Math.max(0.01, Number(data[k].h) - Number(data[k].l));
   const atr = Math.max(0.3, atrSum / ap);
   // Range context also uses deep window (full series capped) so compression is not micro-noise
-  const winCap = isScalp ? 160 : (tfKey === '15m' ? 200 : 260);
+  const winCap = (is1m || isScalp) ? 100 : (tfKey === '15m' ? 200 : 260);
   const win = Math.min(winCap, i + 1);
   let hi = -Infinity, lo = Infinity;
   for (let k = i - win + 1; k <= i; k++) {
@@ -16668,20 +16766,20 @@ function algoTfStructure(data, i, tf) {
   const range = hi - lo;
   // Recent micro-range (few pips chop) — not valid structure even if deep history is wide
   let recentHi = -Infinity, recentLo = Infinity;
-  const recentN = is1m ? 24 : (isScalp ? 18 : 24);
+  // 1m/3m: ~100 candles so MSS sees full swing + small zones, not micro noise
+  const recentN = is1m ? 100 : (isScalp ? 100 : 24);
   for (let k = Math.max(0, i - recentN + 1); k <= i; k++) {
     recentHi = Math.max(recentHi, Number(data[k].h));
     recentLo = Math.min(recentLo, Number(data[k].l));
   }
   const recentRange = recentHi - recentLo;
-  // 1m GOLD: ranges under ~$2.8–3.0 are chop — not tradeable structure / not MSS fuel
+  // 1m FULL SWING: micro ranges are never structure / never MSS
   const fewPipCeil = is1m
-    ? Math.max(atr * 2.6, 2.80)
+    ? Math.max(atr * 4.0, 5.00)
     : (isScalp ? Math.max(atr * 1.8, 1.8) : Math.max(atr * 2.2, 2.5));
   const microChop = recentRange < fewPipCeil;
-  // Deep window also compressed
   const deepCompressed = is1m
-    ? (range < atr * 3.2)
+    ? (range < atr * 5.5)
     : (isScalp ? (range < atr * 2.0) : (range < atr * 2.6));
   const compressed = microChop || deepCompressed;
 
@@ -16705,54 +16803,125 @@ function algoTfStructure(data, i, tf) {
   // Structure break = BOS of the PROTECTING swing, not a bounce HH inside the trend.
   // OLD BUG: (h1 > h0 && ll) = any pullback high above prior micro-high while LL still
   // true → fake brokenSell → fake MSS SELL→BUY on every bounce (your chart case).
+  // 1m FULL SWING BOS only — tiny pullbacks never mark structure broken
   const brkMin = is1m
-    ? Math.max(atr * 1.35, 2.20)   // gold 1m: need real $2+ displacement
+    ? Math.max(atr * 2.40, 4.00)
     : (atr * (isScalp ? 0.70 : 0.55));
   const cNow = data[i] ? Number(data[i].c) : NaN;
   const cPrev = (i > 0 && data[i - 1]) ? Number(data[i - 1].c) : cNow;
 
   if (is1m) {
-    // —— 1m GOLD: break the last significant LH / HL level ——
-    // Sell structure protecting high = highest of last 2–3 swing highs that formed LH sequence
-    // Buy structure protecting low  = lowest of last 2–3 swing lows that formed HL sequence
+    // ═══════════════════════════════════════════════════════════════
+    // 1m HARD MSS RULE: NO ZONE BREAK = NO STRUCTURE BREAK = NO MSS
+    // Retracement into demand/supply is NOT MSS. Only CLOSED break
+    // beyond the protecting zone (and full-swing HL/LH) counts.
+    // ═══════════════════════════════════════════════════════════════
     let protectHi = -Infinity, protectLo = Infinity;
-    const useH = highs.slice(-4);
-    const useL = lows.slice(-4);
-    // Prefer the max of swing highs that are still "LH territory" (not the live spike alone)
-    for (let pi = 0; pi < useH.length; pi++) {
-      protectHi = Math.max(protectHi, Number(useH[pi].p));
-    }
-    for (let pi = 0; pi < useL.length; pi++) {
-      protectLo = Math.min(protectLo, Number(useL[pi].p));
-    }
-    // If we clearly had LH sequence, protecting high is the prior swing high (h0), not a micro h1
+    const useH = highs.slice(-5);
+    const useL = lows.slice(-5);
+    for (let pi = 0; pi < useH.length; pi++) protectHi = Math.max(protectHi, Number(useH[pi].p));
+    for (let pi = 0; pi < useL.length; pi++) protectLo = Math.min(protectLo, Number(useL[pi].p));
     if (h0 && hPrev && h0.p < hPrev.p) protectHi = Math.max(protectHi, Number(hPrev.p), Number(h0.p));
     else if (h0) protectHi = Math.max(protectHi, Number(h0.p));
     if (l0 && lPrev && l0.p > lPrev.p) protectLo = Math.min(protectLo, Number(lPrev.p), Number(l0.p));
     else if (l0) protectLo = Math.min(protectLo, Number(l0.p));
 
-    // SELL structure BROKEN only if CLOSE breaks above protecting LH by brkMin
-    // (wick-only spike through LH is not enough on 1m gold)
-    if (Number.isFinite(protectHi) && protectHi > 0 && Number.isFinite(cNow)) {
-      if (cNow > protectHi + brkMin && cPrev > protectHi) {
-        // Must not still be printing fresh LL after the break attempt
-        const stillNewLL = !!(l1 && l0 && l1.p < l0.p - atr * 0.35 && l1.i >= i - 3);
-        if (!stillNewLL) brokenSell = true;
-      }
+    // Live demand / supply OBs on chart (whole-chart zones, not micro candles)
+    let demZones = [];
+    let supZones = [];
+    try {
+      if (typeof storedDemandOBs !== 'undefined' && Array.isArray(storedDemandOBs)) demZones = storedDemandOBs;
+      if (typeof storedSupplyOBs !== 'undefined' && Array.isArray(storedSupplyOBs)) supZones = storedSupplyOBs;
+    } catch (eZ) {}
+
+    // Deepest demand floor still holding (buy structure protection)
+    let demandFloor = protectLo;
+    demZones.forEach(function (ob) {
+      if (!ob || !(Number(ob.bottom) > 0)) return;
+      // Only zones that are still relevant (price has not already closed far below)
+      const bot = Number(ob.bottom);
+      if (bot < demandFloor || !Number.isFinite(demandFloor)) demandFloor = Math.min(demandFloor, bot);
+      if (!Number.isFinite(demandFloor) || demandFloor === Infinity) demandFloor = bot;
+    });
+    // Highest supply ceiling still holding
+    let supplyCeil = protectHi;
+    supZones.forEach(function (ob) {
+      if (!ob || !(Number(ob.top) > 0)) return;
+      const top = Number(ob.top);
+      if (top > supplyCeil || !Number.isFinite(supplyCeil)) supplyCeil = Math.max(supplyCeil, top);
+      if (!Number.isFinite(supplyCeil) || supplyCeil === -Infinity) supplyCeil = top;
+    });
+
+    // —— BUY structure BROKEN only if:
+    //  1) CLOSE below protecting HL by brkMin AND
+    //  2) CLOSE below demand zone floor (if any demand OB exists) AND
+    //  3) Previous close also below (not a single wick) AND
+    //  4) Not still printing HH (uptrend intact)
+    // Retracement INTO demand (wick in zone, close back above) = NOT a break.
+    // Zone-aware break over ~100-candle map:
+    // Use the NEAREST protective zone (not "any zone still holds far away").
+    // Small zones on the active swing matter; distant OBs do not block a real break.
+    let demandBroken = false;
+    if (demZones.length) {
+      // Nearest demand whose top is at/under recent price area (active swing zone)
+      let nearBot = Infinity;
+      demZones.forEach(function (ob) {
+        const bot = Number(ob.bottom), top = Number(ob.top);
+        if (!(bot > 0 && top > bot)) return;
+        // Active if zone is within last ~100 bars of price interaction
+        if (ob.startIndex != null && (i - ob.startIndex) > 100) return;
+        if (top < cNow + atr * 8) nearBot = Math.min(nearBot, bot);
+      });
+      if (!Number.isFinite(nearBot) || nearBot === Infinity) nearBot = protectLo;
+      demandBroken = (Number.isFinite(nearBot) && cNow < nearBot - brkMin * 0.15 && cPrev < nearBot);
+    } else {
+      demandBroken = (Number.isFinite(protectLo) && cNow < protectLo - brkMin && cPrev < protectLo);
     }
-    // BUY structure BROKEN only if CLOSE breaks below protecting HL by brkMin
-    if (Number.isFinite(protectLo) && protectLo < Infinity && Number.isFinite(cNow)) {
-      if (cNow < protectLo - brkMin && cPrev < protectLo) {
-        const stillNewHH = !!(h1 && h0 && h1.p > h0.p + atr * 0.35 && h1.i >= i - 3);
-        if (!stillNewHH) brokenBuy = true;
-      }
+
+    let supplyBroken = false;
+    if (supZones.length) {
+      let nearTop = -Infinity;
+      supZones.forEach(function (ob) {
+        const bot = Number(ob.bottom), top = Number(ob.top);
+        if (!(top > bot && top > 0)) return;
+        if (ob.startIndex != null && (i - ob.startIndex) > 100) return;
+        if (bot > cNow - atr * 8) nearTop = Math.max(nearTop, top);
+      });
+      if (!Number.isFinite(nearTop) || nearTop === -Infinity) nearTop = protectHi;
+      supplyBroken = (Number.isFinite(nearTop) && cNow > nearTop + brkMin * 0.15 && cPrev > nearTop);
+    } else {
+      supplyBroken = (Number.isFinite(protectHi) && cNow > protectHi + brkMin && cPrev > protectHi);
     }
-    // Reject breaks inside pure micro-chop window
+    // Also accept pure swing break of protectLo/Hi over 100-bar pivots (zone optional)
+    if (!demandBroken && Number.isFinite(protectLo) && cNow < protectLo - brkMin && cPrev < protectLo) {
+      demandBroken = true;
+    }
+    if (!supplyBroken && Number.isFinite(protectHi) && cNow > protectHi + brkMin && cPrev > protectHi) {
+      supplyBroken = true;
+    }
+
+    if (demandBroken) {
+      const stillNewHH = !!(h1 && h0 && h1.p > h0.p + atr * 0.35 && h1.i >= i - 4);
+      if (!stillNewHH) brokenBuy = true;
+    }
+    if (supplyBroken) {
+      const stillNewLL = !!(l1 && l0 && l1.p < l0.p - atr * 0.35 && l1.i >= i - 4);
+      if (!stillNewLL) brokenSell = true;
+    }
+
+    // HARD: retracement only — never MSS without zone break
+    if (!demandBroken) brokenBuy = false;
+    if (!supplyBroken) brokenSell = false;
+
     if (microChop) { brokenBuy = false; brokenSell = false; }
-    // Extra: if still LH+LL clearly, sell structure is intact — never brokenSell
     if (lh && ll && !hh) brokenSell = false;
-    // Extra: if still HH+HL clearly, buy structure is intact — never brokenBuy
     if (hh && hl && !ll) brokenBuy = false;
+
+    // Tag for debug / MSS gate
+    try {
+      data[i]._zoneBreakBuy = !!demandBroken;
+      data[i]._zoneBreakSell = !!supplyBroken;
+    } catch (eTag) {}
   } else {
     // Higher TFs / 3m/5m: prior pivot-distance logic (unchanged)
     if (l1 && l0 && l1.p < l0.p - brkMin && hh) brokenBuy = true;
@@ -16775,6 +16944,12 @@ function algoTfStructure(data, i, tf) {
   // In a clear falling trend, a single bounce HH is NOT a SELL structure break
   if (trendFalling && brokenSell && !hh3) brokenSell = false;
   if (trendRising && brokenBuy && !ll3) brokenBuy = false;
+  // 1m HARD: rising chart / HH+HL with no demand zone break → never brokenBuy
+  if (is1m) {
+    if ((trendRising || (hh && hl)) && !brokenBuy) { /* already false */ }
+    if (trendRising && !ll3) brokenBuy = false;
+    if (hh && hl && !ll3) brokenBuy = false;
+  }
 
   // BOTH-SIDE RECOVERY / LIQUIDITY GRAB (symmetric):
   // SHORT-RECOVERY / LIQ-GRAB: after sell structure (LH/LL) or a low-side liquidity sweep,
@@ -16883,7 +17058,12 @@ function algoTfStructure(data, i, tf) {
   const alignedBuy = dir === 'BUY' && !buyRecovery;
   const alignedSell = dir === 'SELL' && !sellRecovery;
 
-  const sideways = dir === 'SIDEWAYS' || sellRecovery || buyRecovery;
+  // FIX: do not force sideways=true from a lingering recovery flag once dir has
+  // already resolved to a confirmed direction (e.g. 1m's hh&&hl override, or
+  // hh3/ll3 clearing the lock on other TFs). dir already accounts for
+  // sellRecovery/buyRecovery before resolving, so mirroring dir here is correct
+  // and stops the panel/gate from reporting SIDEWAYS on an already-confirmed trend.
+  const sideways = dir === 'SIDEWAYS';
   const detail = (String(tf || '').toUpperCase() || 'TF') + ' struct ' + dir +
     (hh ? ' · HH' : '') + (hl ? ' · HL' : '') + (lh ? ' · LH' : '') + (ll ? ' · LL' : '') +
     (hh3 ? ' · HH3' : '') + (ll3 ? ' · LL3' : '') +
@@ -16979,14 +17159,25 @@ function algoStructureGate(side, data, i, tf, mode) {
   // 1D is preference / confluence boost — does not hard-block when local structure is clear.
   const isMicro = true; // unified local-structure path for 1m…1d
 
-  // SIDEWAYS blocks only when not a clear falling market for SELL / rising for BUY
+  // SIDEWAYS blocks only when not a clear falling market for SELL / rising for BUY.
+  // NO-TRADE ZONE FIX: when the SIDEWAYS verdict came from compressed/microChop
+  // (real no-volatility / tiny-range chop), never allow the trendFalling/ll/lh
+  // (or trendRising/hh/hl) fallback to override it — those booleans are computed
+  // from raw pivots and can still be true inside a dead, tiny-dollar range.
   if (isScalp && struct.sideways) {
-    if (side === 'SELL' && (struct.trendFalling || struct.ll || struct.lh)) {
+    const noTradeZone = !!(struct.compressed || struct.microChop);
+    if (!noTradeZone && side === 'SELL' && (struct.trendFalling || struct.ll || struct.lh)) {
       // allow fall-through to SELL structure checks
-    } else if (side === 'BUY' && (struct.trendRising || struct.hh || struct.hl) && !struct.trendFalling) {
+    } else if (!noTradeZone && side === 'BUY' && (struct.trendRising || struct.hh || struct.hl) && !struct.trendFalling) {
       // allow fall-through to BUY structure checks
     } else {
-      return { ok: false, struct: struct, reason: 'SIDEWAYS on ' + String(tf).toUpperCase() + ' — wait structure', daily: daily || 'NEUTRAL', structLocked: false };
+      return {
+        ok: false, struct: struct,
+        reason: (noTradeZone
+          ? 'NO-TRADE ZONE on ' + String(tf).toUpperCase() + ' — volatility/range too tight'
+          : 'SIDEWAYS on ' + String(tf).toUpperCase() + ' — wait structure'),
+        daily: daily || 'NEUTRAL', structLocked: false
+      };
     }
   }
 
@@ -17132,17 +17323,35 @@ function algoFootprintForCandle(c, tf) {
       const b = rfStore.get(slot);
       if (!b || !b.lv || !b.lv.size) continue;
       let had = false;
+      let slotBuy = 0, slotSell = 0;
       b.lv.forEach(function (v) {
-        if (!Array.isArray(v)) return;
-        sell += Number(v[0]) || 0; buy += Number(v[1]) || 0; had = true;
+        if (!Array.isArray(v)) {
+          if (v && typeof v === 'object') {
+            slotSell += Number(v._b || v.bid || v[0]) || 0;
+            slotBuy += Number(v._a || v.ask || v[1]) || 0;
+            had = true;
+          }
+          return;
+        }
+        slotSell += Number(v[0]) || 0; slotBuy += Number(v[1]) || 0; had = true;
       });
+      sell += slotSell; buy += slotBuy;
       if (had) minutes++;
-      buyN += Number(b._buyTrades) || 0; sellN += Number(b._sellTrades) || 0;
+      // Prefer explicit trade counts; if store only has volume (common on desktop restore),
+      // estimate aggressor hits from non-zero level volume so UI is not stuck at 0B/0S.
+      let bn = Number(b._buyTrades) || 0;
+      let sn = Number(b._sellTrades) || 0;
+      if (bn <= 0 && slotBuy > 0) bn = Math.max(1, Math.round(slotBuy > 50 ? slotBuy / 10 : 1));
+      if (sn <= 0 && slotSell > 0) sn = Math.max(1, Math.round(slotSell > 50 ? slotSell / 10 : 1));
+      buyN += bn; sellN += sn;
       lastTradeAt = Math.max(lastTradeAt, Number(b._lastTradeAt) || 0);
     }
     const vol = buy + sell;
     if (!(vol > 0)) return null;
     const delta = buy - sell, pressure = delta / vol;
+    // If counts still zero but volume exists, derive display counts from volume
+    if (buyN <= 0 && buy > 0) buyN = Math.max(1, Math.round(buy >= 1 ? buy : 1));
+    if (sellN <= 0 && sell > 0) sellN = Math.max(1, Math.round(sell >= 1 ? sell : 1));
     return { buy: buy, sell: sell, vol: vol, delta: delta, pressure: pressure,
       side: pressure >= 0.06 ? 'BUY' : (pressure <= -0.06 ? 'SELL' : 'NEUTRAL'),
       minutes: minutes, buyN: buyN, sellN: sellN, lastTradeAt: lastTradeAt,
@@ -17180,14 +17389,31 @@ function algoConfluencePack(side, mode, localLean, candle, tf) {
     bits.push('1D bias×');
   }
 
-  // 3) Footprint from this individual signal candle, not 1H aggregate.
+  // 3) Footprint from this individual signal candle, not 1H aggregate (OKX XAU-USDT-SWAP
+  //    real aggressor tape). Weight now scales with how one-sided the tape is, and a
+  //    genuinely strong opposing tape (absorption) costs real points — tuned so footprint
+  //    actually moves the decision instead of only adding a flat confirmation bonus.
   let fp = null;
   if (mode === 'LIVE') {
     fp = algoFootprintForCandle(candle, tf);
     if (fp && fp.vol > 0) {
       const aligned = (side === 'BUY' && fp.side === 'BUY') || (side === 'SELL' && fp.side === 'SELL');
-      if (aligned) { score += 28; bits.push('bar FP ' + fp.side + ' ' + (fp.pressure * 100).toFixed(0) + '% · ' + (fp.buyN||0) + 'B/' + (fp.sellN||0) + 'S'); }
-      else bits.push('bar FP ' + fp.side + ' not aligned · ' + (fp.buyN||0) + 'B/' + (fp.sellN||0) + 'S');
+      const absPressure = Math.abs(fp.pressure);
+      const enoughVol = fp.vol >= 6; // ignore near-empty windows (few lots = noise, not real pressure)
+      if (aligned) {
+        // 14 base + up to +22 more as the tape gets more one-sided (max +36 at 100% one-sided).
+        const boost = 14 + Math.min(22, absPressure * 40);
+        score += Math.round(boost);
+        bits.push('bar FP ' + fp.side + ' ' + (fp.pressure * 100).toFixed(0) + '% · ' + (fp.buyN||0) + 'B/' + (fp.sellN||0) + 'S');
+      } else if (enoughVol && absPressure >= 0.30) {
+        // ABSORPTION: real aggressor volume running the other way at this exact
+        // signal candle. Still non-veto on its own (very strong structure/1D/AI
+        // elsewhere can outweigh it), but this is no longer a free pass.
+        score -= Math.min(24, Math.round(absPressure * 45));
+        bits.push('FP ABSORPTION vs ' + side + ' · ' + fp.side + ' ' + (fp.pressure * 100).toFixed(0) + '% · ' + (fp.buyN||0) + 'B/' + (fp.sellN||0) + 'S');
+      } else {
+        bits.push('bar FP ' + fp.side + ' weak/mixed · ' + (fp.buyN||0) + 'B/' + (fp.sellN||0) + 'S');
+      }
     } else bits.push('bar FP unavailable for candle slot (no OKX aggressor trades in window)');
   } else bits.push('FP skip(hist; historical trade tape unavailable)');
 
@@ -17282,11 +17508,13 @@ function algoSMCStructureConfirm(data, i, side, atr, demand, supply, tf) {
   for (let k = start; k <= i; k++) { hi = Math.max(hi, data[k].h); lo = Math.min(lo, data[k].l); }
   if (!(hi > lo)) return { ok: false, reason: 'range unavailable' };
   const pos = (c.c - lo) / (hi - lo);
-  // Scalp: BUY lower ~55%, SELL upper ~55% (was 42/58 — too tight after fast 1m swings).
-  if (isScalp) {
-    if (side === 'BUY' && pos > 0.50) return { ok: false, reason: 'scalp BUY blocked — not in discount zone (pos ' + (pos * 100).toFixed(0) + '% · need ≤50%)' };
-    if (side === 'SELL' && pos < 0.50) return { ok: false, reason: 'scalp SELL blocked — not in premium zone (pos ' + (pos * 100).toFixed(0) + '% · need ≥50%)' };
-  } else {
+  // Scalp: premium/discount is already enforced once, upstream, by
+  // algoScalpPremiumDiscount (24-bar window) before algoScanBar ever reaches an
+  // OB-style entry that calls this function. Re-testing the same 50% rule here
+  // with a different (12-bar) window just gave two windows a chance to disagree
+  // and kill an otherwise-valid setup — removed; pos is still computed below for
+  // the descriptive "premium/discount" tag on the returned reason text.
+  if (!isScalp) {
     if (side === 'BUY' && pos > 0.52) return { ok: false, reason: 'not in discount/equilibrium' };
     if (side === 'SELL' && pos < 0.48) return { ok: false, reason: 'not in premium/equilibrium' };
   }
@@ -17373,6 +17601,43 @@ function algoSMCStructureConfirm(data, i, side, atr, demand, supply, tf) {
 /** 1m/3m scalp zone: BUY only discount (lower half), SELL only premium (upper half).
  * Uses recent range of last N bars ending at i. Returns {ok, pos, lo, hi, reason}.
  */
+
+/** Zone retest depth: how far price entered the OB from the outer edge.
+ *  BUY demand (top=outer, bottom=deep): depth = (top - wickLow) / (top - bottom)
+ *  SELL supply (bottom=outer, top=deep): depth = (wickHigh - bottom) / (top - bottom)
+ *  Valid retest = depth in [minDepth, maxDepth] (default 65% … 99%).
+ *  Shallow <65% = weak touch; ≥100% = zone broken through.
+ */
+function algoZoneRetestDepth(c, side, ob, minDepth, maxDepth) {
+  minDepth = (minDepth != null) ? minDepth : 0.65;
+  maxDepth = (maxDepth != null) ? maxDepth : 0.99;
+  if (!c || !ob) return { ok: false, depth: 0, reason: 'no bar/zone' };
+  const top = Number(ob.top), bot = Number(ob.bottom);
+  if (!(top > bot)) return { ok: false, depth: 0, reason: 'flat zone' };
+  const H = top - bot;
+  let depth = 0;
+  if (side === 'BUY') {
+    // Must still close above bottom (not broken)
+    if (Number(c.c) <= bot) return { ok: false, depth: 1, reason: 'demand zone broken (close ≤ bottom)' };
+    const wick = Number(c.l);
+    // Outside zone entirely
+    if (wick > top) return { ok: false, depth: 0, reason: 'no touch — wick above zone' };
+    depth = (top - Math.min(wick, top)) / H;
+    // Cap if wicked below bottom
+    if (wick < bot) depth = (top - bot) / H; // 1.0+ broken
+    if (wick < bot) return { ok: false, depth: depth, reason: 'demand run-through' };
+  } else {
+    if (Number(c.c) >= top) return { ok: false, depth: 1, reason: 'supply zone broken (close ≥ top)' };
+    const wick = Number(c.h);
+    if (wick < bot) return { ok: false, depth: 0, reason: 'no touch — wick below zone' };
+    depth = (Math.max(wick, bot) - bot) / H;
+    if (wick > top) return { ok: false, depth: depth, reason: 'supply run-through' };
+  }
+  if (depth < minDepth) return { ok: false, depth: depth, reason: 'shallow retest ' + (depth * 100).toFixed(0) + '% · need ≥' + (minDepth * 100).toFixed(0) + '%' };
+  if (depth > maxDepth) return { ok: false, depth: depth, reason: 'too deep ' + (depth * 100).toFixed(0) + '% · max ' + (maxDepth * 100).toFixed(0) + '%' };
+  return { ok: true, depth: depth, reason: 'zone retest ' + (depth * 100).toFixed(0) + '% (65–99%)' };
+}
+
 function algoScalpPremiumDiscount(data, i, side, lookback, tf) {
   lookback = lookback || 24;
   if (!Array.isArray(data) || i < 3 || !data[i]) return { ok: false, pos: 0.5, reason: 'no range' };
@@ -17387,11 +17652,19 @@ function algoScalpPremiumDiscount(data, i, side, lookback, tf) {
   const pos = (Number(c.c) - lo) / (hi - lo);
   const tfK = String(tf || '').toLowerCase();
   const isHold = (tfK === '15m' || tfK === '1h' || tfK === '4h' || tfK === '1d');
+  // 1m/3m/5m only: tighter location (HTF/hold path unchanged)
+  const isMicroScalp = (tfK === '1m' || tfK === '3m' || tfK === '5m');
   if (side === 'BUY') {
     if (isHold) {
       if (pos > 0.72) return { ok: false, pos: pos, lo: lo, hi: hi, reason: 'hold BUY blocked — extreme premium' };
       return { ok: true, pos: pos, lo: lo, hi: hi, reason: 'hold discount/mid ' + (pos * 100).toFixed(0) + '%' };
     }
+    // Micro scalp: true discount ≤40% of recent range (was 50% → mid-chart noise entries)
+    if (isMicroScalp) {
+      if (pos > 0.40) return { ok: false, pos: pos, lo: lo, hi: hi, reason: 'not discount (pos ' + (pos * 100).toFixed(0) + '% · need ≤40%)' };
+      return { ok: true, pos: pos, lo: lo, hi: hi, reason: 'scalp discount ' + (pos * 100).toFixed(0) + '%' };
+    }
+    // Chart-range discount (50%). Zone RE-TEST depth (65–99% into OB) is enforced separately.
     if (pos > 0.50) return { ok: false, pos: pos, lo: lo, hi: hi, reason: 'not discount (pos ' + (pos * 100).toFixed(0) + '% · need ≤50%)' };
     return { ok: true, pos: pos, lo: lo, hi: hi, reason: 'discount ' + (pos * 100).toFixed(0) + '%' };
   }
@@ -17399,6 +17672,11 @@ function algoScalpPremiumDiscount(data, i, side, lookback, tf) {
     if (isHold) {
       if (pos < 0.28) return { ok: false, pos: pos, lo: lo, hi: hi, reason: 'hold SELL blocked — extreme discount' };
       return { ok: true, pos: pos, lo: lo, hi: hi, reason: 'hold premium/mid ' + (pos * 100).toFixed(0) + '%' };
+    }
+    // Micro scalp: true premium ≥62% (was 50% → selling mid-range)
+    if (isMicroScalp) {
+      if (pos < 0.62) return { ok: false, pos: pos, lo: lo, hi: hi, reason: 'not premium (pos ' + (pos * 100).toFixed(0) + '% · need ≥62%)' };
+      return { ok: true, pos: pos, lo: lo, hi: hi, reason: 'scalp premium ' + (pos * 100).toFixed(0) + '%' };
     }
     if (pos < 0.50) return { ok: false, pos: pos, lo: lo, hi: hi, reason: 'not premium (pos ' + (pos * 100).toFixed(0) + '% · need ≥50%)' };
     return { ok: true, pos: pos, lo: lo, hi: hi, reason: 'premium ' + (pos * 100).toFixed(0) + '%' };
@@ -17567,63 +17845,186 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
       sellDirOk = false;
     }
   }
-  // ===== HARD PER-TF MSS LOCK (every individual timeframe) =====
-  // After MSS on THIS TF: wait first structure, then only allowedSide until opposite MSS.
-  // This lock is absolute — 15m+ relaxation / sideways lean must NOT bypass it.
-  // Also sticky: lastMss.side = SELL permanently blocks BUY on this TF until opposite MSS.
-  // BUG FIX: complete WAIT here when THIS TF already has first structure in the MSS
-  // direction. Previously waitStructure zeroed sellDirOk/buyDirOk so pushTrade never
-  // ran and the unlock inside pushTrade was unreachable → 1m/3m took 0 trades after MSS.
+  // ===== HARD PER-TF MSS LOCK — STRUCTURE + ZONE AWARE =====
+  // MSS is a bias lock ONLY when live structure still confirms that side.
+  // If MSS says SELL but HH+HL / rising / demand structure is intact → treat as FAKE,
+  // clear the lock, and do NOT force sell trades (the chart bug you reported).
   if (mssSt) {
     const lastMssSide = (mssSt.lastMss && mssSt.lastMss.side) ? String(mssSt.lastMss.side).toUpperCase() : '';
+    const tfKeyM = String(tf || '').toLowerCase();
+    const is1mM = (tfKeyM === '1m');
+    const hhM = !!(tfStruct && tfStruct.hh);
+    const hlM = !!(tfStruct && tfStruct.hl);
+    const lhM = !!(tfStruct && tfStruct.lh);
+    const llM = !!(tfStruct && tfStruct.ll);
+    const risingM = !!(tfStruct && tfStruct.trendRising);
+    const fallingM = !!(tfStruct && (tfStruct.trendFalling || fallingMarket));
+    const brokenBuyM = !!(tfStruct && tfStruct.brokenBuy);
+    const brokenSellM = !!(tfStruct && tfStruct.brokenSell);
+    // Live structure integrity (whole-chart, not micro)
+    const buyStructLive = !!(structAlignedBuy || structDir === 'BUY' || ((hhM && hlM) && !fallingM) || risingM);
+    const sellStructLive = !!(structAlignedSell || structDir === 'SELL' || ((lhM && llM) && !risingM) || fallingM);
+
+    // —— FAKE MSS CLEAR (structure vetoes sticky lock) ——
+    // HARD: SELL MSS without zone break (brokenBuy) is always fake on 1m
+    if (is1mM && lastMssSide === 'SELL' && !brokenBuyM) {
+      mssSt.mssActive = false;
+      mssSt.waitStructure = false;
+      mssSt.allowedSide = null;
+      mssSt.armedForBreak = true;
+      try {
+        mssSt.lastMss = {
+          side: 'BUY', from: 'SELL', tf: tfKeyM,
+          reason: 'MSS 1M CANCEL — no demand zone break (retracement only)',
+          at: Date.now(), barIndex: i, price: Number(c && c.c) || 0,
+          id: tfKeyM + '-mss-nozone-' + Date.now()
+        };
+        window.__algoMssState = window.__algoMssState || {};
+        window.__algoMssState[tfKeyM] = mssSt;
+        try { localStorage.removeItem('gp_mss_last_' + tfKeyM); } catch (eLS) {}
+      } catch (eClr0) {}
+      try { console.log('[GP Algo] MSS 1m CANCEL — no zone break, retracement only'); } catch (eL) {}
+    }
+    if (lastMssSide === 'SELL' && !brokenBuyM && buyStructLive && !sellStructLive) {
+      mssSt.mssActive = false;
+      mssSt.waitStructure = false;
+      mssSt.allowedSide = null;
+      mssSt.armedForBreak = true;
+      try {
+        mssSt.lastMss = {
+          side: 'BUY', from: 'SELL', tf: tfKeyM,
+          reason: 'MSS ' + tfKeyM.toUpperCase() + ' FAKE SELL cleared · buy structure/zones intact',
+          at: Date.now(), barIndex: i, price: Number(c && c.c) || 0,
+          id: tfKeyM + '-mss-struct-clear-' + Date.now()
+        };
+        window.__algoMssState = window.__algoMssState || {};
+        window.__algoMssState[tfKeyM] = mssSt;
+        try { localStorage.removeItem('gp_mss_last_' + tfKeyM); } catch (eLS) {}
+      } catch (eClr) {}
+      try { console.log('[GP Algo] MSS', tf, 'STRUCTURE VETO — fake SELL lock cleared (HH/HL or rising intact)'); } catch (eL) {}
+    }
+    if (lastMssSide === 'BUY' && !brokenSellM && sellStructLive && !buyStructLive) {
+      mssSt.mssActive = false;
+      mssSt.waitStructure = false;
+      mssSt.allowedSide = null;
+      mssSt.armedForBreak = true;
+      try {
+        mssSt.lastMss = {
+          side: 'SELL', from: 'BUY', tf: tfKeyM,
+          reason: 'MSS ' + tfKeyM.toUpperCase() + ' FAKE BUY cleared · sell structure intact',
+          at: Date.now(), barIndex: i, price: Number(c && c.c) || 0,
+          id: tfKeyM + '-mss-struct-clear-' + Date.now()
+        };
+        window.__algoMssState = window.__algoMssState || {};
+        window.__algoMssState[tfKeyM] = mssSt;
+        try { localStorage.removeItem('gp_mss_last_' + tfKeyM); } catch (eLS2) {}
+      } catch (eClr2) {}
+      try { console.log('[GP Algo] MSS', tf, 'STRUCTURE VETO — fake BUY lock cleared'); } catch (eL) {}
+    }
+
+    // Re-read after possible clear
+    const lastMssSide2 = (mssSt.lastMss && mssSt.lastMss.side) ? String(mssSt.lastMss.side).toUpperCase() : '';
+
+    // REALTIME WAIT unlock — only confirmed structure in MSS direction
     if (mssSt.mssActive && mssSt.waitStructure) {
-      const bearishReady = !!(structAlignedSell || structDir === 'SELL' || fallingMarket ||
-        (tfStruct && (tfStruct.trendFalling || tfStruct.lh || tfStruct.ll)));
-      const bullishReady = !!(structAlignedBuy || structDir === 'BUY' ||
-        (tfStruct && (tfStruct.trendRising || tfStruct.hh || tfStruct.hl)) && !fallingMarket);
-      if (lastMssSide === 'SELL' && bearishReady) {
+      const notSideways = !(sidewaysMarket || structDir === 'SIDEWAYS' || (tfStruct && tfStruct.sideways));
+      const bearishReady = !!(notSideways && structAlignedSell &&
+        (structDir === 'SELL' || (lhM && llM) || fallingM));
+      const bullishReady = !!(notSideways && structAlignedBuy && structDir === 'BUY' && !fallingM &&
+        ((hhM && hlM) || risingM));
+      if (lastMssSide2 === 'SELL' && bearishReady) {
         mssSt.waitStructure = false;
         mssSt.allowedSide = 'SELL';
-        try {
-          window.__algoMssState = window.__algoMssState || {};
-          window.__algoMssState[String(tf).toLowerCase()] = mssSt;
-        } catch (eU1) {}
-      } else if (lastMssSide === 'BUY' && bullishReady) {
+        mssSt.mssUnlockedAt = Date.now();
+        try { window.__algoMssState[tfKeyM] = mssSt; } catch (eU1) {}
+        try { console.log('[GP Algo] MSS', tf, 'WAIT→SELL unlocked (realtime structure)'); } catch (eL) {}
+      } else if (lastMssSide2 === 'BUY' && bullishReady) {
         mssSt.waitStructure = false;
         mssSt.allowedSide = 'BUY';
-        try {
-          window.__algoMssState = window.__algoMssState || {};
-          window.__algoMssState[String(tf).toLowerCase()] = mssSt;
-        } catch (eU2) {}
+        mssSt.mssUnlockedAt = Date.now();
+        try { window.__algoMssState[tfKeyM] = mssSt; } catch (eU2) {}
+        try { console.log('[GP Algo] MSS', tf, 'WAIT→BUY unlocked (realtime structure)'); } catch (eL) {}
       }
     }
+
     const lockSide = mssSt.allowedSide || null;
-    if (mssSt.mssActive) {
+    if (mssSt.mssActive || mssSt.waitStructure) {
       if (mssSt.waitStructure) {
-        // Still waiting first structure — no new entries either side on THIS TF
         buyDirOk = false;
         sellDirOk = false;
       } else if (lockSide === 'BUY') {
-        // Only BUY allowed on this TF until opposite MSS
-        sellDirOk = false;
-        if (!(structAlignedBuy || structDir === 'BUY')) buyDirOk = false;
+        // Only keep BUY lock if buy structure still supports it
+        if (buyStructLive || structAlignedBuy || structDir === 'BUY') {
+          sellDirOk = false;
+        } else {
+          // Lock stale — release
+          mssSt.mssActive = false;
+          mssSt.allowedSide = null;
+        }
       } else if (lockSide === 'SELL') {
-        // Only SELL allowed on this TF until opposite MSS
-        buyDirOk = false;
-        if (!(structAlignedSell || structDir === 'SELL' || fallingMarket || (tfStruct && tfStruct.trendFalling))) sellDirOk = false;
+        // Only keep SELL lock if sell structure still supports it
+        if (sellStructLive || structAlignedSell || structDir === 'SELL' || fallingM) {
+          buyDirOk = false;
+          // Still require real sell structure for entries
+          if (!(structAlignedSell || structDir === 'SELL' || fallingM || (lhM && llM))) {
+            sellDirOk = false;
+          }
+        } else {
+          // Fake SELL lock vs intact buy map — release so structure can trade
+          mssSt.mssActive = false;
+          mssSt.allowedSide = null;
+          buyDirOk = !!gateBuy.ok && !fallingMarket;
+          try { console.log('[GP Algo] MSS', tf, 'SELL lock released — no sell structure behind it'); } catch (eL) {}
+        }
       }
     }
-    // Sticky last-MSS: BUY→SELL on this TF means no new BUY until opposite MSS fires
-    if (lastMssSide === 'SELL') {
+    // Sticky last-MSS: only block opposite side when structure STILL agrees with MSS
+    // (was absolute — that forced sell trades while HH/HL demand was intact)
+    if (lastMssSide2 === 'SELL' && (sellStructLive || brokenBuyM || fallingM)) {
       buyDirOk = false;
     }
+    if (lastMssSide2 === 'BUY' && (buyStructLive || brokenSellM || risingM)) {
+      sellDirOk = false;
+    }
   }
-  // Structure veto: no BUY into pure SELL structure; no SELL into pure BUY (unless falling sell path)
-  // Note: MSS lock above already ran — these are additional structure filters only
-  if (structDir === 'SELL' || (sidewaysMarket && !structAlignedBuy && !isHoldTf)) buyDirOk = false;
-  if (structDir === 'BUY' && !fallingMarket) {
-    if (!structAlignedSell && !isHoldTf) sellDirOk = false;
+  // ═══════════════════════════════════════════════════════════
+  // HARD STRUCTURE SIDE LOCK (user rule):
+  //   Market structure BUY  → only BUY allowed (no sell anywhere)
+  //   Market structure SELL → only SELL allowed (no buy anywhere)
+  // MSS reinforces this; it does not override it.
+  // ═══════════════════════════════════════════════════════════
+  {
+    const hh1 = !!(tfStruct && tfStruct.hh);
+    const hl1 = !!(tfStruct && tfStruct.hl);
+    const lh1 = !!(tfStruct && tfStruct.lh);
+    const ll1 = !!(tfStruct && tfStruct.ll);
+    const rising1 = !!(tfStruct && tfStruct.trendRising);
+    const falling1 = !!(tfStruct && tfStruct.trendFalling);
+    const brokenBuy1 = !!(tfStruct && tfStruct.brokenBuy);
+    const brokenSell1 = !!(tfStruct && tfStruct.brokenSell);
+    // Structure BUY map
+    const structIsBuy = !!(
+      structDir === 'BUY' || structAlignedBuy ||
+      ((hh1 && hl1) && !brokenBuy1 && !falling1) ||
+      (rising1 && !falling1 && !brokenBuy1)
+    );
+    // Structure SELL map
+    const structIsSell = !!(
+      structDir === 'SELL' || structAlignedSell ||
+      ((lh1 && ll1) && !brokenSell1 && !rising1) ||
+      (falling1 && !rising1 && !brokenSell1)
+    );
+    if (structIsBuy && !structIsSell) {
+      sellDirOk = false; // BUY structure → NO sells
+    }
+    if (structIsSell && !structIsBuy) {
+      buyDirOk = false; // SELL structure → NO buys
+    }
+    // Pure SELL dir always blocks buy; pure BUY dir always blocks sell
+    if (structDir === 'SELL') buyDirOk = false;
+    if (structDir === 'BUY') sellDirOk = false;
   }
+  if (sidewaysMarket && !structAlignedBuy && !isHoldTf) buyDirOk = false;
   if (sidewaysMarket && !structAlignedSell && !fallingMarket && !isHoldTf) sellDirOk = false;
   const buyBiasOk = buyDirOk;
   const sellBiasOk = sellDirOk;
@@ -17670,19 +18071,6 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
       const mssNow = (typeof algoGetMssState === 'function') ? algoGetMssState(tf) : mssSt;
       if (mssNow) {
         const lastSide = mssNow.lastMss && mssNow.lastMss.side ? String(mssNow.lastMss.side).toUpperCase() : '';
-        // If stuck on WAIT after BUY→SELL but structure is already bearish, unlock SELL
-        // so 1m/3m can punch. Does not change premium/TL/structure/max-trade rules.
-        if (mssNow.mssActive && mssNow.waitStructure && lastSide === 'SELL' && side === 'SELL') {
-          const bearishNow = !!(sellDirOk || fallingMarket || (tfStruct && (tfStruct.trendFalling || tfStruct.lh || tfStruct.ll || tfStruct.dir === 'SELL' || tfStruct.alignedSell)));
-          if (bearishNow) {
-            mssNow.waitStructure = false;
-            mssNow.allowedSide = 'SELL';
-            try {
-              window.__algoMssState = window.__algoMssState || {};
-              window.__algoMssState[String(tf).toLowerCase()] = mssNow;
-            } catch (eSet) {}
-          }
-        }
         if (mssNow.mssActive) {
           if (mssNow.waitStructure) return; // waiting first structure after MSS — block both sides
           if (mssNow.allowedSide === 'BUY' && side === 'SELL') return; // only BUY allowed on this TF
@@ -17695,22 +18083,22 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
         }
       }
     } catch (eMssPush) {}
-    // 1) Max 1 open trade per TF
+    // 1) LIVE/MT5 only: max 1 open per TF · max 4 total (BACKTEST ignored)
     try {
-      const log = (typeof algoLoadTrades === 'function') ? algoLoadTrades() : [];
-      const tfKey = String(tf || '').toLowerCase();
-      let openThisTf = 0, openAll = 0;
-      for (let oi = 0; oi < log.length; oi++) {
-        const t = log[oi];
-        if (!t) continue;
-        if (t.outcome === 'TP' || t.outcome === 'SL' || t.status === 'TP' || t.status === 'SL') continue;
-        openAll++;
-        if (String(t.tf || '').toLowerCase() === tfKey) openThisTf++;
+      const isBtPush = String(mode || '').toUpperCase() === 'BACKTEST';
+      if (!isBtPush) {
+        const tfKey = String(tf || '').toLowerCase();
+        const openThisTf = (typeof algoCountOpenTradesOnTf === 'function')
+          ? algoCountOpenTradesOnTf(tfKey) : 0;
+        const openAll = (typeof algoCountOpenTrades === 'function') ? algoCountOpenTrades() : 0;
+        // LIVE only: max 1 per TF · hard max 4 total (MT5+paper). BACKTEST never hits this block.
+        if (openThisTf >= (typeof ALGO_MAX_OPEN_PER_TF === 'number' ? ALGO_MAX_OPEN_PER_TF : 1)) return;
+        if (openAll >= ALGO_MAX_OPEN_TRADES) return;
+        if (out.some(function (x) {
+          return String(x.tf || '').toLowerCase() === tfKey &&
+            String(x.source || '').toUpperCase() !== 'BACKTEST';
+        })) return;
       }
-      if (openThisTf >= 1) return; // max 1 per TF
-      if (openAll >= ALGO_MAX_OPEN_TRADES) return;
-      // Also block if this scan already queued a trade for this TF
-      if (out.some(function (x) { return String(x.tf || '').toLowerCase() === tfKey; })) return;
     } catch (eLim) {}
     if (side === 'BUY' && !buyDirOk) return;
     if (side === 'SELL' && !sellDirOk) return;
@@ -17719,7 +18107,7 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
       if (typeof algoScalpPremiumDiscount === 'function') {
         const tfPd = String(tf || '').toLowerCase();
         const lbPd = (tfPd === '1m' || tfPd === '3m' || tfPd === '5m') ? 24 : 40;
-        const pdGate = algoScalpPremiumDiscount(data, i, side, lbPd, tfPd);
+        const pdGate = algoScalpPremiumDiscount(data, i, side, (String(tfPd).toLowerCase()==='1m' ? 48 : lbPd), tfPd);
         if (pdGate && !pdGate.ok) return;
       }
     } catch (ePdG) {}
@@ -17759,33 +18147,58 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
     // Scalp: ≥0.90×ATR or $0.80 min beyond zone · Hold: 1.35×ATR
     const SL_BUF = 1.35;
     let sl, tp, risk;
-    const RR_TARGET = 2;
+    // HTF keeps RR 1:2. Micro scalp uses 1:1.5 (Gold 1–5m rarely pays full 1:2 before noise).
     const isScalpPush = (String(tf || '').toLowerCase() === '1m' || String(tf || '').toLowerCase() === '3m' || String(tf || '').toLowerCase() === '5m');
+    const RR_TARGET = isScalpPush ? 1.5 : 2;
     if (side === 'BUY') {
       const structLow = Math.min(c.l, Number(zonePx) || c.l);
       const buf = isScalpPush ? Math.max(atr * 0.90, 0.80) : atr * SL_BUF;
       sl = structLow - buf;
       if (!(sl < entry) || !(sl < structLow + 1e-9)) sl = Math.min(entry, structLow) - buf;
-      risk = Math.max(isScalpPush ? atr * 0.55 : atr * 0.45, entry - sl);
-      if (!(risk > 0)) risk = atr * 0.55;
       // Keep SL beyond structure — never tighten into the zone
       if (sl > structLow - buf * 0.5) sl = structLow - buf;
       risk = Math.max(isScalpPush ? 0.60 : 0.40, entry - sl);
-      sl = entry - risk;
-      tp = entry + risk * RR_TARGET;
+      if (!(risk > 0)) risk = atr * 0.55;
+      if (isScalpPush) {
+        // GOLD SCALP FIX: do NOT pull SL inside structure to meet a dollar cap.
+        // If structure risk is too wide for a 1–5m scalp, skip the trade instead.
+        const maxRisk = Math.max(atr * 3.2, 4.50);
+        const minRisk = Math.max(atr * 0.55, 1.20);
+        if (risk > maxRisk) return; // structure too far — not a scalp
+        if (risk < minRisk) return; // noise-level stop — skip
+        // SL stays at structure; TP from structure risk @ RR 1.5
+        tp = entry + risk * RR_TARGET;
+      } else {
+        // HTF: prior geometry (unchanged)
+        risk = Math.max(atr * 0.45, entry - sl);
+        if (!(risk > 0)) risk = atr * 0.55;
+        risk = Math.max(0.40, entry - sl);
+        sl = entry - risk;
+        tp = entry + risk * RR_TARGET;
+      }
     } else {
       const structHigh = Math.max(c.h, Number(zonePx) || c.h);
       const buf = isScalpPush ? Math.max(atr * 0.90, 0.80) : atr * SL_BUF;
       sl = structHigh + buf;
       if (!(sl > entry) || !(sl > structHigh - 1e-9)) sl = Math.max(entry, structHigh) + buf;
-      risk = Math.max(isScalpPush ? atr * 0.55 : atr * 0.45, sl - entry);
-      if (!(risk > 0)) risk = atr * 0.55;
       if (sl < structHigh + buf * 0.5) sl = structHigh + buf;
       risk = Math.max(isScalpPush ? 0.60 : 0.40, sl - entry);
-      sl = entry + risk;
-      tp = entry - risk * RR_TARGET;
+      if (!(risk > 0)) risk = atr * 0.55;
+      if (isScalpPush) {
+        const maxRisk = Math.max(atr * 3.2, 4.50);
+        const minRisk = Math.max(atr * 0.55, 1.20);
+        if (risk > maxRisk) return;
+        if (risk < minRisk) return;
+        tp = entry - risk * RR_TARGET;
+      } else {
+        risk = Math.max(atr * 0.45, sl - entry);
+        if (!(risk > 0)) risk = atr * 0.55;
+        risk = Math.max(0.40, sl - entry);
+        sl = entry + risk;
+        tp = entry - risk * RR_TARGET;
+      }
     }
-    // TINY ZONE filter: no trade when there is not enough space for 1:2 target
+    // TINY ZONE filter: no trade when there is not enough space for target
     // relative to recent range / ATR (avoid micro-chop entries)
     try {
       const rngSp = (typeof algoRecentRange === 'function') ? algoRecentRange(data, i, isScalpPush ? 30 : 50) : null;
@@ -17843,7 +18256,10 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
   // Falling nearest ray blocks TL path only — NOT swing-low or demand-OB paths.
   const nearestSup = algoNearestSupport(lines, c, i, atr);
   const nearestSupFalling = !!(nearestSup && Number.isFinite(nearestSup.slope) && nearestSup.slope < 0 && nearestSup.dist <= atr * 4);
-  const buyRejOk = isScalpBar ? true : algoIsRejection(c, 'BUY', '');
+  // 1m/3m/5m: require rejection wick (was always-true → mid-bar sells/buys).
+  // 15m+ path unchanged (prior isScalpBar?true left HTF without hard rejection).
+  const isMicroScalpTf = (_tfB === '1m' || _tfB === '3m' || _tfB === '5m');
+  const buyRejOk = isMicroScalpTf ? algoIsRejection(c, 'BUY', 'scalp') : (isScalpBar ? true : algoIsRejection(c, 'BUY', ''));
   if (buyDirOk && buyRejOk && confBuy.ok) {
     let tookBuy = false;
     // Scalp: 2-touch TL is enough when 1D plan is BUY + structure aligned (was 3 → missed real supports).
@@ -17868,16 +18284,26 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
       const mid = (c.h + c.l) / 2;
       // Support line must sit in LOWER half of the bar (discount area)
       if (px > mid + atr * 0.25) continue;
-      // Scalp: near-line touch is enough; hold still requires wick sweep
-      const buyTouchOk = isScalpBar
-        ? (algoNearLine(c, l, i, atr * 1.35) || algoWickSweepsZone(c, 'BUY', px, atr) ||
-           (Number(c.l) <= px + atr * 0.35 && Number(c.c) >= px - atr * 0.15))
-        : algoWickSweepsZone(c, 'BUY', px, atr);
+      // 1m/3m/5m: wick into TL + close reclaim (no bare near-line). HTF path unchanged.
+      const buyTouchOk = isMicroScalpTf
+        ? (algoWickSweepsZone(c, 'BUY', px, atr) ||
+           (Number(c.l) <= px + atr * 0.25 && Number(c.c) >= px && algoIsRejection(c, 'BUY', 'scalp')))
+        : (isScalpBar
+          ? (algoNearLine(c, l, i, atr * 1.35) || algoWickSweepsZone(c, 'BUY', px, atr) ||
+             (Number(c.l) <= px + atr * 0.35 && Number(c.c) >= px - atr * 0.15))
+          : algoWickSweepsZone(c, 'BUY', px, atr));
       if (!buyTouchOk) continue;
       let smcBuy = { ok: true, reason: isScalpBar ? 'green↑ TL touch · discount' : 'TL + structure' };
       try {
         smcBuy = algoSMCStructureConfirm(data, i, 'BUY', atr, demand, supply, tf);
-        if (!smcBuy.ok && isScalpBar && structAlignedBuy) {
+        // Micro scalp: soft SMC only with rejection + aligned BUY (no free pass).
+        // HTF keeps prior isScalpBar soft path.
+        if (!smcBuy.ok && isMicroScalpTf && structAlignedBuy && algoIsRejection(c, 'BUY', 'scalp')) {
+          const rsn = String(smcBuy.reason || '');
+          if (rsn.indexOf('CHoCH') >= 0 || rsn.indexOf('sweep') >= 0 || rsn.indexOf('discount') >= 0) {
+            smcBuy = { ok: true, reason: 'scalp structure + green↑ TL + rejection (soft SMC)' };
+          }
+        } else if (!smcBuy.ok && !isMicroScalpTf && isScalpBar && structAlignedBuy) {
           const rsn = String(smcBuy.reason || '');
           if (rsn.indexOf('CHoCH') >= 0 || rsn.indexOf('sweep') >= 0 || rsn.indexOf('discount') >= 0) {
             smcBuy = { ok: true, reason: 'scalp structure + green↑ TL (soft SMC)' };
@@ -17891,11 +18317,12 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
         const posPx = (px - rng.lo) / (rng.hi - rng.lo);
         const posC = (c.c - rng.lo) / (rng.hi - rng.lo);
         if ((typeof isHoldBar !== 'undefined' && isHoldBar) ? (posPx > 0.72 || posC > 0.72)
-          : (isScalpBar ? (posPx > 0.50 || posC > 0.50) : (posPx > 0.55 || posC > 0.58))) continue;
+          : (isMicroScalpTf ? (posPx > 0.40 || posC > 0.40)
+          : (isScalpBar ? (posPx > 0.50 || posC > 0.50) : (posPx > 0.55 || posC > 0.58)))) continue;
       }
       try {
         if (typeof algoScalpPremiumDiscount === 'function') {
-          const pdB = algoScalpPremiumDiscount(data, i, 'BUY', isScalpBar ? 24 : 40, tf);
+          const pdB = algoScalpPremiumDiscount(data, i, 'BUY', (String(tf||'').toLowerCase()==='1m' ? 48 : (isScalpBar ? 24 : 40)), tf);
           if (pdB && !pdB.ok) continue;
         }
       } catch (ePdB) {}
@@ -17906,6 +18333,7 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
         px, 'SUPPORT_TL_BUY_DIR');
       if (out.length) out[out.length - 1].reason += ' · conf ' + confBuy.score + '/100 · ' + confBuy.bits;
       if (out.length) out[out.length - 1].conf = confBuy.score;
+      if (out.length) out[out.length - 1].fp = confBuy.fp || null;
       tookBuy = true;
       break;
     }
@@ -17925,6 +18353,14 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
         // Sweep-and-close: close back ABOVE block bottom (absorption)
         if (c.c <= ob.bottom) continue;
         if (!algoWickSweepsZone(c, 'BUY', zMid, atr) && !(c.l <= ob.top && c.c > ob.bottom)) continue;
+        // ZONE RETEST DEPTH 65%–99%: must dig into the OB (not shallow lip touch)
+        // Applies to all TFs; 1m is especially strict about wrong-area entries.
+        try {
+          if (typeof algoZoneRetestDepth === 'function') {
+            const zd = algoZoneRetestDepth(c, 'BUY', ob, 0.65, 0.99);
+            if (!zd.ok) continue;
+          }
+        } catch (eZdB) {}
         const smcBuy = algoSMCStructureConfirm(data, i, 'BUY', atr, demand, supply, tf);
         if (!smcBuy.ok) continue;
         pushTrade('BUY',
@@ -17933,6 +18369,7 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
           zMid, 'SUPPORT_OB');
         if (out.length) out[out.length - 1].reason += ' · conf ' + confBuy.score + '/100 · ' + confBuy.bits;
         if (out.length) out[out.length - 1].conf = confBuy.score;
+        if (out.length) out[out.length - 1].fp = confBuy.fp || null;
         break;
       }
     }
@@ -17948,8 +18385,11 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
   // RULE: SELL only on red downward resistance TL + structure + premium.
   // Rejection is OPTIONAL for scalp (not required). NEVER sell on green ↑ support TL.
   // Soft conf on micro when fallingMarket.
-  const sellConfOk = confSell.ok || (isScalpBar && fallingMarket && confSell.score >= 18);
-  const sellRejOk = isScalpBar ? true : algoIsRejection(c, 'SELL', '');
+  // Soft conf only on micro scalp when falling + higher score (was 18 → weak sells).
+  // HTF: same as before (isScalpBar soft path preserved for non-micro).
+  const sellConfOk = confSell.ok || (isMicroScalpTf && fallingMarket && confSell.score >= 28)
+    || (!isMicroScalpTf && isScalpBar && fallingMarket && confSell.score >= 18);
+  const sellRejOk = isMicroScalpTf ? algoIsRejection(c, 'SELL', 'scalp') : (isScalpBar ? true : algoIsRejection(c, 'SELL', ''));
   if (liveSellAllowed && sellRejOk && sellConfOk && !out.some(function (t) { return t.side === 'BUY'; })) {
     let tookSell = false;
     const minTLTouchesSell = 2;
@@ -17971,20 +18411,34 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
       const upperHalf = px >= mid - atr * 0.45;
       const retestFromBelow = Number(c.h) >= px - atr * 0.5 && Number(c.c) < px + atr * 0.15;
       if (!upperHalf && !retestFromBelow) continue;
-      // Scalp: near-line touch is enough; hold still prefers wick sweep / retest
-      const sellTouchOk = isScalpBar
-        ? (algoNearLine(c, l, i, atr * 1.4) || algoWickSweepsZone(c, 'SELL', px, atr) || retestFromBelow)
-        : (algoWickSweepsZone(c, 'SELL', px, atr) || retestFromBelow);
+      // 1m/3m/5m: real rejection / wick sweep at resistance — not bare near-line.
+      // 15m+ keeps prior near-line path.
+      const sellTouchOk = isMicroScalpTf
+        ? (algoWickSweepsZone(c, 'SELL', px, atr) ||
+           (retestFromBelow && algoIsRejection(c, 'SELL', 'scalp')))
+        : (isScalpBar
+          ? (algoNearLine(c, l, i, atr * 1.4) || algoWickSweepsZone(c, 'SELL', px, atr) || retestFromBelow)
+          : (algoWickSweepsZone(c, 'SELL', px, atr) || retestFromBelow));
       if (!sellTouchOk) continue;
       let smcSell = { ok: true, reason: isScalpBar ? 'red↓ TL touch · premium' : 'red↓ TL rejection' };
       try {
         smcSell = algoSMCStructureConfirm(data, i, 'SELL', atr, demand, supply, tf);
-        if (!smcSell.ok && (fallingMarket || structBrokenBuy || structAlignedSell)) {
-          smcSell = { ok: true, reason: 'structure broken/falling + red↓ TL' };
-        } else if (!smcSell.ok && isScalpBar && (structAlignedSell || fallingMarket)) {
-          const rsn = String(smcSell.reason || '');
-          if (rsn.indexOf('CHoCH') >= 0 || rsn.indexOf('sweep') >= 0 || rsn.indexOf('premium') >= 0) {
-            smcSell = { ok: true, reason: 'scalp structure + red↓ TL (soft SMC)' };
+        // Micro scalp: never auto-OK from fallingMarket alone — need rejection at TL.
+        if (isMicroScalpTf) {
+          if (!smcSell.ok && (structAlignedSell || structBrokenBuy) && algoIsRejection(c, 'SELL', 'scalp')) {
+            const rsn = String(smcSell.reason || '');
+            if (rsn.indexOf('CHoCH') >= 0 || rsn.indexOf('sweep') >= 0 || rsn.indexOf('premium') >= 0 || rsn.indexOf('structure') >= 0) {
+              smcSell = { ok: true, reason: 'scalp SELL structure + red↓ TL + rejection (soft SMC)' };
+            }
+          }
+        } else {
+          if (!smcSell.ok && (fallingMarket || structBrokenBuy || structAlignedSell)) {
+            smcSell = { ok: true, reason: 'structure broken/falling + red↓ TL' };
+          } else if (!smcSell.ok && isScalpBar && (structAlignedSell || fallingMarket)) {
+            const rsn = String(smcSell.reason || '');
+            if (rsn.indexOf('CHoCH') >= 0 || rsn.indexOf('sweep') >= 0 || rsn.indexOf('premium') >= 0) {
+              smcSell = { ok: true, reason: 'scalp structure + red↓ TL (soft SMC)' };
+            }
           }
         }
         if (!smcSell.ok) continue;
@@ -17996,9 +18450,11 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
         if (rngS && rngS.hi > rngS.lo) {
           const posPx = (px - rngS.lo) / (rngS.hi - rngS.lo);
           const posC = (c.c - rngS.lo) / (rngS.hi - rngS.lo);
-          // Micro scalp ≥50%; hold 15m+ continuation (only block extreme discount)
+          // 1m/3m/5m ≥62% premium; hold 15m+ continuation (only block extreme discount)
           if (typeof isHoldBar !== 'undefined' && isHoldBar) {
             if (posPx < 0.28 || posC < 0.28) continue;
+          } else if (isMicroScalpTf) {
+            if (posPx < 0.62 || posC < 0.62) continue;
           } else if (isScalpBar) {
             if (posPx < 0.50 || posC < 0.50) continue;
           } else {
@@ -18009,7 +18465,7 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
       // Also hard-block via dedicated helper (same rule book text)
       try {
         if (typeof algoScalpPremiumDiscount === 'function') {
-          const pd = algoScalpPremiumDiscount(data, i, 'SELL', isScalpBar ? 24 : 40, tf);
+          const pd = algoScalpPremiumDiscount(data, i, 'SELL', (String(tf||'').toLowerCase()==='1m' ? 48 : (isScalpBar ? 24 : 40)), tf);
           if (pd && !pd.ok) continue;
         }
       } catch (ePd) {}
@@ -18020,6 +18476,7 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
         px, 'RESIST_TL_SELL_DIR');
       if (out.length) out[out.length - 1].reason += ' · conf ' + confSell.score + '/100 · ' + confSell.bits;
       if (out.length) out[out.length - 1].conf = confSell.score;
+      if (out.length) out[out.length - 1].fp = confSell.fp || null;
       tookSell = true;
       break;
     }
@@ -18037,6 +18494,13 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
         // Sweep-and-close: close back BELOW block top
         if (c.c >= ob.top) continue;
         if (!algoWickSweepsZone(c, 'SELL', zMid, atr) && !(c.h >= ob.bottom && c.c < ob.top)) continue;
+        // ZONE RETEST DEPTH 65%–99%: deep into supply OB (not shallow edge scrape)
+        try {
+          if (typeof algoZoneRetestDepth === 'function') {
+            const zd = algoZoneRetestDepth(c, 'SELL', ob, 0.65, 0.99);
+            if (!zd.ok) continue;
+          }
+        } catch (eZdS) {}
         if (c.c < zMid - atr * 2.5) continue;
         // HARD premium: supply OB sell only in upper half of recent range
         {
@@ -18045,12 +18509,13 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
             const posZ = (zMid - rngOb.lo) / (rngOb.hi - rngOb.lo);
             const posC = (c.c - rngOb.lo) / (rngOb.hi - rngOb.lo);
             if ((typeof isHoldBar !== 'undefined' && isHoldBar) ? (posZ < 0.28 || posC < 0.28)
-              : (isScalpBar ? (posZ < 0.50 || posC < 0.50) : (posZ < 0.40 || posC < 0.38))) continue;
+              : (isMicroScalpTf ? (posZ < 0.62 || posC < 0.62)
+              : (isScalpBar ? (posZ < 0.50 || posC < 0.50) : (posZ < 0.40 || posC < 0.38)))) continue;
           }
         }
         try {
           if (typeof algoScalpPremiumDiscount === 'function') {
-            const pd = algoScalpPremiumDiscount(data, i, 'SELL', isScalpBar ? 24 : 40, tf);
+            const pd = algoScalpPremiumDiscount(data, i, 'SELL', (String(tf||'').toLowerCase()==='1m' ? 48 : (isScalpBar ? 24 : 40)), tf);
             if (pd && !pd.ok) continue;
           }
         } catch (ePd2) {}
@@ -18062,6 +18527,7 @@ function algoScanBar(data, i, tf, lines, demand, supply, mode) {
           zMid, 'RESIST_OB');
         if (out.length) out[out.length - 1].reason += ' · conf ' + confSell.score + '/100 · ' + confSell.bits;
         if (out.length) out[out.length - 1].conf = confSell.score;
+        if (out.length) out[out.length - 1].fp = confSell.fp || null;
         break;
       }
     }
@@ -18145,10 +18611,7 @@ function algoScanSignals(candles, tf, mode, structOpt) {
   }
 
   if (mode === 'LIVE') {
-    // Confirmed live entries: last 2 completed bars (standard);
-    // scalp 1m/3m look back 5 closed bars so setups are not missed between ticks.
-    // Pre-refresh MSS from THIS TF's latest closed + live candle so lookback reads
-    // current per-TF MSS (not stale state from another TF or older bar).
+    // LIVE = last CLOSED bar only + realtime MSS refresh (WAIT unlocks same tick).
     try {
       const iCl = n - 2, iLv = n - 1;
       if (iCl >= 10 && typeof algoUpdateMssState === 'function' && typeof algoTfStructure === 'function') {
@@ -18162,19 +18625,14 @@ function algoScanSignals(candles, tf, mode, structOpt) {
         }
       }
     } catch (eMssPre) {}
-    const tfLive = String(tf || '').toLowerCase();
-    const isScalpLive = (tfLive === '1m' || tfLive === '3m' || tfLive === '5m');
-    // Closed-bar window: catch recent zone touches without multi-hour lag.
-    const lookBack = (tfLive === '1m') ? 8
-      : (tfLive === '3m') ? 6
-      : (tfLive === '5m') ? 6
-      : (tfLive === '15m') ? 6
-      : (tfLive === '1h') ? 4
-      : 3;
-    for (let i = n - 2; i >= n - 1 - lookBack && i >= 10; i--) {
-      const found = algoScanBar(data, i, tf, lines, demand, supply, 'LIVE');
+    const iClosed = n - 2;
+    if (iClosed >= 10) {
+      const found = algoScanBar(data, iClosed, tf, lines, demand, supply, 'LIVE');
       for (let j = 0; j < found.length; j++) {
         found[j].source = 'LIVE';
+        found[j].barIndex = iClosed;
+        if (data[iClosed] && data[iClosed].barSlot != null) found[j].barSlot = data[iClosed].barSlot;
+        found[j].reason = (found[j].reason || '') + ' · LIVE closed bar';
         out.push(found[j]);
       }
     }
@@ -18230,7 +18688,7 @@ function algoCandlesForTradeTf(tf) {
  */
 function algoResolveTradeOnCandles(t, candles) {
   if (!t) return t;
-  if (t.outcome === 'TP' || t.outcome === 'SL') return t;
+  if (t.outcome === 'TP' || t.outcome === 'SL' || t.outcome === 'MANUAL') return t;
   if (t.status === 'TP' || t.status === 'SL') {
     return Object.assign({}, t, { outcome: t.status });
   }
@@ -18379,7 +18837,7 @@ function algoResolveAllTrades(candles) {
   let changed = false;
   const next = log.map(function (t) {
     if (!t) return t;
-    if (t.outcome === 'TP' || t.outcome === 'SL') return t;
+    if (t.outcome === 'TP' || t.outcome === 'SL' || t.outcome === 'MANUAL') return t;
 
     // If this trade is still open on the broker, force local OPEN (ignore candle false-hits)
     const ticket = t.mt5Ticket != null ? String(t.mt5Ticket) : '';
@@ -18452,7 +18910,7 @@ function algoResolveAllTrades(candles) {
 
 function algoComputeStats(list) {
   list = list || algoLoadTrades();
-  let tp = 0, sl = 0, open = 0, totalPnl = 0, openPnl = 0;
+  let tp = 0, sl = 0, manual = 0, open = 0, totalPnl = 0, openPnl = 0;
   list.forEach(function (t) {
     if (!t) return;
     if (t.outcome === 'TP' || t.status === 'TP') {
@@ -18461,14 +18919,17 @@ function algoComputeStats(list) {
     } else if (t.outcome === 'SL' || t.status === 'SL') {
       sl++;
       if (t.pnl != null) totalPnl += Number(t.pnl) || 0;
+    } else if (t.outcome === 'MANUAL' || t.status === 'MANUAL_CLOSE') {
+      manual++;
+      if (t.pnl != null) totalPnl += Number(t.pnl) || 0;
     } else {
       open++;
       if (t.pnl != null) openPnl += Number(t.pnl) || 0;
     }
   });
-  const closed = tp + sl;
+  const closed = tp + sl + manual;
   return {
-    tp: tp, sl: sl, open: open, closed: closed,
+    tp: tp, sl: sl, manual: manual, open: open, closed: closed,
     winRate: closed > 0 ? (tp / closed) * 100 : 0,
     totalPnl: totalPnl, openPnl: openPnl, lots: 1
   };
@@ -18505,6 +18966,29 @@ function algoMergeNewTrades(candidates) {
   (candidates || []).forEach(function (t) {
     if (!t || !t.id || ids.has(t.id)) return;
     if (nearDup(t)) return;
+    // STALE-SIGNAL GUARD: a live/scalper candidate must be sitting on a recent
+    // candle, not one whose close has already passed by several bars. Without
+    // this, a TF that wasn't scanned for a while could surface an old signal as
+    // if it were brand new and punch it live at the current, unrelated price.
+    try {
+      const isBtAge = String(t.source || '').toUpperCase() === 'BACKTEST';
+      if (!isBtAge) {
+        const stepMs = (ALGO_TF_SECONDS[String(t.tf || '').toLowerCase()] || 900) * 1000;
+        const slot = Number(t.barSlot) || 0;
+        const closeAt = slot ? slot + stepMs : 0;
+        // Floor of 10 minutes regardless of TF: normal scan cadence / a phone
+        // backgrounding briefly must not false-trigger this on 1m. Still catches
+        // the multi-hour-old case (e.g. 5m+ would allow ~15-45min, 1h ~3h, etc.)
+        const maxAgeMs = Math.max(stepMs * 3, 10 * 60 * 1000);
+        if (closeAt && (Date.now() - closeAt) > maxAgeMs) {
+          try {
+            algoUpdateStatus('<span class="warn">LIVE ' + String(t.tf || '').toUpperCase() + ' ' + String(t.side || '') +
+              ' blocked — signal candle is stale (' + Math.round((Date.now() - closeAt) / 60000) + 'm old)</span>');
+          } catch (eStaleMsg) {}
+          return;
+        }
+      }
+    } catch (eStaleAge) {}
     // ===== FINAL HARD PER-TF MSS LOCK (cannot be bypassed) =====
     // After MSS BUY→SELL on this TF → no new BUY until opposite MSS.
     // After MSS SELL→BUY on this TF → no new SELL while wait/allowedSide still locks.
@@ -18578,12 +19062,15 @@ function algoMergeNewTrades(candidates) {
       }
     }
     const lotN = (t.lots != null) ? Number(t.lots) : algoGetLotSize();
-    // Force RR 1:2 geometry from entry/SL so chart + history always match.
+    // Geometry from entry/SL. Micro scalp keeps RR 1.5; HTF stays 1:2.
     let entryN = Number(t.entry != null ? t.entry : t.price);
     let slN = Number(t.sl);
     let tpN = Number(t.tp);
     let riskN = Number(t.risk);
     const sideN = String(t.side || '').toUpperCase();
+    const tfN = String(t.tf || '').toLowerCase();
+    const isMicroN = (tfN === '1m' || tfN === '3m' || tfN === '5m');
+    const rrN = (Number(t.rr) > 0) ? Number(t.rr) : (isMicroN ? 1.5 : 2);
     if (Number.isFinite(entryN) && entryN > 0) {
       if (Number.isFinite(slN) && ((sideN === 'BUY' && slN < entryN) || (sideN === 'SELL' && slN > entryN))) {
         riskN = Math.abs(entryN - slN);
@@ -18591,7 +19078,10 @@ function algoMergeNewTrades(candidates) {
         slN = sideN === 'SELL' ? (entryN + riskN) : (entryN - riskN);
       }
       if (Number.isFinite(riskN) && riskN > 0) {
-        tpN = sideN === 'SELL' ? (entryN - riskN * 2) : (entryN + riskN * 2);
+        // Prefer stored TP when valid; else rebuild from rrN (1.5 scalp / 2 HTF)
+        if (!Number.isFinite(tpN) || (sideN === 'BUY' ? !(tpN > entryN) : !(tpN < entryN))) {
+          tpN = sideN === 'SELL' ? (entryN - riskN * rrN) : (entryN + riskN * rrN);
+        }
       }
     }
     const row = Object.assign({}, t, {
@@ -18602,7 +19092,7 @@ function algoMergeNewTrades(candidates) {
       sl: Number.isFinite(slN) ? Number(slN.toFixed(2)) : t.sl,
       tp: Number.isFinite(tpN) ? Number(tpN.toFixed(2)) : t.tp,
       risk: Number.isFinite(riskN) ? Number(riskN.toFixed(2)) : t.risk,
-      rr: 2,
+      rr: rrN,
       ts: t.ts || Date.now(),
       source: t.source || 'BACKTEST',
       mt5Status: (String(t.source || 'BACKTEST').toUpperCase() === 'BACKTEST') ? 'BACKTEST' : 'PAPER_ONLY'
@@ -18640,8 +19130,8 @@ function algoMergeNewTrades(candidates) {
 
 function algoIsOpenTrade(t) {
   if (!t) return false;
-  if (t.outcome === 'TP' || t.outcome === 'SL') return false;
-  if (t.status === 'TP' || t.status === 'SL') return false;
+  if (t.outcome === 'TP' || t.outcome === 'SL' || t.outcome === 'MANUAL') return false;
+  if (t.status === 'TP' || t.status === 'SL' || t.status === 'MANUAL_CLOSE') return false;
   return true;
 }
 
@@ -18753,9 +19243,15 @@ function algoRenderLog(filter) {
         outcome = '<span style="color:#f87171;font-weight:800"> ✗ SL HIT</span> · PnL ' +
           ((t.pnl >= 0 ? '+' : '') + Number(t.pnl || 0).toFixed(2)) +
           (t.exit != null ? (' · exit ' + Number(t.exit).toFixed(2)) : '');
+      } else if (t.outcome === 'MANUAL' || t.status === 'MANUAL_CLOSE') {
+        outcome = '<span style="color:#94a3b8;font-weight:800"> ✕ MANUALLY CLOSED</span> · PnL ' +
+          ((t.pnl >= 0 ? '+' : '') + Number(t.pnl || 0).toFixed(2)) +
+          (t.exit != null ? (' · exit ' + Number(t.exit).toFixed(2)) : '');
       } else {
         const mtm = t.pnl != null ? ((t.pnl >= 0 ? '+' : '') + Number(t.pnl).toFixed(2)) : '—';
-        outcome = '<span style="color:#fbbf24;font-weight:800"> ● OPEN</span> · MTM ' + mtm;
+        outcome = '<span style="color:#fbbf24;font-weight:800"> ● OPEN</span> · MTM ' + mtm +
+          '<button type="button" class="algo-close-btn" data-close-id="' + String(t.id).replace(/'/g, '') +
+          '" style="margin-left:8px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;border:1px solid #f87171;background:rgba(248,113,113,0.12);color:#f87171;cursor:pointer">✕ Close</button>';
       }
       const execState = String(t.mt5Status || (String(src).toUpperCase() === 'BACKTEST' ? 'BACKTEST' : 'PAPER_ONLY'));
       const execColor = /FILLED|CONNECTED|CLOSED/.test(execState) ? '#34d399' :
@@ -18782,6 +19278,13 @@ function algoRenderLog(filter) {
       ev.preventDefault();
       ev.stopPropagation();
       algoRenderLog(btn.getAttribute('data-f') || 'ALL');
+      // The chart only plots backtest markers when histFilter is BACKTEST/ALL;
+      // without an explicit repaint here it wouldn't appear until some other
+      // unrelated event (a tick, a pan) happened to redraw the canvas.
+      try {
+        if (typeof triggerRealtimeRender === 'function') triggerRealtimeRender();
+        else if (typeof drawTradingViewChart === 'function') drawTradingViewChart();
+      } catch (eRedraw) {}
     });
   });
   box.querySelectorAll('.algo-trade[data-algo-id]').forEach(function (row) {
@@ -18789,6 +19292,14 @@ function algoRenderLog(filter) {
       ev.preventDefault();
       const id = row.getAttribute('data-algo-id');
       if (id) algoFocusTrade(id);
+    });
+  });
+  box.querySelectorAll('.algo-close-btn[data-close-id]').forEach(function (btn) {
+    btn.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const id = btn.getAttribute('data-close-id');
+      if (id) algoManualCloseTrade(id);
     });
   });
 }
@@ -19425,6 +19936,13 @@ function algoRenderDecisionAudit(candles, tf, lines, demand, supply, actualFound
         if(c.h<ob.bottom-atr*.25||c.l>ob.top+atr*.30){obReason='Price has not entered supply OB';continue;}
         if(c.c>=ob.top){obReason='SELL did not close back below supply OB';continue;}
       }
+      // Zone retest must dig 65–99% into the OB (shallow lip / full break rejected)
+      try {
+        if (typeof algoZoneRetestDepth === 'function') {
+          const zdA = algoZoneRetestDepth(c, side, ob, 0.65, 0.99);
+          if (!zdA.ok) { obReason = zdA.reason || 'Zone retest depth not 65–99%'; continue; }
+        }
+      } catch (eZdA) {}
       if(!algoWickSweepsZone(c,side,z,atr) && !(side==='BUY'?(c.l<=ob.top&&c.c>ob.bottom):(c.h>=ob.bottom&&c.c<ob.top))){obReason='Order-block wick sweep missing';continue;}
       obHit={ob,px:z};break;
     }
@@ -19828,6 +20346,26 @@ async function mt5SendOpen(trade) {
   if(!trade)return null;
   const src=String(trade.source||'').toUpperCase(); if(src==='BACKTEST')return null;
   if(trade.mt5Status && trade.mt5Status!=='PAPER_ONLY' && trade.mt5Status!=='PAPER_OFFLINE')return null;
+  // HARD CAP: never open more than 4 live MT5/paper positions under any condition.
+  // BACKTEST is already excluded above — backtest history still records freely.
+  try {
+    const openAll = (typeof algoCountOpenTrades === 'function') ? algoCountOpenTrades() : 0;
+    const openTf = (typeof algoCountOpenTradesOnTf === 'function')
+      ? algoCountOpenTradesOnTf(String(trade.tf || '').toLowerCase()) : 0;
+    const maxAll = (typeof ALGO_MAX_OPEN_TRADES === 'number') ? ALGO_MAX_OPEN_TRADES : 4;
+    const maxTf = (typeof ALGO_MAX_OPEN_PER_TF === 'number') ? ALGO_MAX_OPEN_PER_TF : 1;
+    if (openTf >= maxTf) {
+      trade.mt5Status='PAPER_ONLY';
+      trade.mt5Note='Max 1 open trade per TF — not sent to MT5.';
+      return {ok:false,paper:true,error:'max 1 per TF'};
+    }
+    if (openAll >= maxAll) {
+      trade.mt5Status='PAPER_ONLY';
+      trade.mt5Note='Max 4 MT5/live open trades — not sent to MT5. Backtest still allowed.';
+      try { algoUpdateStatus('<span class="warn">MT5 blocked — 4 open max (backtest still runs)</span>'); } catch(e0){}
+      return {ok:false,paper:true,error:'max 4 open'};
+    }
+  } catch (eCap) {}
   if(!algoState || !algoState.armed){trade.mt5Status='PAPER_ONLY';trade.mt5Note='GP ALGO is not armed; signal retained locally, not sent.';return {ok:false,paper:true,error:'GP ALGO disarmed'};}
   if(!MT5_BRIDGE.enabled){trade.mt5Status='PAPER_ONLY';trade.mt5Note='MT5 execution switch is OFF; signal retained locally, not sent.';return {ok:false,paper:true,error:'execution disabled'};}
   if(!MT5_BRIDGE.connected){
@@ -19860,7 +20398,7 @@ async function mt5SendClose(trade,reason){
   if(r.ok&&r.data&&r.data.closed){trade.mt5Closed=true;trade.mt5Status='MT5_CLOSE_SENT_VERIFY';trade.mt5CloseAt=Date.now();}
   else if(r.ok&&!r.data.closed){trade.mt5Status='MT5_POSITION_NOT_FOUND';trade.mt5Note=r.data.message||'Position not found; verify broker history.';}
   else{trade.mt5Status='MT5_CLOSE_FAILED';trade.mt5Note=r.error||'Close rejected; retry will occur while position remains visible.';}
-  try{const log=algoLoadTrades();const ix=log.findIndex(x=>x&&x.id===trade.id);if(ix>=0){log[ix]=Object.assign(log[ix],trade);algoSaveTrades(log);algoRenderLog();}}catch(e){}
+  try{const log=algoLoadTrades();const ix=log.findIndex(x=>x&&x.id===trade.id);if(ix>=0){log[ix]=Object.assign(log[ix],trade);algoSaveTrades(log);algoRenderLog();if(typeof algoUpdateTfLivePnl==='function')algoUpdateTfLivePnl();}}catch(e){}
   mt5PaintStatus();return r;
 }
 
@@ -20038,7 +20576,7 @@ function algoDrawExecutionHud(ctx,chartW){
 const auditLines=tfAuditRows;
   const auditLineH=mobileView?7:9;
   const auditBlockH=(mobileView?21:25)+auditLines.length*auditLineH;
-  const pressureRows=[['5m',5],['15m',15],['1H',60],['4H',240],['1D',1440]].map(function(x){return {tf:x[0],p:rfGetCurrentCandlePressure(x[1])};});
+  const pressureRows=[['1m',1],['3m',3],['5m',5],['15m',15],['1H',60],['4H',240],['1D',1440]].map(function(x){return {tf:x[0],p:rfGetCurrentCandlePressure(x[1])};});
   const pressureLineH=mobileView?7:9;
   const pressureBlockH=(mobileView?15:18)+pressureRows.length*pressureLineH;
   const boxH=(mobileView?8:10)+(mobileView?10:13)+(lines.length*rowH)+8+tradeHeaderH+Math.max(1,tradeRows.length)*tradeRowH+auditBlockH+pressureBlockH+8;
@@ -20664,9 +21202,7 @@ function algoOnLiveTick() {
   try {
     const hasOpen = (function () {
       try {
-        return algoLoadTrades().some(function (t) {
-          return !(t.outcome === 'TP' || t.outcome === 'SL' || t.status === 'TP' || t.status === 'SL');
-        });
+        return algoLoadTrades().some(function (t) { return algoIsOpenTrade(t); });
       } catch (e) { return false; }
     })();
     if ((state.chartAsset || 'gold') === 'gold') {
@@ -20691,20 +21227,37 @@ function algoOnLiveTick() {
     }
   } catch (eM) {}
 
-  // LIVE MSS scan on the open Gold chart TF (even when algo is disarmed —
-  // keeps markers / structure lock in sync with the candles on screen).
+  // REALTIME MSS: refresh ALL engine TFs every tick so WAIT unlocks live
+  // (not only the open chart TF — missed unlocks lost good trades).
   try {
-    if ((state.chartAsset || 'gold') === 'gold' && candleHistory && candleHistory.length >= 12) {
-      const chartTf = String(state.tf_interval || '').toLowerCase();
-      if (chartTf && typeof algoTfStructure === 'function' && typeof algoUpdateMssState === 'function') {
-        const iClosed = Math.max(0, candleHistory.length - 2);
-        const iLive = candleHistory.length - 1;
-        const stClosed = algoTfStructure(candleHistory, iClosed, chartTf);
-        algoUpdateMssState(chartTf, stClosed, iClosed, Number(candleHistory[iClosed].c), true);
-        if (iLive > iClosed) {
-          const stLive = algoTfStructure(candleHistory, iLive, chartTf);
-          algoUpdateMssState(chartTf, stLive, iLive, Number(candleHistory[iLive].c), false);
-        }
+    if (typeof algoTfStructure === 'function' && typeof algoUpdateMssState === 'function') {
+      const tfsMss = ['1m', '3m', '5m', '15m', '1h', '4h', '1d'];
+      for (let ti = 0; ti < tfsMss.length; ti++) {
+        const tfM = tfsMss[ti];
+        let bars = null;
+        try {
+          if ((state.chartAsset || 'gold') === 'gold' &&
+              String(state.tf_interval || '').toLowerCase() === tfM &&
+              candleHistory && candleHistory.length >= 12) {
+            bars = candleHistory;
+          } else if (typeof algoCandlesForTradeTf === 'function') {
+            bars = algoCandlesForTradeTf(tfM);
+          } else if (typeof chartStore !== 'undefined' && chartStore.gold && chartStore.gold[tfM]) {
+            bars = chartStore.gold[tfM].candles;
+          }
+        } catch (eB) {}
+        if (!bars || bars.length < 12) continue;
+        const iClosed = Math.max(0, bars.length - 2);
+        const iLive = bars.length - 1;
+        try {
+          const stClosed = algoTfStructure(bars, iClosed, tfM);
+          algoUpdateMssState(tfM, stClosed, iClosed, Number(bars[iClosed].c), true);
+          if (iLive > iClosed) {
+            const stLive = algoTfStructure(bars, iLive, tfM);
+            // Live bar updates structure lean for WAIT readiness; final MSS still needs closedOk
+            algoUpdateMssState(tfM, stLive, iLive, Number(bars[iLive].c), false);
+          }
+        } catch (eOne) {}
       }
     }
   } catch (eMssLive) {}
@@ -21015,16 +21568,73 @@ function algoUpdateTfLivePnl(){
       rows.push({tf:tf,side:side,pnl:profit,source:'MT5'});
     });
     // Include HTML-tracked open trades not yet broker-confirmed, clearly labelled.
-    log.forEach(function(t){if(!t||t.mt5Confirmed||t.outcome==='TP'||t.outcome==='SL'||t.status==='TP'||t.status==='SL')return;
+    log.forEach(function(t){if(!t||t.mt5Confirmed||!algoIsOpenTrade(t))return;
       if(rows.some(function(r){return t.mt5Ticket&&String(t.mt5Ticket)===String(r.ticket);}))return;
       const entry=Number(t.entry||t.price),px=Number(state&&state.gold_price);let pnl=Number(t.pnl);
       if(entry>0&&px>500&&typeof algoPnlPoints==='function')pnl=algoPnlPoints(t.side,entry,px,t.lots||1);
       if(!Number.isFinite(pnl))return;
-      rows.push({tf:String(t.tf||'LIVE').toUpperCase(),side:t.side==='SELL'?'S':'B',pnl:pnl,source:'HTML'});
+      rows.push({tf:String(t.tf||'LIVE').toUpperCase(),side:t.side==='SELL'?'S':'B',pnl:pnl,source:'HTML',id:t.id});
     });
     if(!rows.length){el.innerHTML='<span class="pnl-label">LIVE PnL</span><span class="pnl-empty">No open trades</span>';return;}
-    el.innerHTML='<span class="pnl-label">LIVE PnL</span>'+rows.slice(0,8).map(function(r){const c=r.pnl>=0?'#34d399':'#fb7185';const val=(r.pnl>0?'+':'')+r.pnl.toFixed(2);return '<span class="pnl-chip" style="color:'+c+'" title="'+r.source+' position · '+r.tf+'">'+r.side+' '+r.tf+' '+val+'</span>';}).join('');
+    el.innerHTML='<span class="pnl-label">LIVE PnL</span>'+rows.slice(0,8).map(function(r){
+      const c=r.pnl>=0?'#34d399':'#fb7185';const val=(r.pnl>0?'+':'')+r.pnl.toFixed(2);
+      const closeBtn=(r.source==='HTML'&&r.id)
+        ? '<span class="pnl-close" title="Close this trade" onclick="algoManualCloseTrade(\''+String(r.id).replace(/'/g,"")+'\')">✕</span>'
+        : '<span class="pnl-close pnl-close-locked" title="MT5 position — close from broker/EA">🔒</span>';
+      return '<span class="pnl-chip" style="color:'+c+'" title="'+r.source+' position · '+r.tf+'">'+r.side+' '+r.tf+' '+val+closeBtn+'</span>';
+    }).join('');
   }catch(e){el.innerHTML='<span class="pnl-label">LIVE PnL</span><span class="pnl-empty">Updating…</span>';}
+}
+
+/** Manually close ANY open trade (backtest, paper/HTML, or real MT5 ticket) —
+ * used by the ✕ on each LIVE PnL chip and the Close button in the History list.
+ * Backtest/paper trades close immediately and for good. A trade with a real MT5
+ * ticket gets an actual broker close request sent (mt5SendClose) — marking it
+ * "closed" purely locally while the broker still shows the position open would
+ * be misleading, so that case drives a real close instead of faking one.
+ * Either way this frees the per-TF/overall open-trade slot it was occupying,
+ * which otherwise silently blocks new scalp entries on that TF. */
+function algoManualCloseTrade(id){
+  try{
+    if(!id || typeof algoLoadTrades!=='function' || typeof algoSaveTrades!=='function') return;
+    const log=algoLoadTrades();
+    const idx=log.findIndex(function(t){return t&&String(t.id)===String(id);});
+    if(idx<0) return;
+    const t=log[idx];
+    if(!algoIsOpenTrade(t)) return; // already closed
+
+    const hasBrokerTicket = !!(t.mt5Ticket && !t.mt5Closed);
+    const brokerLive = !!(typeof MT5_BRIDGE!=='undefined' && MT5_BRIDGE && MT5_BRIDGE.connected);
+
+    if (hasBrokerTicket && brokerLive && typeof mt5SendClose === 'function') {
+      // Real broker position: drive an actual close. mt5SendClose updates the
+      // log + re-renders itself once the broker responds.
+      try { mt5SendClose(Object.assign({}, t), 'MANUAL'); } catch (eMc) {}
+      try { algoUpdateStatus && algoUpdateStatus('<span>Close sent to MT5 for ticket ' + t.mt5Ticket + '…</span>'); } catch (eU) {}
+      return;
+    }
+    if (hasBrokerTicket && !brokerLive) {
+      // Has a real ticket but no live broker link — closing it here only would
+      // desync from whatever the broker actually shows. Say so instead of faking it.
+      try { algoUpdateStatus && algoUpdateStatus('<span class="bad">Cannot close ticket ' + t.mt5Ticket + ' — MT5 not connected. Close it from the broker/EA, or wait for reconnect.</span>'); } catch (eU) {}
+      return;
+    }
+
+    // Backtest / paper / HTML-only trade — nothing on a broker to contradict,
+    // close it locally and permanently.
+    const px=Number(state&&state.gold_price)||Number(t.entry||t.price);
+    let pnl=Number(t.pnl);
+    if(Number(t.entry)>0&&px>500&&typeof algoPnlPoints==='function') pnl=algoPnlPoints(t.side,Number(t.entry||t.price),px,t.lots||1);
+    log[idx]=Object.assign({},t,{
+      outcome:'MANUAL', status:'MANUAL_CLOSE', exit:px,
+      pnl:Number.isFinite(pnl)?Number(pnl.toFixed(2)):t.pnl,
+      closedAt:Date.now(),
+      reason:(t.reason||'')+' · manually closed by trader'
+    });
+    algoSaveTrades(log);
+    if(typeof algoUpdateTfLivePnl==='function') algoUpdateTfLivePnl();
+    if(typeof algoRenderLog==='function') algoRenderLog(algoState && algoState.histFilter);
+  }catch(e){}
 }
 setInterval(algoUpdateTfLivePnl,1000);
 
@@ -21124,6 +21734,11 @@ function algoDrawMssOnChart(ctx, getX, getY, chartW, topPad, chartH) {
           if (String(lm.side).toUpperCase() === 'SELL' && stNow.hh && stNow.hl && !stNow.brokenBuy) {
             structTag += ' · FAKE?';
           }
+          // HL + LH together = higher low AND lower high at once — a converging/
+          // compression structure, not a confirmed directional flip either way.
+          if (stNow.hl && stNow.lh) {
+            structTag += ' · COMPRESSION?';
+          }
         }
       } catch (eSt) {}
       const label = 'MSS ' + chartTf.toUpperCase() + ' ' + (lm.from || '?') + '→' + (lm.side || '?') + structTag;
@@ -21188,7 +21803,7 @@ function algoDrawTradesOnChart(ctx, getX, getY, chartW, topPad, chartH) {
       // A trade belongs only on the timeframe that generated it.
       // Do not project a 1m signal onto 5m/15m/1h candles (or vice versa).
       if (!chartTf || String(t.tf || '').toLowerCase() !== chartTf) return;
-      const isOpen = !(t.outcome === 'TP' || t.outcome === 'SL' || t.status === 'TP' || t.status === 'SL');
+      const isOpen = algoIsOpenTrade(t);
       const src = String(t.source || 'LIVE').toUpperCase();
       const isBt = (src === 'BACKTEST');
       // Bug fix: sliding the chart used to reveal a flood of BACKTEST markers.
@@ -21273,19 +21888,25 @@ function algoDrawTradesOnChart(ctx, getX, getY, chartW, topPad, chartH) {
         else return;
       }
       if (!(entry > 0)) return;
-      // Live chart always enforces RR 1:2 for display + open-trade geometry.
+      // Display uses trade RR (1.5 on 1m/3m/5m, 1:2 on HTF). Prefer stored SL/TP.
       let slPx = Number(t.sl);
       let tpPx = Number(t.tp);
       let riskPx = Number(t.risk);
       const isBuy = t.side === 'BUY';
+      const tfDisp = String(t.tf || '').toLowerCase();
+      const isMicroDisp = (tfDisp === '1m' || tfDisp === '3m' || tfDisp === '5m');
+      const rrDisp = (Number(t.rr) > 0) ? Number(t.rr) : (isMicroDisp ? 1.5 : 2);
       if (Number.isFinite(slPx) && ((isBuy && slPx < entry) || (!isBuy && slPx > entry))) {
         riskPx = Math.abs(entry - slPx);
       } else if (!(riskPx > 0)) {
         riskPx = Math.max(0.5, Math.abs(Number(state.gold_price) || entry) * 0.0004);
         slPx = isBuy ? (entry - riskPx) : (entry + riskPx);
       }
+      // Only rebuild TP if missing; do not overwrite a valid stored scalp TP with 1:2
       if (riskPx > 0) {
-        tpPx = isBuy ? (entry + riskPx * 2) : (entry - riskPx * 2);
+        if (!Number.isFinite(tpPx) || (isBuy ? !(tpPx > entry) : !(tpPx < entry))) {
+          tpPx = isBuy ? (entry + riskPx * rrDisp) : (entry - riskPx * rrDisp);
+        }
         if (!Number.isFinite(slPx) || (isBuy ? !(slPx < entry) : !(slPx > entry))) {
           slPx = isBuy ? (entry - riskPx) : (entry + riskPx);
         }
@@ -21347,11 +21968,11 @@ function algoDrawTradesOnChart(ctx, getX, getY, chartW, topPad, chartH) {
           ctx.fillText(label, x2 + 5, yy + 2);
         }
         pill('SL ' + Number(slPx).toFixed(1) + ' · R ' + Number(riskPx).toFixed(1), ySl, '#f87171');
-        pill('TP ' + Number(tpPx).toFixed(1) + ' · RR 1:2', yTp, '#34d399');
+        pill('TP ' + Number(tpPx).toFixed(1) + ' · RR 1:' + rrDisp, yTp, '#34d399');
         // Entry RR badge near marker
         ctx.font = 'bold 10px system-ui,sans-serif';
         ctx.textAlign = 'left';
-        const rrLab = 'RR 1:2';
+        const rrLab = 'RR 1:' + rrDisp;
         const rrW = Math.ceil(ctx.measureText(rrLab).width) + 8;
         ctx.fillStyle = 'rgba(8,12,18,0.85)';
         ctx.fillRect(x + 14, y - 8, rrW, 14);
@@ -21389,6 +22010,49 @@ function algoDrawTradesOnChart(ctx, getX, getY, chartW, topPad, chartH) {
         ctx.font = '9px monospace';
         ctx.fillText(t.volRatio.toFixed(1) + '× vol', x, isBuy ? y + 42 : y - 34);
       }
+
+      // FOOTPRINT TAG — OKX tape at entry. Live-recompute when stored counts are 0
+      // (desktop/localStorage restore often keeps volume but drops _buyTrades/_sellTrades).
+      try {
+        let fp = t.fp || null;
+        const needLive = !fp || !(fp.vol > 0) ||
+          (((Number(fp.buyN) || 0) <= 0 && (Number(fp.sellN) || 0) <= 0) &&
+           ((Number(fp.buy) || 0) > 0 || (Number(fp.sell) || 0) > 0 || true));
+        if (needLive && typeof algoFootprintForCandle === 'function' && candleHistory && idx >= 0 && candleHistory[idx]) {
+          const liveFp = algoFootprintForCandle(candleHistory[idx], t.tf || chartTf);
+          if (liveFp && liveFp.vol > 0) fp = liveFp;
+        }
+        if (fp && (fp.vol > 0 || (Number(fp.buy) || 0) > 0 || (Number(fp.sell) || 0) > 0)) {
+          let buyN = Number(fp.buyN) || 0;
+          let sellN = Number(fp.sellN) || 0;
+          const buyV = Number(fp.buy) || 0;
+          const sellV = Number(fp.sell) || 0;
+          // Prefer trade counts; fall back to formatted volume so laptop never shows 0B/0S with real tape
+          function fmtFpN(n, v) {
+            if (n > 0) return String(Math.round(n));
+            if (!(v > 0)) return '0';
+            if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+            if (v >= 1e3) return (v / 1e3).toFixed(1) + 'k';
+            return v >= 10 ? String(Math.round(v)) : v.toFixed(1);
+          }
+          const delta = Number(fp.delta);
+          const dlt = Number.isFinite(delta) ? delta : (buyV - sellV);
+          const side = fp.side || (dlt > 0 ? 'BUY' : (dlt < 0 ? 'SELL' : 'NEUTRAL'));
+          const fpSideOk = (isBuy && side === 'BUY') || (!isBuy && side === 'SELL');
+          const fpCol = fpSideOk ? '#34d399' : (side === 'NEUTRAL' ? '#94a3b8' : '#f87171');
+          const fpLabel = 'FP ' + fmtFpN(buyN, buyV) + 'B/' + fmtFpN(sellN, sellV) + 'S · Δ' +
+            (dlt >= 0 ? '+' : '') + (Math.abs(dlt) >= 1000 ? (dlt / 1000).toFixed(1) + 'k' : Number(dlt).toFixed(1)) +
+            (fpSideOk ? '' : ' (absorbed)');
+          ctx.font = focused ? 'bold 9.5px monospace' : '9px monospace';
+          ctx.textAlign = 'center';
+          const fpY = isBuy ? y + (t.volRatio ? 54 : 42) : y - (t.volRatio ? 46 : 34);
+          const fpW = Math.ceil(ctx.measureText(fpLabel).width) + 8;
+          ctx.fillStyle = 'rgba(8,12,18,0.82)';
+          ctx.fillRect(x - fpW / 2, fpY - 9, fpW, 13);
+          ctx.fillStyle = fpCol;
+          ctx.fillText(fpLabel, x, fpY + 1);
+        }
+      } catch (eFpTag) {}
 
     });
 
